@@ -3,24 +3,63 @@
 <head>
   <meta charset="UTF-8">
   <title>月份異動申請書</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <style>
     body {
       font-family: "微軟正黑體", sans-serif;
-      margin: 30px;
+      padding: 40px;
     }
-    h2 {
-      margin-top: 30px;
+
+    h1 {
+      text-align: center;
+      font-size: 24px;
+      margin-bottom: 10px;
     }
-    label {
-      display: block;
-      margin: 10px 0 4px;
+
+    .right {
+      text-align: right;
+      font-size: 14px;
+      margin-bottom: 20px;
     }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+    }
+
+    td, th {
+      border: 1px solid black;
+      padding: 8px;
+      vertical-align: top;
+      font-size: 14px;
+    }
+
     input {
-      width: 300px;
-      padding: 6px;
+      width: 100%;
+      border: none;
+      font-size: 14px;
+      background: transparent;
     }
-    button {
-      margin-top: 20px;
+
+    .note, .statement {
+      border: 1px solid black;
+      padding: 10px;
+      font-size: 13px;
+    }
+
+    .highlight-yellow {
+      background-color: yellow;
+      font-weight: bold;
+    }
+
+    .red {
+      color: red;
+      font-weight: bold;
+    }
+
+    #downloadBtn {
+      margin-top: 30px;
       padding: 10px 20px;
       font-size: 16px;
       cursor: pointer;
@@ -29,72 +68,98 @@
 </head>
 <body>
 
-  <h1>月份異動申請書填寫</h1>
+  <div id="pdfContent">
+    <h1>月份異動申請書</h1>
+    <div class="right">版本：20250801_V1.0　申請日期：<input type="text" placeholder="年 月 日"></div>
 
-  <h2>轉移者資料</h2>
-  <label>客戶編號</label>
-  <input id="trans_from_id">
-  <label>姓名</label>
-  <input id="trans_from_name">
-  <label>電話</label>
-  <input id="trans_from_phone">
-  <label>到期日</label>
-  <input id="trans_from_expire">
-  <label>地址</label>
-  <input id="trans_from_address">
+    <table>
+      <tr><th colspan="4">轉移者資料</th></tr>
+      <tr>
+        <td>客戶編號<br><input></td>
+        <td>客戶姓名<br><input></td>
+        <td>電話<br><input></td>
+        <td>到期日<br><input></td>
+      </tr>
+      <tr>
+        <td colspan="4">地址<br><input></td>
+      </tr>
+    </table>
 
-  <h2>承接者資料</h2>
-  <label>客戶編號</label>
-  <input id="trans_to_id">
-  <label>姓名</label>
-  <input id="trans_to_name">
-  <label>地址</label>
-  <input id="trans_to_address">
-  <label>轉移起始日</label>
-  <input id="trans_start_date">
-  <label>轉移時間</label>
-  <input id="trans_time">
-  <label>轉移後到期日</label>
-  <input id="trans_new_expire">
+    <table>
+      <tr><th colspan="4">承接者資料</th></tr>
+      <tr>
+        <td>客戶編號<br><input></td>
+        <td>客戶姓名<br><input></td>
+        <td colspan="2">地址<br><input></td>
+      </tr>
+      <tr>
+        <td>轉移起始日<br><input></td>
+        <td>轉移時間<br><input></td>
+        <td colspan="2">轉移後到期日<br><input></td>
+      </tr>
+    </table>
 
-  <br>
-  <button onclick="sendDataToGoogleDocs()">轉移並產出 PDF</button>
+    <div class="note">
+      <strong>注意事項：</strong>
+      <ol>
+        <li class="highlight-yellow">各項異動服務需填具申請書/並檢附登記人雙證件影本方可辦理。</li>
+        <li>接受月份轉移者，轉移之月份、天數不得再次轉移，亦不得列入退費計算。承接人享月份使用權益，退費權益仍屬原登記人，雙方因月份轉移而肇致糾紛，由轉移雙方當事人負責。</li>
+        <li>本申請書之登記人及承接人應確實填具上開資料，如有錯誤或偽冒，願負法律責任。上開資料，本公司僅作申辦異動業務及聯絡使用。</li>
+        <li>本公司保證依隱私權保護相關法令之規定，保護登記人及承接人所提供之資料，除依法或命令，不得提供與第三人使用。</li>
+      </ol>
+    </div>
+
+    <div class="statement">
+      <p class="red">個人資料蒐集暨營業規章與租用契約條款聲明</p>
+      <p><strong>1. 個人資料蒐集與利用：</strong><br>
+        今網智慧科技(股)（以下稱「本公司」）基於契約、類似契約或其他法律關係，依據法律規定蒐集、處理及利用您的個人資料。蒐集目的包括但不限於：消費者管理與服務、調查、統計與研究分析、廣告或商業行為管理及個人資料之合法交易等。<br>
+        詳細的個人資料告知聲明，請參閱：<a href="https://top1.kingnet.net.tw/rules-person.html" target="_blank">https://top1.kingnet.net.tw/rules-person.html</a>
+      </p>
+      <p><strong>2. 營業規章與租用契約條款：</strong><br>
+        本公司各產品之營業規章及租用契約條款，請參閱：<a href="https://top1.kingnet.net.tw/rule.html" target="_blank">https://top1.kingnet.net.tw/rule.html</a>
+      </p>
+    </div>
+
+    <table>
+      <tr><td><strong>回傳方式：</strong></td></tr>
+      <tr>
+        <td>
+          1. 郵寄：40466 台中市北區太原北路130號10樓<br>
+          2. MAIL：service@smartdaily.com.tw
+        </td>
+      </tr>
+    </table>
+
+    <table>
+      <tr>
+        <th>會辦單位</th>
+        <th>主管</th>
+        <th>服務人員</th>
+        <th>用戶簽章</th>
+      </tr>
+      <tr>
+        <td style="height: 60px;"></td>
+        <td></td>
+        <td></td>
+        <td></td>
+      </tr>
+    </table>
+  </div>
+
+  <button id="downloadBtn" onclick="generatePDF()">產出 PDF</button>
 
   <script>
-    function sendDataToGoogleDocs() {
-      const data = {
-        trans_from_id: document.getElementById("trans_from_id").value,
-        trans_from_name: document.getElementById("trans_from_name").value,
-        trans_from_phone: document.getElementById("trans_from_phone").value,
-        trans_from_expire: document.getElementById("trans_from_expire").value,
-        trans_from_address: document.getElementById("trans_from_address").value,
-
-        trans_to_id: document.getElementById("trans_to_id").value,
-        trans_to_name: document.getElementById("trans_to_name").value,
-        trans_to_address: document.getElementById("trans_to_address").value,
-        trans_start_date: document.getElementById("trans_start_date").value,
-        trans_time: document.getElementById("trans_time").value,
-        trans_new_expire: document.getElementById("trans_new_expire").value
-      };
-
-      fetch("https://script.google.com/macros/s/AKfycbznlgffCfz1UA0EZOtwKnVcQrPtrFyHRY0FKcdN7vPNIIwCgWOT35NwyIUXEdQ9IU42/exec", {
-        method: "POST",
-        body: JSON.stringify(data),
-        headers: {
-          "Content-Type": "application/json"
-        }
-      })
-      .then(res => res.json())
-      .then(res => {
-        alert("PDF 已產生，將為您開啟預覽。");
-        window.open(res.pdfUrl, '_blank');
-      })
-      .catch(err => {
-        console.error(err);
-        alert("PDF 產出失敗，請稍後再試。");
-      });
+    function generatePDF() {
+      const element = document.getElementById('pdfContent');
+      html2pdf().from(element).set({
+        margin: 10,
+        filename: '月份異動申請書.pdf',
+        html2canvas: { scale: 2 },
+        jsPDF: { format: 'a4', orientation: 'portrait' }
+      }).save();
     }
   </script>
 
 </body>
 </html>
+
