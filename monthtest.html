@@ -77,6 +77,7 @@
             padding: 20px;
             margin: 0 auto;
             max-width: 800px;
+            font-size: 12px; /* 縮小字體大小 */
         }
         
         /* 載入指示器 */
@@ -106,7 +107,7 @@
             100% { transform: rotate(360deg); }
         }
         
-        /* 表格樣式 */
+        /* 表格樣式 - 縮小間距 */
         .print-table {
             width: 100%;
             border-collapse: collapse;
@@ -114,44 +115,58 @@
         }
         .print-table th, .print-table td {
             border: 1px solid #000;
-            padding: 8px;
+            padding: 4px; /* 縮小表格內間距 */
+            font-size: 11px; /* 縮小表格字體 */
         }
         .print-table th {
             background-color: #f2f2f2;
         }
         
-        /* 注意事項和回傳方式框架 */
+        /* 注意事項和回傳方式框架 - 縮小間距 */
         .notice-box {
             border: 1px solid #000;
-            padding: 10px;
-            margin-bottom: 20px;
+            padding: 6px; /* 縮小內間距 */
+            margin-bottom: 10px; /* 縮小底部間距 */
         }
         
         /* 注意事項標題置中 */
         .notice-title {
             text-align: center;
             font-weight: bold;
-            margin-bottom: 10px;
+            margin-bottom: 5px; /* 縮小底部間距 */
+            font-size: 13px; /* 調整標題大小 */
         }
         
-        /* 簽名欄位 */
+        /* 簽名欄位 - 縮小高度 */
         .signature-box {
             display: flex;
             width: 100%;
-            margin-top: 20px;
+            margin-top: 10px; /* 縮小頂部間距 */
         }
         .signature-cell {
             flex: 1;
             border: 1px solid #000;
-            height: 120px;
-            padding: 10px;
+            height: 80px; /* 縮小簽名欄高度 */
+            padding: 5px;
             text-align: center;
+            font-size: 11px; /* 縮小字體 */
         }
         
         /* 注意事項列表左對齊 */
         .notice-list {
             text-align: left;
             width: 100%;
+        }
+        
+        /* 注意事項列表項目 - 縮小間距和字體 */
+        .notice-list ol {
+            padding-left: 20px; /* 縮小左邊間距 */
+            margin: 5px 0; /* 縮小上下間距 */
+        }
+        .notice-list ol li {
+            font-size: 10px; /* 縮小列表項目字體 */
+            margin-bottom: 2px; /* 縮小項目間距 */
+            line-height: 1.3; /* 縮小行高 */
         }
 
         /* Google文件風格的下載對話框 */
@@ -252,6 +267,40 @@
         .download-toast-icon {
             margin-right: 12px;
         }
+        
+        /* 調整列印區域的間距 */
+        .print-container {
+            padding: 10px;
+        }
+        
+        /* 調整表頭間距 */
+        .print-header {
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+        }
+        
+        /* 調整標題間距 */
+        .print-title {
+            margin-bottom: 10px;
+        }
+        
+        /* 調整區塊間距 */
+        .print-section {
+            margin-bottom: 10px;
+        }
+        
+        /* 調整頁面縮放選項 */
+        .page-scale-options {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #f5f5f5;
+            border-radius: 4px;
+        }
+        
+        .page-scale-options label {
+            margin-right: 15px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -295,6 +344,20 @@
                     <div class="format-description">較小的檔案大小，適合電子郵件附件</div>
                 </div>
             </label>
+            
+            <div class="page-scale-options mt-4 pt-4 border-t border-gray-200">
+                <p class="mb-3 text-gray-700 font-medium">頁面縮放：</p>
+                <div class="flex flex-wrap">
+                    <label class="flex items-center mb-2">
+                        <input type="radio" name="pageScale" value="fit" checked class="mr-2">
+                        <span>自動縮放至一頁</span>
+                    </label>
+                    <label class="flex items-center mb-2">
+                        <input type="radio" name="pageScale" value="actual" class="mr-2">
+                        <span>實際大小</span>
+                    </label>
+                </div>
+            </div>
         </div>
         <div class="google-dialog-footer">
             <button id="cancelDownload" class="google-btn google-btn-cancel">取消</button>
@@ -626,36 +689,36 @@
         <div id="printArea">
             <div class="print-container">
                 <!-- 表頭 -->
-                <div class="flex justify-between items-center mb-6 border-b pb-4">
+                <div class="flex justify-between items-center mb-4 border-b pb-2 print-header">
                     <div class="flex items-center">
                         <!-- 今網智生活Logo -->
-                        <div class="mr-4">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 100 100" fill="#3b82f6">
+                        <div class="mr-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 100 100" fill="#3b82f6">
                                 <path d="M50 0C22.4 0 0 22.4 0 50s22.4 50 50 50 50-22.4 50-50S77.6 0 50 0zm0 90c-22.1 0-40-17.9-40-40s17.9-40 40-40 40 17.9 40 40-17.9 40-40 40z"/>
                                 <path d="M65 35H35c-2.8 0-5 2.2-5 5v20c0 2.8 2.2 5 5 5h30c2.8 0 5-2.2 5-5V40c0-2.8-2.2-5-5-5zm-5 20H40V45h20v10z"/>
                             </svg>
                         </div>
                         <!-- 公司名稱和統編 -->
                         <div>
-                            <h2 class="text-xl font-bold">今網智慧科技股份有限公司</h2>
-                            <p class="text-gray-600">統一編號：54307560</p>
+                            <h2 class="text-base font-bold">今網智慧科技股份有限公司</h2>
+                            <p class="text-xs text-gray-600">統一編號：54307560</p>
                         </div>
                     </div>
                     <!-- 版本號和申請日期 -->
                     <div class="text-right">
-                        <p class="text-gray-600">版本：20250206_V1.0</p>
-                        <p class="text-gray-600">申請日期：<span id="print_application_date"></span></p>
+                        <p class="text-xs text-gray-600">版本：20250206_V1.0</p>
+                        <p class="text-xs text-gray-600">申請日期：<span id="print_application_date"></span></p>
                     </div>
                 </div>
 
                 <!-- 標題 -->
-                <div class="text-center mb-8">
-                    <h1 class="text-2xl font-bold">月份轉移申請書</h1>
+                <div class="text-center mb-4 print-title">
+                    <h1 class="text-xl font-bold">月份轉移申請書</h1>
                 </div>
 
                 <!-- 轉讓戶資料 -->
-                <div class="mb-8">
-                    <h3 class="text-lg font-bold mb-4 bg-gray-100 p-2">轉讓戶資料</h3>
+                <div class="mb-4 print-section">
+                    <h3 class="text-sm font-bold mb-2 bg-gray-100 p-1">轉讓戶資料</h3>
                     <table class="print-table">
                         <tr>
                             <td class="bg-gray-50 w-1/4">客戶編號</td>
@@ -677,8 +740,8 @@
                 </div>
 
                 <!-- 承接者資料 -->
-                <div class="mb-8">
-                    <h3 class="text-lg font-bold mb-4 bg-gray-100 p-2">承接者資料</h3>
+                <div class="mb-4 print-section">
+                    <h3 class="text-sm font-bold mb-2 bg-gray-100 p-1">承接者資料</h3>
                     <table class="print-table">
                         <tr>
                             <td class="bg-gray-50 w-1/4">客戶編號</td>
@@ -704,11 +767,11 @@
                 </div>
 
                 <!-- 注意事項 -->
-                <div class="mb-8 notice-box">
-                    <h3 class="notice-title text-lg">【注意事項】</h3>
-                    <p class="text-center mb-2">申請程序如下(未盡細項詳租用條款第七條各項)：</p>
+                <div class="mb-4 notice-box print-section">
+                    <h3 class="notice-title">【注意事項】</h3>
+                    <p class="text-center mb-1 text-xs">申請程序如下(未盡細項詳租用條款第七條各項)：</p>
                     <div class="notice-list">
-                        <ol class="list-decimal pl-6 text-sm space-y-2">
+                        <ol class="list-decimal pl-4 text-xs space-y-1">
                             <li>各項異動服務需填具申請書/並檢附登記人雙證件影本方可辦理。</li>
                             <li>每次暫停期間最長1年，暫停復訊後需屆滿15天，方可再辦理暫停。</li>
                             <li>用戶有主分機者，辦理暫停則主分機將一併暫停。</li>
@@ -721,10 +784,10 @@
                 </div>
 
                 <!-- 回傳方式 -->
-                <div class="mb-8 notice-box">
-                    <p class="text-center mb-2 font-bold">回傳方式：本申請書(含證件)，方可透過以下方式回傳並來電412-8166(手機需加區碼)確認，避免遺漏。</p>
+                <div class="mb-4 notice-box print-section">
+                    <p class="text-center mb-1 text-xs font-bold">回傳方式：本申請書(含證件)，方可透過以下方式回傳並來電412-8166(手機需加區碼)確認，避免遺漏。</p>
                     <div class="notice-list">
-                        <ol class="list-decimal pl-6 text-sm">
+                        <ol class="list-decimal pl-4 text-xs">
                             <li>郵寄：40466-台中市北區太原北路130號10樓</li>
                             <li>MAIL：service@smartdaily.com.tw</li>
                         </ol>
@@ -732,23 +795,23 @@
                 </div>
 
                 <!-- 簽名欄 -->
-                <div class="signature-box">
+                <div class="signature-box print-section">
                     <div class="signature-cell">
-                        <p class="mb-4">會辦單位</p>
+                        <p class="mb-2">會辦單位</p>
                     </div>
                     <div class="signature-cell">
-                        <p class="mb-4">主管</p>
+                        <p class="mb-2">主管</p>
                     </div>
                     <div class="signature-cell">
-                        <p class="mb-4">服務人員</p>
+                        <p class="mb-2">服務人員</p>
                     </div>
                     <div class="signature-cell">
-                        <p class="mb-4">客戶簽名</p>
+                        <p class="mb-2">客戶簽名</p>
                     </div>
                 </div>
 
                 <!-- 轉移單號 -->
-                <div class="mt-8 text-right">
+                <div class="mt-4 text-right text-xs">
                     <p>轉移單號：<span id="print_transfer_id"></span></p>
                 </div>
             </div>
@@ -1132,6 +1195,9 @@
             // 獲取選擇的檔案格式
             const fileFormat = document.querySelector('input[name="fileFormat"]:checked').value;
             
+            // 獲取頁面縮放選項
+            const pageScale = document.querySelector('input[name="pageScale"]:checked').value;
+            
             // 獲取必要的數據
             const customerAId = document.getElementById('result_transferor_id').textContent;
             const customerBId = document.getElementById('result_recipient_id').textContent;
@@ -1171,20 +1237,38 @@
                             // 計算PDF頁面尺寸
                             const imgWidth = 210; // A4寬度，單位mm
                             const pageHeight = 297; // A4高度，單位mm
-                            const imgHeight = canvas.height * imgWidth / canvas.width;
                             
-                            // 添加圖像到PDF
-                            pdf.addImage(imgData, 'JPEG', 0, 0, imgWidth, imgHeight);
-                            
-                            // 如果內容超過一頁，添加新頁面
-                            let heightLeft = imgHeight;
-                            let position = 0;
-                            
-                            while (heightLeft > pageHeight) {
-                                position = heightLeft - pageHeight;
-                                pdf.addPage();
-                                pdf.addImage(imgData, 'JPEG', 0, -position, imgWidth, imgHeight);
-                                heightLeft -= pageHeight;
+                            if (pageScale === 'fit') {
+                                // 自動縮放至一頁
+                                const imgHeight = canvas.height * imgWidth / canvas.width;
+                                
+                                // 如果內容高度超過A4高度，進行縮放
+                                if (imgHeight > pageHeight) {
+                                    const scale = pageHeight / imgHeight;
+                                    const scaledWidth = imgWidth * scale;
+                                    
+                                    // 居中放置
+                                    const xOffset = (imgWidth - scaledWidth) / 2;
+                                    pdf.addImage(imgData, 'JPEG', xOffset, 0, scaledWidth, pageHeight);
+                                } else {
+                                    // 不需要縮放，直接添加
+                                    pdf.addImage(imgData, 'JPEG', 0, 0, imgWidth, imgHeight);
+                                }
+                            } else {
+                                // 實際大小
+                                const imgHeight = canvas.height * imgWidth / canvas.width;
+                                pdf.addImage(imgData, 'JPEG', 0, 0, imgWidth, imgHeight);
+                                
+                                // 如果內容超過一頁，添加新頁面
+                                let heightLeft = imgHeight;
+                                let position = 0;
+                                
+                                while (heightLeft > pageHeight) {
+                                    position = heightLeft - pageHeight;
+                                    pdf.addPage();
+                                    pdf.addImage(imgData, 'JPEG', 0, -position, imgWidth, imgHeight);
+                                    heightLeft -= pageHeight;
+                                }
                             }
                             
                             // 下載PDF
@@ -1268,8 +1352,9 @@
         // 設置今天日期為轉移日期的預設值
         document.getElementById('transferDate').value = formatDate(new Date());
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'965b7fb15385f218',t:'MTc1MzYxMjYxOC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'965b8e0ec1b3f228',t:'MTc1MzYxMzIwNy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
+
 
 
 
