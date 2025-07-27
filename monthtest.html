@@ -1,165 +1,74 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
-<head>
-  <meta charset="UTF-8">
-  <title>月份異動申請書</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-  <style>
-    body {
-      font-family: "微軟正黑體", sans-serif;
-      padding: 40px;
-    }
+  <head>
+    <meta charset="UTF-8" />
+    <title>客戶資料轉移系統</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  </head>
+  <body class="bg-blue-50 py-8">
+    <div class="max-w-6xl mx-auto px-4">
+      <!-- LOGO -->
+      <div class="flex justify-between items-center mb-4">
+        <img src="logo.png" alt="logo" class="h-12" />
+        <span class="text-sm text-gray-400">版本:20250801_V1.0</span>
+      </div>
 
-    h1 {
-      text-align: center;
-      font-size: 24px;
-      margin-bottom: 10px;
-    }
+      <!-- 表單卡片區塊（PDF 範圍） -->
+      <div id="printArea" class="bg-white shadow-md rounded-lg p-6 space-y-6">
 
-    .right {
-      text-align: right;
-      font-size: 14px;
-      margin-bottom: 20px;
-    }
+        <h1 class="text-2xl font-bold text-center">月份異動申請書</h1>
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-bottom: 20px;
-    }
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <!-- A 客戶 -->
+          <div class="space-y-4">
+            <h2 class="text-lg font-bold">A 客戶資料（轉出方）</h2>
+            <input type="text" placeholder="客戶編號" id="from_id" class="w-full border rounded px-3 py-2" />
+            <input type="text" placeholder="姓名" id="from_name" class="w-full border rounded px-3 py-2" />
+            <input type="text" placeholder="電話" id="from_phone" class="w-full border rounded px-3 py-2" />
+            <input type="text" placeholder="地址" id="from_address" class="w-full border rounded px-3 py-2" />
+            <input type="date" placeholder="使用期限" id="from_expire" class="w-full border rounded px-3 py-2" />
+          </div>
 
-    td, th {
-      border: 1px solid black;
-      padding: 8px;
-      vertical-align: top;
-      font-size: 14px;
-    }
+          <!-- B 客戶 -->
+          <div class="space-y-4">
+            <h2 class="text-lg font-bold">B 客戶資料（接收方）</h2>
+            <input type="text" placeholder="客戶編號" id="to_id" class="w-full border rounded px-3 py-2" />
+            <input type="text" placeholder="姓名" id="to_name" class="w-full border rounded px-3 py-2" />
+            <input type="text" placeholder="電話" id="to_phone" class="w-full border rounded px-3 py-2" />
+            <input type="text" placeholder="地址" id="to_address" class="w-full border rounded px-3 py-2" />
+            <input type="date" placeholder="轉移後到期日" id="new_expire" class="w-full border rounded px-3 py-2" />
+          </div>
+        </div>
 
-    input {
-      width: 100%;
-      border: none;
-      font-size: 14px;
-      background: transparent;
-    }
+        <!-- 備註 -->
+        <div class="text-sm text-gray-600 pt-4 border-t">
+          <p>本申請書將 A 客戶帳戶轉移至 B 客戶，請確認資料無誤。</p>
+        </div>
+      </div>
 
-    .note, .statement {
-      border: 1px solid black;
-      padding: 10px;
-      font-size: 13px;
-    }
-
-    .highlight-yellow {
-      background-color: yellow;
-      font-weight: bold;
-    }
-
-    .red {
-      color: red;
-      font-weight: bold;
-    }
-
-    #downloadBtn {
-      margin-top: 30px;
-      padding: 10px 20px;
-      font-size: 16px;
-      cursor: pointer;
-    }
-  </style>
-</head>
-<body>
-
-  <div id="pdfContent">
-    <h1>月份異動申請書</h1>
-    <div class="right">版本：20250801_V1.0　申請日期：<input type="text" placeholder="年 月 日"></div>
-
-    <table>
-      <tr><th colspan="4">轉移者資料</th></tr>
-      <tr>
-        <td>客戶編號<br><input></td>
-        <td>客戶姓名<br><input></td>
-        <td>電話<br><input></td>
-        <td>到期日<br><input></td>
-      </tr>
-      <tr>
-        <td colspan="4">地址<br><input></td>
-      </tr>
-    </table>
-
-    <table>
-      <tr><th colspan="4">承接者資料</th></tr>
-      <tr>
-        <td>客戶編號<br><input></td>
-        <td>客戶姓名<br><input></td>
-        <td colspan="2">地址<br><input></td>
-      </tr>
-      <tr>
-        <td>轉移起始日<br><input></td>
-        <td>轉移時間<br><input></td>
-        <td colspan="2">轉移後到期日<br><input></td>
-      </tr>
-    </table>
-
-    <div class="note">
-      <strong>注意事項：</strong>
-      <ol>
-        <li class="highlight-yellow">各項異動服務需填具申請書/並檢附登記人雙證件影本方可辦理。</li>
-        <li>接受月份轉移者，轉移之月份、天數不得再次轉移，亦不得列入退費計算。承接人享月份使用權益，退費權益仍屬原登記人，雙方因月份轉移而肇致糾紛，由轉移雙方當事人負責。</li>
-        <li>本申請書之登記人及承接人應確實填具上開資料，如有錯誤或偽冒，願負法律責任。上開資料，本公司僅作申辦異動業務及聯絡使用。</li>
-        <li>本公司保證依隱私權保護相關法令之規定，保護登記人及承接人所提供之資料，除依法或命令，不得提供與第三人使用。</li>
-      </ol>
+      <!-- PDF 產出按鈕 -->
+      <div class="text-center mt-6">
+        <button onclick="generatePDF()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded shadow">
+          產出 PDF
+        </button>
+      </div>
     </div>
 
-    <div class="statement">
-      <p class="red">個人資料蒐集暨營業規章與租用契約條款聲明</p>
-      <p><strong>1. 個人資料蒐集與利用：</strong><br>
-        今網智慧科技(股)（以下稱「本公司」）基於契約、類似契約或其他法律關係，依據法律規定蒐集、處理及利用您的個人資料。蒐集目的包括但不限於：消費者管理與服務、調查、統計與研究分析、廣告或商業行為管理及個人資料之合法交易等。<br>
-        詳細的個人資料告知聲明，請參閱：<a href="https://top1.kingnet.net.tw/rules-person.html" target="_blank">https://top1.kingnet.net.tw/rules-person.html</a>
-      </p>
-      <p><strong>2. 營業規章與租用契約條款：</strong><br>
-        本公司各產品之營業規章及租用契約條款，請參閱：<a href="https://top1.kingnet.net.tw/rule.html" target="_blank">https://top1.kingnet.net.tw/rule.html</a>
-      </p>
-    </div>
-
-    <table>
-      <tr><td><strong>回傳方式：</strong></td></tr>
-      <tr>
-        <td>
-          1. 郵寄：40466 台中市北區太原北路130號10樓<br>
-          2. MAIL：service@smartdaily.com.tw
-        </td>
-      </tr>
-    </table>
-
-    <table>
-      <tr>
-        <th>會辦單位</th>
-        <th>主管</th>
-        <th>服務人員</th>
-        <th>用戶簽章</th>
-      </tr>
-      <tr>
-        <td style="height: 60px;"></td>
-        <td></td>
-        <td></td>
-        <td></td>
-      </tr>
-    </table>
-  </div>
-
-  <button id="downloadBtn" onclick="generatePDF()">產出 PDF</button>
-
-  <script>
-    function generatePDF() {
-      const element = document.getElementById('pdfContent');
-      html2pdf().from(element).set({
-        margin: 10,
-        filename: '月份異動申請書.pdf',
-        html2canvas: { scale: 2 },
-        jsPDF: { format: 'a4', orientation: 'portrait' }
-      }).save();
-    }
-  </script>
-
-</body>
+    <script>
+      function generatePDF() {
+        const element = document.getElementById("printArea");
+        const opt = {
+          margin: 0.5,
+          filename: `月份異動申請書_${Date.now()}.pdf`,
+          image: { type: 'jpeg', quality: 0.98 },
+          html2canvas: { scale: 2 },
+          jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+        };
+        html2pdf().set(opt).from(element).save();
+      }
+    </script>
+  </body>
 </html>
+
 
