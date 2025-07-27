@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <title>月份異動申請書</title>
+  <style>
+    body {
+      font-family: "微軟正黑體", sans-serif;
+      margin: 30px;
+    }
+    h2 {
+      margin-top: 30px;
+    }
+    label {
+      display: block;
+      margin: 10px 0 4px;
+    }
+    input {
+      width: 300px;
+      padding: 6px;
+    }
+    button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>月份異動申請書填寫</h1>
+
+  <h2>轉移者資料</h2>
+  <label>客戶編號</label>
+  <input id="trans_from_id">
+  <label>姓名</label>
+  <input id="trans_from_name">
+  <label>電話</label>
+  <input id="trans_from_phone">
+  <label>到期日</label>
+  <input id="trans_from_expire">
+  <label>地址</label>
+  <input id="trans_from_address">
+
+  <h2>承接者資料</h2>
+  <label>客戶編號</label>
+  <input id="trans_to_id">
+  <label>姓名</label>
+  <input id="trans_to_name">
+  <label>地址</label>
+  <input id="trans_to_address">
+  <label>轉移起始日</label>
+  <input id="trans_start_date">
+  <label>轉移時間</label>
+  <input id="trans_time">
+  <label>轉移後到期日</label>
+  <input id="trans_new_expire">
+
+  <br>
+  <button onclick="sendDataToGoogleDocs()">轉移並產出 PDF</button>
+
+  <script>
+    function sendDataToGoogleDocs() {
+      const data = {
+        trans_from_id: document.getElementById("trans_from_id").value,
+        trans_from_name: document.getElementById("trans_from_name").value,
+        trans_from_phone: document.getElementById("trans_from_phone").value,
+        trans_from_expire: document.getElementById("trans_from_expire").value,
+        trans_from_address: document.getElementById("trans_from_address").value,
+
+        trans_to_id: document.getElementById("trans_to_id").value,
+        trans_to_name: document.getElementById("trans_to_name").value,
+        trans_to_address: document.getElementById("trans_to_address").value,
+        trans_start_date: document.getElementById("trans_start_date").value,
+        trans_time: document.getElementById("trans_time").value,
+        trans_new_expire: document.getElementById("trans_new_expire").value
+      };
+
+      fetch("https://script.google.com/macros/s/AKfycbznlgffCfz1UA0EZOtwKnVcQrPtrFyHRY0FKcdN7vPNIIwCgWOT35NwyIUXEdQ9IU42/exec", {
+        method: "POST",
+        body: JSON.stringify(data),
+        headers: {
+          "Content-Type": "application/json"
+        }
+      })
+      .then(res => res.json())
+      .then(res => {
+        alert("PDF 已產生，將為您開啟預覽。");
+        window.open(res.pdfUrl, '_blank');
+      })
+      .catch(err => {
+        console.error(err);
+        alert("PDF 產出失敗，請稍後再試。");
+      });
+    }
+  </script>
+
+</body>
+</html>
