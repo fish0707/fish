@@ -7,88 +7,127 @@
     body {
       font-family: "微軟正黑體", sans-serif;
       margin: 40px;
-      line-height: 1.6;
+      font-size: 14px;
     }
-    h1, h2 {
+    .logo-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .logo-title img {
+      height: 40px;
+    }
+    .title {
       text-align: center;
+      font-size: 20px;
+      font-weight: bold;
+      margin: 10px 0;
+    }
+    .sub-title {
+      text-align: right;
+      font-size: 12px;
+      margin-bottom: 10px;
     }
     table {
       width: 100%;
       border-collapse: collapse;
-      margin: 20px 0;
+      margin-bottom: 20px;
     }
-    td, th {
-      border: 1px solid #000;
-      padding: 8px;
+    th, td {
+      border: 1px solid black;
+      padding: 6px;
       vertical-align: top;
     }
-    .section-title {
-      font-weight: bold;
-      background-color: #f2f2f2;
-    }
     .note {
-      font-size: 0.95em;
-      margin-top: 10px;
+      border: 1px solid black;
+      padding: 10px;
+      background-color: #f9f9f9;
     }
-    .small {
-      font-size: 0.85em;
+    .note li {
+      margin-bottom: 6px;
     }
-    .signature-table td {
+    .highlight {
+      background-color: yellow;
+      font-weight: bold;
+    }
+    .red {
+      color: red;
+      font-weight: bold;
+    }
+    .footer-table td {
       height: 80px;
+      text-align: center;
+    }
+    .gray-box {
+      background-color: #f0f0f0;
+      padding: 10px;
     }
   </style>
 </head>
 <body>
 
-  <h1>月份異動申請書</h1>
-  <p style="text-align:right;">版本：20250801_V1.0<br>申請日期：______年______月______日</p>
+<div class="logo-title">
+  <div>
+    <strong>統編 54307560</strong><br>
+    今網智慧科技股份有限公司<br>
+    KNST Co., Ltd
+  </div>
+  <img src="https://top1.kingnet.net.tw/images/smartdaily_logo.png" alt="logo"> <!-- 建議使用你自己網站上的LOGO URL -->
+</div>
 
-  <h2>轉移者資料</h2>
-  <table>
-    <tr><td>客戶編號</td><td></td><td>客戶姓名</td><td></td></tr>
-    <tr><td>電話</td><td></td><td>到期日</td><td></td></tr>
-    <tr><td>地址</td><td colspan="3"></td></tr>
-  </table>
+<div class="title">月份異動申請書</div>
+<div class="sub-title">版本:20250801_V1.0　申請日期:　年　月　日</div>
 
-  <h2>承接者資料</h2>
-  <table>
-    <tr><td>客戶編號</td><td></td><td>客戶姓名</td><td></td></tr>
-    <tr><td>地址</td><td colspan="3"></td></tr>
-    <tr><td>轉移起始日</td><td></td><td>轉移時間</td><td></td></tr>
-    <tr><td>轉移後到期日</td><td colspan="3"></td></tr>
-  </table>
+<table>
+  <tr><th colspan="4">轉移者資料</th></tr>
+  <tr><td>客戶編號</td><td></td><td>客戶姓名</td><td></td></tr>
+  <tr><td>電話</td><td></td><td>到期日</td><td></td></tr>
+  <tr><td>地址</td><td colspan="3"></td></tr>
+</table>
 
-  <h2>注意事項</h2>
-  <ol class="note">
-    <li>各項異動服務需填具申請書並檢附登記人雙證件影本方可辦理。</li>
+<table>
+  <tr><th colspan="4">承接者資料</th></tr>
+  <tr><td>客戶編號</td><td></td><td>客戶姓名</td><td></td></tr>
+  <tr><td>地址</td><td colspan="3"></td></tr>
+  <tr><td>轉移起始日</td><td></td><td>轉移時間</td><td></td></tr>
+  <tr><td>轉移後到期日</td><td colspan="3"></td></tr>
+</table>
+
+<div class="note">
+  <strong>注意事項</strong>
+  <ol>
+    <li><span class="highlight">各項異動服務需填具申請書/並檢附登記人雙證件影本方可辦理。</span></li>
     <li>接受月份轉移者，轉移之月份、天數不得再次轉移，亦不得列入退費計算。承接人享月份使用權益，退費權益仍屬原登記人，雙方因月份轉移而肇致糾紛，由轉移雙方當事人負責。</li>
     <li>本申請書之登記人及承接人應確實填具上開資料，如有錯誤或偽冒，願負法律責任。上開資料，本公司僅作申辦異動業務及聯絡使用。</li>
-    <li>本公司保證依隱私權保護相關法令之規定，保護登記人及承接人所提供之資料，除依法律規定、法院命令或相關主管機關依法以書面申請，不得提供與第三人使用。</li>
+    <li>本公司依照隱私保護法令之規定，保護登記人及承接人所提供之資料，除依法或命令，否則不得提供予第三人使用。</li>
   </ol>
+</div>
 
-  <h2>個人資料蒐集暨營業規章與租用契約條款聲明</h2>
-  <p class="small">
-    今網智慧科技(股)（以下稱「本公司」）基於契約、類似契約或其他法律關係，依據法律規定蒐集、處理及利用您的個人資料。蒐集目的包括但不限於：消費者管理與服務、調查、統計與研究分析、廣告或商業行為管理及個人資料之合法交易等。<br>
-    詳細個人資料聲明：https://top1.kingnet.net.tw/rules-person.html<br>
-    營業規章與租用契約條款：https://top1.kingnet.net.tw/rule.html
-  </p>
+<div class="gray-box">
+  <strong>個人資料蒐集暨營業規章與租用契約條款聲明</strong><br>
+  <span class="red">1.個人資料蒐集與利用說明：</span><br>
+  今網智慧科技(股)公司(以下簡稱本公司)，基於契約或類似法律關係，依法蒐集處理及利用您個人資料，蒐集目的包括：消費者管理、統計與分析、契約關係履行及合法之其他用途。<br>
+  詳細請參閱：https://top1.kingnet.net.tw/rules-person.html<br><br>
+  <span class="red">2.營業規章與租用契約條款：</span><br>
+  各項產品之營業規章及租用契約條款，請參閱：https://top1.kingnet.net.tw/rule.html
+</div>
 
-  <h2>回傳方式</h2>
-  <p class="small">
-    本申請書(含證件)，方可透過以下方式回傳並來電412-8166(手機需加區碼)確認，避免遺漏。
-    <br>1. 郵寄：40466 台中市北區太原北路130號10樓
-    <br>2. 電子郵件：service@smartdaily.com.tw
-  </p>
+<h4>回傳方式</h4>
+<ol>
+  <li>郵寄：40466 台中市北區太原北路130號10樓</li>
+  <li>MAIL：service@smartdaily.com.tw</li>
+</ol>
+<p class="red">本人已詳細閱讀備註約定事項及租用條款</p>
 
-  <h2>會辦</h2>
-  <table class="signature-table">
-    <tr>
-      <td>單位主管</td>
-      <td>服務人員</td>
-      <td>用戶簽章</td>
-    </tr>
-  </table>
+<table class="footer-table">
+  <tr>
+    <td>會辦單位 主任</td>
+    <td>服務人員</td>
+    <td>用戶簽章</td>
+  </tr>
+</table>
 
 </body>
 </html>
+
 
