@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>客戶資料轉移系統</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.5.0-beta4/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         body {
@@ -104,6 +105,9 @@
         /* PDF專用樣式 */
         #pdfContainer {
             display: none;
+            position: absolute;
+            left: -9999px;
+            top: -9999px;
         }
         
         .pdf-page {
@@ -1094,7 +1098,7 @@
             }, 500);
         });
         
-        // 下載PDF
+        // 下載PDF (使用html2canvas + jsPDF)
         document.getElementById('downloadBtn').addEventListener('click', function() {
             showLoading('正在生成PDF檔案，請稍候...');
             
@@ -1112,26 +1116,39 @@
                     // 檔案名稱
                     const fileName = `月份轉移申請書_${customerAId}_${customerBId}`;
                     
-                    // 使用html2pdf庫生成PDF
+                    // 使用html2canvas將內容轉為圖片
                     const pdfElement = document.querySelector('.pdf-page');
                     
-                    const opt = {
-                        margin: 0,
-                        filename: `${fileName}.pdf`,
-                        image: { type: 'jpeg', quality: 0.98 },
-                        html2canvas: { scale: 2, useCORS: true },
-                        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-                    };
-                    
-                    html2pdf().from(pdfElement).set(opt).save().then(() => {
+                    html2canvas(pdfElement, {
+                        scale: 2, // 提高解析度
+                        useCORS: true,
+                        logging: false,
+                        allowTaint: true,
+                        backgroundColor: "#ffffff"
+                    }).then(function(canvas) {
+                        // 創建PDF
+                        const { jsPDF } = window.jspdf;
+                        const pdf = new jsPDF('p', 'mm', 'a4');
+                        
+                        // 計算比例以適應A4紙張
+                        const imgWidth = 210; // A4寬度，單位mm
+                        const imgHeight = canvas.height * imgWidth / canvas.width;
+                        
+                        // 將圖片添加到PDF
+                        const imgData = canvas.toDataURL('image/jpeg', 1.0);
+                        pdf.addImage(imgData, 'JPEG', 0, 0, imgWidth, imgHeight);
+                        
+                        // 保存PDF
+                        pdf.save(`${fileName}.pdf`);
+                        
                         // 隱藏PDF容器和載入指示器
                         pdfContainer.style.display = 'none';
                         hideLoading();
                         
                         // 顯示下載成功通知
                         showDownloadToast();
-                    }).catch(error => {
-                        console.error('PDF生成錯誤:', error);
+                    }).catch(function(error) {
+                        console.error('Canvas生成錯誤:', error);
                         alert('PDF生成發生錯誤，請稍後再試。');
                         pdfContainer.style.display = 'none';
                         hideLoading();
@@ -1174,8 +1191,9 @@
         // 設置今天日期為轉移日期的預設值
         document.getElementById('transferDate').value = formatDate(new Date());
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96622e9114bef205',t:'MTc1MzY4MjY5Ni4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96627f45b4baf1d4',t:'MTc1MzY4NjAwMS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
+
 
 
 
