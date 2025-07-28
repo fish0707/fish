@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>客戶資料轉移系統</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         body {
@@ -242,12 +242,6 @@
             text-align: center;
             font-size: 12px;
         }
-        
-        .print-footer {
-            margin-top: 20px;
-            text-align: right;
-            font-size: 11px;
-        }
     </style>
 </head>
 <body>
@@ -266,7 +260,7 @@
                 <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" fill="white"/>
             </svg>
         </div>
-        <span>下載已開始</span>
+        <span>下載已完成</span>
     </div>
 
     <div class="container mx-auto px-4 py-8 max-w-6xl">
@@ -496,16 +490,9 @@
             <div class="card bg-white rounded-lg p-6 mt-8">
                 <h2 class="text-xl font-bold text-gray-800 mb-6">轉移詳情</h2>
                 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label class="block text-gray-500 text-sm mb-1">轉移日期</label>
-                        <p id="result_transferDate" class="text-gray-800 font-medium"></p>
-                    </div>
-                    
-                    <div>
-                        <label class="block text-gray-500 text-sm mb-1">轉移單號</label>
-                        <p id="result_transferId" class="text-gray-800 font-medium"></p>
-                    </div>
+                <div>
+                    <label class="block text-gray-500 text-sm mb-1">轉移日期</label>
+                    <p id="result_transferDate" class="text-gray-800 font-medium"></p>
                 </div>
                 
                 <div class="mt-6">
@@ -642,18 +629,10 @@
                     <div style="margin-bottom: 5px;">客戶簽名</div>
                 </div>
             </div>
-
-            <!-- 轉移單號 -->
-            <div class="print-footer">
-                <div>轉移單號：<span id="print_transfer_id"></span></div>
-            </div>
         </div>
     </div>
 
     <script>
-        // 確保jsPDF已載入
-        window.jsPDF = window.jspdf.jsPDF;
-        
         // 模擬客戶資料庫
         const customerDatabase = {
             'A001': {
@@ -740,16 +719,6 @@
             } catch (e) {
                 return dateStr; // 如果發生錯誤，直接返回原始字串
             }
-        }
-
-        // 生成隨機轉移單號
-        function generateTransferId() {
-            const date = new Date();
-            const year = date.getFullYear();
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const day = String(date.getDate()).padStart(2, '0');
-            const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
-            return `T${year}${month}${day}${random}`;
         }
 
         // 將天數轉換為月份和天數
@@ -910,9 +879,6 @@
                 }
             }
             
-            // 生成轉移單號
-            const transferId = generateTransferId();
-            
             // 隱藏表單，顯示結果
             document.getElementById('inputForm').classList.add('hidden');
             document.getElementById('resultArea').classList.remove('hidden');
@@ -939,7 +905,6 @@
             
             // 填充轉移詳情
             document.getElementById('result_transferDate').textContent = formatDisplayDate(transferDate);
-            document.getElementById('result_transferId').textContent = transferId;
             document.getElementById('result_transferNotes').textContent = document.getElementById('transferNotes').value || '無';
             
             // 填充列印區域資料
@@ -956,7 +921,6 @@
             document.getElementById('print_transfer_start_date').textContent = formatDisplayDate(transferDate);
             document.getElementById('print_transfer_period').textContent = transferDays;
             document.getElementById('print_recipient_newExpiry').textContent = formatDisplayDate(newExpiry);
-            document.getElementById('print_transfer_id').textContent = transferId;
         });
 
         // 返回表單
@@ -996,130 +960,32 @@
                     // 獲取必要的數據
                     const customerAId = document.getElementById('result_transferor_id').textContent;
                     const customerBId = document.getElementById('result_recipient_id').textContent;
-                    const transferId = document.getElementById('result_transferId').textContent;
                     
                     // 檔案名稱
-                    const fileName = `月份轉移申請書_${customerAId}_${customerBId}_${transferId}`;
+                    const fileName = `月份轉移申請書_${customerAId}_${customerBId}`;
                     
-                    // 創建PDF
-                    const pdf = new jsPDF({
-                        orientation: 'portrait',
-                        unit: 'mm',
-                        format: 'a4'
+                    // 使用html2pdf庫生成PDF
+                    const opt = {
+                        margin: 10,
+                        filename: `${fileName}.pdf`,
+                        image: { type: 'jpeg', quality: 0.98 },
+                        html2canvas: { scale: 2, useCORS: true },
+                        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                    };
+                    
+                    html2pdf().from(printArea).set(opt).save().then(() => {
+                        // 隱藏列印區域和載入指示器
+                        printArea.style.display = 'none';
+                        hideLoading();
+                        
+                        // 顯示下載成功通知
+                        showDownloadToast();
+                    }).catch(error => {
+                        console.error('PDF生成錯誤:', error);
+                        alert('PDF生成發生錯誤，請稍後再試。');
+                        printArea.style.display = 'none';
+                        hideLoading();
                     });
-                    
-                    // 添加標題
-                    pdf.setFont('helvetica', 'bold');
-                    pdf.setFontSize(16);
-                    pdf.text('月份轉移申請書', 105, 20, { align: 'center' });
-                    
-                    // 添加公司資訊
-                    pdf.setFontSize(12);
-                    pdf.text('今網智慧科技股份有限公司', 20, 30);
-                    pdf.setFont('helvetica', 'normal');
-                    pdf.setFontSize(10);
-                    pdf.text('統一編號：54307560', 20, 35);
-                    pdf.text('申請日期：' + document.getElementById('print_application_date').textContent, 150, 30, { align: 'right' });
-                    
-                    // 添加分隔線
-                    pdf.setLineWidth(0.5);
-                    pdf.line(20, 40, 190, 40);
-                    
-                    // 轉讓戶資料
-                    pdf.setFont('helvetica', 'bold');
-                    pdf.setFontSize(12);
-                    pdf.text('轉讓戶資料', 20, 50);
-                    
-                    // 表格內容
-                    pdf.setFont('helvetica', 'normal');
-                    pdf.setFontSize(10);
-                    pdf.text('客戶編號：' + document.getElementById('print_transferor_id').textContent, 20, 60);
-                    pdf.text('客戶姓名：' + document.getElementById('print_transferor_name').textContent, 105, 60);
-                    pdf.text('電話：' + document.getElementById('print_transferor_phone').textContent, 20, 70);
-                    pdf.text('到期日：' + document.getElementById('print_transferor_expiry').textContent, 105, 70);
-                    pdf.text('地址：' + document.getElementById('print_transferor_address').textContent, 20, 80);
-                    
-                    // 承接者資料
-                    pdf.setFont('helvetica', 'bold');
-                    pdf.setFontSize(12);
-                    pdf.text('承接者資料', 20, 95);
-                    
-                    // 表格內容
-                    pdf.setFont('helvetica', 'normal');
-                    pdf.setFontSize(10);
-                    pdf.text('客戶編號：' + document.getElementById('print_recipient_id').textContent, 20, 105);
-                    pdf.text('客戶姓名：' + document.getElementById('print_recipient_name').textContent, 105, 105);
-                    pdf.text('地址：' + document.getElementById('print_recipient_address').textContent, 20, 115);
-                    pdf.text('轉移起始日：' + document.getElementById('print_transfer_start_date').textContent, 20, 125);
-                    pdf.text('轉移時間：' + document.getElementById('print_transfer_period').textContent, 105, 125);
-                    pdf.text('轉移後新到期日：' + document.getElementById('print_recipient_newExpiry').textContent, 20, 135);
-                    
-                    // 注意事項
-                    pdf.setFont('helvetica', 'bold');
-                    pdf.setFontSize(12);
-                    pdf.text('【注意事項】', 105, 150, { align: 'center' });
-                    
-                    pdf.setFont('helvetica', 'normal');
-                    pdf.setFontSize(9);
-                    pdf.text('申請程序如下(未盡細項詳租用條款第七條各項)：', 105, 155, { align: 'center' });
-                    
-                    const noticeItems = [
-                        '1. 各項異動服務需填具申請書/並檢附登記人雙證件影本方可辦理。',
-                        '2. 每次暫停期間最長1年，暫停復訊後需屆滿15天，方可再辦理暫停。',
-                        '3. 用戶有主分機者，辦理暫停則主分機將一併暫停。',
-                        '4. 網路暫停天數將如數延長於網路到期日之後。',
-                        '5. 接受月份轉移者，轉移之月份、天數不得再次轉移，亦不得列入退費計算。',
-                        '   承接人享月份使用權益，退費權益仍屬原登記人，雙方因月份轉移而肇致糾紛，由轉移雙方當事人負責。',
-                        '6. 本申請書之登記人及承接人應確實填具上開資料，如有錯誤或偽冒，願負法律責任。',
-                        '   上開資料，本公司僅作申辦異動業務及聯絡使用。',
-                        '7. 本公司保證依隱私權保護相關法令之規定，保護登記人及承接人所提供之資料，',
-                        '   除依法律規定、法院命令或相關主管機關依法以書面申請，不得提供與第三人使用。'
-                    ];
-                    
-                    let yPos = 165;
-                    noticeItems.forEach(item => {
-                        pdf.text(item, 25, yPos);
-                        yPos += 5;
-                    });
-                    
-                    // 回傳方式
-                    pdf.setFont('helvetica', 'bold');
-                    pdf.setFontSize(10);
-                    pdf.text('回傳方式：本申請書(含證件)，方可透過以下方式回傳並來電412-8166(手機需加區碼)確認，避免遺漏。', 105, 220, { align: 'center' });
-                    
-                    pdf.setFont('helvetica', 'normal');
-                    pdf.setFontSize(9);
-                    pdf.text('1. 郵寄：40466-台中市北區太原北路130號10樓', 25, 230);
-                    pdf.text('2. MAIL：service@smartdaily.com.tw', 25, 235);
-                    
-                    // 簽名欄
-                    pdf.setLineWidth(0.5);
-                    pdf.rect(20, 245, 40, 25);
-                    pdf.rect(65, 245, 40, 25);
-                    pdf.rect(110, 245, 40, 25);
-                    pdf.rect(155, 245, 40, 25);
-                    
-                    pdf.setFont('helvetica', 'normal');
-                    pdf.setFontSize(10);
-                    pdf.text('會辦單位', 40, 250, { align: 'center' });
-                    pdf.text('主管', 85, 250, { align: 'center' });
-                    pdf.text('服務人員', 130, 250, { align: 'center' });
-                    pdf.text('客戶簽名', 175, 250, { align: 'center' });
-                    
-                    // 轉移單號
-                    pdf.setFont('helvetica', 'normal');
-                    pdf.setFontSize(9);
-                    pdf.text('轉移單號：' + document.getElementById('print_transfer_id').textContent, 190, 280, { align: 'right' });
-                    
-                    // 下載PDF
-                    pdf.save(`${fileName}.pdf`);
-                    
-                    // 隱藏列印區域和載入指示器
-                    printArea.style.display = 'none';
-                    hideLoading();
-                    
-                    // 顯示下載成功通知
-                    showDownloadToast();
                 } catch (error) {
                     console.error('PDF生成錯誤:', error);
                     alert('PDF生成發生錯誤，請稍後再試。');
@@ -1158,8 +1024,9 @@
         // 設置今天日期為轉移日期的預設值
         document.getElementById('transferDate').value = formatDate(new Date());
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9661692d35cef230',t:'MTc1MzY3NDYxMS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96617662b3bff255',t:'MTc1MzY3NTE1Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
+
 
 
 
