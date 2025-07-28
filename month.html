@@ -5,14 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>客戶資料轉移系統</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Noto Sans TC', sans-serif;
             background-color: #f0f5ff;
-            margin: 0;
-            padding: 0;
         }
         .card {
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
@@ -63,13 +61,21 @@
                 left: 0;
                 top: 0;
                 width: 100%;
-                padding: 0;
-                margin: 0;
+                padding: 20px;
                 background-color: white;
             }
             .no-print {
                 display: none !important;
             }
+        }
+        
+        /* 確保列印區域在列印時可見 */
+        #printArea {
+            display: none;
+            background-color: white;
+            padding: 20px;
+            margin: 0 auto;
+            max-width: 800px;
         }
         
         /* 載入指示器 */
@@ -99,141 +105,52 @@
             100% { transform: rotate(360deg); }
         }
         
-        /* 下載成功通知 */
-        .download-toast {
-            position: fixed;
-            bottom: 24px;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: #323232;
-            color: white;
-            padding: 12px 24px;
-            border-radius: 4px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-            display: flex;
-            align-items: center;
-            z-index: 10001;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-        .download-toast.show {
-            opacity: 1;
-        }
-        .download-toast-icon {
-            margin-right: 12px;
-        }
-        
-        /* PDF專用樣式 */
-        #pdfContainer {
-            display: none;
-        }
-        
-        .pdf-page {
-            width: 210mm;
-            min-height: 297mm;
-            margin: 0;
-            padding: 0;
-            background-color: white;
-            position: relative;
-            box-sizing: border-box;
-            page-break-after: always;
-            overflow: hidden;
-        }
-        
-        .pdf-content {
-            padding: 0;
-        }
-        
-        .print-section {
-            margin-bottom: 5px;
-        }
-        
-        .print-section-title {
-            background-color: #f2f2f2;
-            padding: 3px 5px;
-            font-weight: bold;
-            font-size: 14px;
-            margin-bottom: 3px;
-        }
-        
+        /* 表格樣式 */
         .print-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 5px;
+            border: 1px solid #000;
         }
-        
         .print-table th, .print-table td {
             border: 1px solid #000;
-            padding: 5px;
-            font-size: 12px;
+            padding: 8px;
         }
-        
         .print-table th {
             background-color: #f2f2f2;
-            font-weight: bold;
-            text-align: center;
         }
         
-        .print-notice-box {
+        /* 注意事項和回傳方式框架 */
+        .notice-box {
             border: 1px solid #000;
-            padding: 5px 8px;
-            margin-bottom: 5px;
+            padding: 10px;
+            margin-bottom: 20px;
         }
         
-        .print-notice-title {
+        /* 注意事項標題置中 */
+        .notice-title {
             text-align: center;
             font-weight: bold;
-            margin-bottom: 2px;
-            font-size: 14px;
+            margin-bottom: 10px;
         }
         
-        .print-notice-list {
-            padding-left: 18px;
-            font-size: 11px;
-            margin: 3px 0;
-        }
-        
-        .print-notice-list li {
-            margin-bottom: 1px;
-        }
-        
-        .print-signature-box {
+        /* 簽名欄位 */
+        .signature-box {
             display: flex;
             width: 100%;
-            margin-top: 5px;
+            margin-top: 20px;
         }
-        
-        .print-signature-cell {
+        .signature-cell {
             flex: 1;
             border: 1px solid #000;
-            height: 50px;
-            padding: 3px;
+            height: 120px;
+            padding: 10px;
             text-align: center;
-            font-size: 12px;
         }
         
-        /* 列印區域樣式 */
-        #printArea {
-            display: none;
-            background-color: white;
-            padding: 0;
-            margin: 0;
-            font-family: 'Noto Sans TC', sans-serif;
-            width: 210mm;
-            height: 297mm;
-            position: relative;
-            box-sizing: border-box;
-        }
-        
-        .print-container {
-            padding: 15mm 10mm;
-        }
-        
-        .print-title {
-            text-align: center;
-            font-size: 20px;
-            font-weight: bold;
-            margin: 10px 0 15px 0;
+        /* 注意事項列表左對齊 */
+        .notice-list {
+            text-align: left;
+            width: 100%;
         }
     </style>
 </head>
@@ -244,16 +161,6 @@
             <div class="loading-spinner mx-auto mb-4"></div>
             <p id="loadingText" class="text-lg font-medium text-gray-700">正在處理，請稍候...</p>
         </div>
-    </div>
-
-    <!-- 下載成功通知 -->
-    <div id="downloadToast" class="download-toast">
-        <div class="download-toast-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" fill="white"/>
-            </svg>
-        </div>
-        <span>下載已完成</span>
     </div>
 
     <div class="container mx-auto px-4 py-8 max-w-6xl">
@@ -282,6 +189,17 @@
                     <div class="mb-4">
                         <label class="block text-gray-700 mb-2">姓名</label>
                         <input type="text" id="customerA_name" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="請輸入姓名">
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-gray-700 mb-2">生日</label>
+                            <input type="date" id="customerA_birthday" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 mb-2">身分證號</label>
+                            <input type="text" id="customerA_idNumber" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="請輸入身分證號">
+                        </div>
                     </div>
                     
                     <div class="mb-4">
@@ -324,6 +242,17 @@
                     <div class="mb-4">
                         <label class="block text-gray-700 mb-2">姓名</label>
                         <input type="text" id="customerB_name" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="請輸入姓名">
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-gray-700 mb-2">生日</label>
+                            <input type="date" id="customerB_birthday" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 mb-2">身分證號</label>
+                            <input type="text" id="customerB_idNumber" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="請輸入身分證號">
+                        </div>
                     </div>
                     
                     <div class="mb-4">
@@ -415,6 +344,17 @@
                         <p id="result_transferor_name" class="text-gray-800 font-medium"></p>
                     </div>
                     
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-gray-500 text-sm mb-1">生日</label>
+                            <p id="result_transferor_birthday" class="text-gray-800 font-medium"></p>
+                        </div>
+                        <div>
+                            <label class="block text-gray-500 text-sm mb-1">身分證號</label>
+                            <p id="result_transferor_idNumber" class="text-gray-800 font-medium"></p>
+                        </div>
+                    </div>
+                    
                     <div class="mb-4">
                         <label class="block text-gray-500 text-sm mb-1">地址</label>
                         <p id="result_transferor_address" class="text-gray-800 font-medium"></p>
@@ -456,6 +396,17 @@
                         <p id="result_recipient_name" class="text-gray-800 font-medium"></p>
                     </div>
                     
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-gray-500 text-sm mb-1">生日</label>
+                            <p id="result_recipient_birthday" class="text-gray-800 font-medium"></p>
+                        </div>
+                        <div>
+                            <label class="block text-gray-500 text-sm mb-1">身分證號</label>
+                            <p id="result_recipient_idNumber" class="text-gray-800 font-medium"></p>
+                        </div>
+                    </div>
+                    
                     <div class="mb-4">
                         <label class="block text-gray-500 text-sm mb-1">地址</label>
                         <p id="result_recipient_address" class="text-gray-800 font-medium"></p>
@@ -483,9 +434,16 @@
             <div class="card bg-white rounded-lg p-6 mt-8">
                 <h2 class="text-xl font-bold text-gray-800 mb-6">轉移詳情</h2>
                 
-                <div>
-                    <label class="block text-gray-500 text-sm mb-1">轉移日期</label>
-                    <p id="result_transferDate" class="text-gray-800 font-medium"></p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-gray-500 text-sm mb-1">轉移日期</label>
+                        <p id="result_transferDate" class="text-gray-800 font-medium"></p>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-gray-500 text-sm mb-1">轉移單號</label>
+                        <p id="result_transferId" class="text-gray-800 font-medium"></p>
+                    </div>
                 </div>
                 
                 <div class="mt-6">
@@ -506,134 +464,12 @@
                     </svg>
                     列印轉移單
                 </button>
-                <button id="downloadBtn" class="btn-success text-white px-6 py-3 rounded-md font-medium flex items-center">
+                <button id="downloadPdfBtn" class="btn-success text-white px-6 py-3 rounded-md font-medium flex items-center">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
                     </svg>
-                    下載PDF
+                    下載PDF檔案
                 </button>
-            </div>
-        </div>
-
-        <!-- PDF專用容器 -->
-        <div id="pdfContainer">
-            <div class="pdf-page">
-                <div class="pdf-content">
-                    <!-- 表頭 -->
-                    <div class="flex justify-between items-center mb-6 border-b pb-4">
-                        <div class="flex items-center">
-                            <!-- 今網智生活Logo -->
-                            <div class="mr-4">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 100 100" fill="#3b82f6">
-                                    <path d="M50 0C22.4 0 0 22.4 0 50s22.4 50 50 50 50-22.4 50-50S77.6 0 50 0zm0 90c-22.1 0-40-17.9-40-40s17.9-40 40-40 40 17.9 40 40-17.9 40-40 40z"/>
-                                    <path d="M65 35H35c-2.8 0-5 2.2-5 5v20c0 2.8 2.2 5 5 5h30c2.8 0 5-2.2 5-5V40c0-2.8-2.2-5-5-5zm-5 20H40V45h20v10z"/>
-                                </svg>
-                            </div>
-                            <!-- 公司名稱和統編 -->
-                            <div>
-                                <h2 class="text-xl font-bold">今網智慧科技股份有限公司</h2>
-                                <p class="text-gray-600">統一編號：54307560</p>
-                            </div>
-                        </div>
-                        <!-- 版本號和申請日期 -->
-                        <div class="text-right">
-                            <p class="text-gray-600">版本：20250206_V1.0</p>
-                            <p class="text-gray-600">申請日期：<span id="pdf_application_date"></span></p>
-                        </div>
-                    </div>
-
-                    <div class="print-title">月份轉移申請書</div>
-
-                    <!-- 轉讓戶資料 -->
-                    <div class="print-section">
-                        <div class="print-section-title">轉讓戶資料</div>
-                        <table class="print-table">
-                            <tr>
-                                <td style="width: 25%; background-color: #f2f2f2;">客戶編號</td>
-                                <td style="width: 25%;" id="pdf_transferor_id"></td>
-                                <td style="width: 25%; background-color: #f2f2f2;">客戶姓名</td>
-                                <td style="width: 25%;" id="pdf_transferor_name"></td>
-                            </tr>
-                            <tr>
-                                <td style="background-color: #f2f2f2;">電話</td>
-                                <td id="pdf_transferor_phone"></td>
-                                <td style="background-color: #f2f2f2;">到期日</td>
-                                <td id="pdf_transferor_expiry"></td>
-                            </tr>
-                            <tr>
-                                <td style="background-color: #f2f2f2;">地址</td>
-                                <td colspan="3" id="pdf_transferor_address"></td>
-                            </tr>
-                        </table>
-                    </div>
-
-                    <!-- 承接者資料 -->
-                    <div class="print-section">
-                        <div class="print-section-title">承接者資料</div>
-                        <table class="print-table">
-                            <tr>
-                                <td style="width: 25%; background-color: #f2f2f2;">客戶編號</td>
-                                <td style="width: 25%;" id="pdf_recipient_id"></td>
-                                <td style="width: 25%; background-color: #f2f2f2;">客戶姓名</td>
-                                <td style="width: 25%;" id="pdf_recipient_name"></td>
-                            </tr>
-                            <tr>
-                                <td style="background-color: #f2f2f2;">地址</td>
-                                <td colspan="3" id="pdf_recipient_address"></td>
-                            </tr>
-                            <tr>
-                                <td style="background-color: #f2f2f2;">轉移起始日</td>
-                                <td id="pdf_transfer_start_date"></td>
-                                <td style="background-color: #f2f2f2;">轉移時間</td>
-                                <td id="pdf_transfer_period"></td>
-                            </tr>
-                            <tr>
-                                <td style="background-color: #f2f2f2;">轉移後新到期日</td>
-                                <td colspan="3" id="pdf_recipient_newExpiry"></td>
-                            </tr>
-                        </table>
-                    </div>
-
-                    <!-- 注意事項 -->
-                    <div class="print-notice-box">
-                        <div class="print-notice-title">【注意事項】</div>
-                        <div style="text-align: center; margin-bottom: 2px; font-size: 12px;">申請程序如下(未盡細項詳租用條款第七條各項)：</div>
-                        <ol class="print-notice-list">
-                            <li>各項異動服務需填具申請書/並檢附登記人雙證件影本方可辦理。</li>
-                            <li>每次暫停期間最長1年，暫停復訊後需屆滿15天，方可再辦理暫停。</li>
-                            <li>用戶有主分機者，辦理暫停則主分機將一併暫停。</li>
-                            <li>網路暫停天數將如數延長於網路到期日之後。</li>
-                            <li>接受月份轉移者，轉移之月份、天數不得再次轉移，亦不得列入退費計算。承接人享月份使用權益，退費權益仍屬原登記人，雙方因月份轉移而肇致糾紛，由轉移雙方當事人負責。</li>
-                            <li>本申請書之登記人及承接人應確實填具上開資料，如有錯誤或偽冒，願負法律責任。上開資料，本公司僅作申辦異動業務及聯絡使用。</li>
-                            <li>本公司保證依隱私權保護相關法令之規定，保護登記人及承接人所提供之資料，除依法律規定、法院命令或相關主管機關依法以書面申請，不得提供與第三人使用。</li>
-                        </ol>
-                    </div>
-
-                    <!-- 回傳方式 -->
-                    <div class="print-notice-box">
-                        <div style="text-align: center; margin-bottom: 2px; font-size: 12px; font-weight: bold;">回傳方式：本申請書(含證件)，方可透過以下方式回傳並來電412-8166(手機需加區碼)確認，避免遺漏。</div>
-                        <ol class="print-notice-list">
-                            <li>郵寄：40466-台中市北區太原北路130號10樓</li>
-                            <li>MAIL：service@smartdaily.com.tw</li>
-                        </ol>
-                    </div>
-
-                    <!-- 簽名欄 -->
-                    <div class="print-signature-box">
-                        <div class="print-signature-cell">
-                            <div style="margin-bottom: 5px;">會辦單位</div>
-                        </div>
-                        <div class="print-signature-cell">
-                            <div style="margin-bottom: 5px;">主管</div>
-                        </div>
-                        <div class="print-signature-cell">
-                            <div style="margin-bottom: 5px;">服務人員</div>
-                        </div>
-                        <div class="print-signature-cell">
-                            <div style="margin-bottom: 5px;">客戶簽名</div>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
 
@@ -663,96 +499,108 @@
                     </div>
                 </div>
 
-                <div class="print-title">月份轉移申請書</div>
+                <!-- 標題 -->
+                <div class="text-center mb-8">
+                    <h1 class="text-2xl font-bold">月份轉移申請書</h1>
+                </div>
 
                 <!-- 轉讓戶資料 -->
-                <div class="print-section">
-                    <div class="print-section-title">轉讓戶資料</div>
+                <div class="mb-8">
+                    <h3 class="text-lg font-bold mb-4 bg-gray-100 p-2">轉讓戶資料</h3>
                     <table class="print-table">
                         <tr>
-                            <td style="width: 25%; background-color: #f2f2f2;">客戶編號</td>
-                            <td style="width: 25%;" id="print_transferor_id"></td>
-                            <td style="width: 25%; background-color: #f2f2f2;">客戶姓名</td>
-                            <td style="width: 25%;" id="print_transferor_name"></td>
+                            <td class="bg-gray-50 w-1/4">客戶編號</td>
+                            <td class="w-1/4" id="print_transferor_id"></td>
+                            <td class="bg-gray-50 w-1/4">客戶姓名</td>
+                            <td class="w-1/4" id="print_transferor_name"></td>
                         </tr>
                         <tr>
-                            <td style="background-color: #f2f2f2;">電話</td>
+                            <td class="bg-gray-50">電話</td>
                             <td id="print_transferor_phone"></td>
-                            <td style="background-color: #f2f2f2;">到期日</td>
+                            <td class="bg-gray-50">到期日</td>
                             <td id="print_transferor_expiry"></td>
                         </tr>
                         <tr>
-                            <td style="background-color: #f2f2f2;">地址</td>
+                            <td class="bg-gray-50">地址</td>
                             <td colspan="3" id="print_transferor_address"></td>
                         </tr>
                     </table>
                 </div>
 
                 <!-- 承接者資料 -->
-                <div class="print-section">
-                    <div class="print-section-title">承接者資料</div>
+                <div class="mb-8">
+                    <h3 class="text-lg font-bold mb-4 bg-gray-100 p-2">承接者資料</h3>
                     <table class="print-table">
                         <tr>
-                            <td style="width: 25%; background-color: #f2f2f2;">客戶編號</td>
-                            <td style="width: 25%;" id="print_recipient_id"></td>
-                            <td style="width: 25%; background-color: #f2f2f2;">客戶姓名</td>
-                            <td style="width: 25%;" id="print_recipient_name"></td>
+                            <td class="bg-gray-50 w-1/4">客戶編號</td>
+                            <td class="w-1/4" id="print_recipient_id"></td>
+                            <td class="bg-gray-50 w-1/4">客戶姓名</td>
+                            <td class="w-1/4" id="print_recipient_name"></td>
                         </tr>
                         <tr>
-                            <td style="background-color: #f2f2f2;">地址</td>
+                            <td class="bg-gray-50">地址</td>
                             <td colspan="3" id="print_recipient_address"></td>
                         </tr>
                         <tr>
-                            <td style="background-color: #f2f2f2;">轉移起始日</td>
+                            <td class="bg-gray-50">轉移起始日</td>
                             <td id="print_transfer_start_date"></td>
-                            <td style="background-color: #f2f2f2;">轉移時間</td>
+                            <td class="bg-gray-50">轉移時間</td>
                             <td id="print_transfer_period"></td>
                         </tr>
                         <tr>
-                            <td style="background-color: #f2f2f2;">轉移後新到期日</td>
+                            <td class="bg-gray-50">轉移後新到期日</td>
                             <td colspan="3" id="print_recipient_newExpiry"></td>
                         </tr>
                     </table>
                 </div>
 
                 <!-- 注意事項 -->
-                <div class="print-notice-box">
-                    <div class="print-notice-title">【注意事項】</div>
-                    <div style="text-align: center; margin-bottom: 5px; font-size: 12px;">申請程序如下(未盡細項詳租用條款第七條各項)：</div>
-                    <ol class="print-notice-list">
-                        <li>各項異動服務需填具申請書/並檢附登記人雙證件影本方可辦理。</li>
-                        <li>每次暫停期間最長1年，暫停復訊後需屆滿15天，方可再辦理暫停。</li>
-                        <li>用戶有主分機者，辦理暫停則主分機將一併暫停。</li>
-                        <li>網路暫停天數將如數延長於網路到期日之後。</li>
-                        <li>接受月份轉移者，轉移之月份、天數不得再次轉移，亦不得列入退費計算。承接人享月份使用權益，退費權益仍屬原登記人，雙方因月份轉移而肇致糾紛，由轉移雙方當事人負責。</li>
-                        <li>本申請書之登記人及承接人應確實填具上開資料，如有錯誤或偽冒，願負法律責任。上開資料，本公司僅作申辦異動業務及聯絡使用。</li>
-                        <li>本公司保證依隱私權保護相關法令之規定，保護登記人及承接人所提供之資料，除依法律規定、法院命令或相關主管機關依法以書面申請，不得提供與第三人使用。</li>
-                    </ol>
+                <div class="mb-8 notice-box">
+                    <h3 class="notice-title text-lg">【注意事項】</h3>
+                    <p class="text-center mb-2">申請程序如下(未盡細項詳租用條款第七條各項)：</p>
+                    <div class="notice-list">
+                        <ol class="list-decimal pl-6 text-sm space-y-2">
+                            <li>各項異動服務需填具申請書/並檢附登記人雙證件影本方可辦理。</li>
+                            <li>每次暫停期間最長1年，暫停復訊後需屆滿15天，方可再辦理暫停。</li>
+                            <li>用戶有主分機者，辦理暫停則主分機將一併暫停。</li>
+                            <li>網路暫停天數將如數延長於網路到期日之後。</li>
+                            <li>接受月份轉移者，轉移之月份、天數不得再次轉移，亦不得列入退費計算。承接人享月份使用權益，退費權益仍屬原登記人，雙方因月份轉移而肇致糾紛，由轉移雙方當事人負責。</li>
+                            <li>本申請書之登記人及承接人應確實填具上開資料，如有錯誤或偽冒，願負法律責任。上開資料，本公司僅作申辦異動業務及聯絡使用。</li>
+                            <li>本公司保證依隱私權保護相關法令之規定，保護登記人及承接人所提供之資料，除依法律規定、法院命令或相關主管機關依法以書面申請，不得提供與第三人使用。</li>
+                        </ol>
+                    </div>
                 </div>
 
                 <!-- 回傳方式 -->
-                <div class="print-notice-box">
-                    <div style="text-align: center; margin-bottom: 5px; font-size: 12px; font-weight: bold;">回傳方式：本申請書(含證件)，方可透過以下方式回傳並來電412-8166(手機需加區碼)確認，避免遺漏。</div>
-                    <ol class="print-notice-list">
-                        <li>郵寄：40466-台中市北區太原北路130號10樓</li>
-                        <li>MAIL：service@smartdaily.com.tw</li>
-                    </ol>
+                <div class="mb-8 notice-box">
+                    <p class="text-center mb-2 font-bold">回傳方式：本申請書(含證件)，方可透過以下方式回傳並來電412-8166(手機需加區碼)確認，避免遺漏。</p>
+                    <div class="notice-list">
+                        <ol class="list-decimal pl-6 text-sm">
+                            <li>郵寄：40466-台中市北區太原北路130號10樓</li>
+                            <li>MAIL：service@smartdaily.com.tw</li>
+                        </ol>
+                    </div>
                 </div>
 
                 <!-- 簽名欄 -->
-                <div class="print-signature-box">
-                    <div class="print-signature-cell">
-                        <div style="margin-bottom: 5px;">會辦單位</div>
+                <div class="signature-box">
+                    <div class="signature-cell">
+                        <p class="mb-4">會辦單位</p>
                     </div>
-                    <div class="print-signature-cell">
-                        <div style="margin-bottom: 5px;">主管</div>
+                    <div class="signature-cell">
+                        <p class="mb-4">主管</p>
                     </div>
-                    <div class="print-signature-cell">
-                        <div style="margin-bottom: 5px;">服務人員</div>
+                    <div class="signature-cell">
+                        <p class="mb-4">服務人員</p>
                     </div>
-                    <div class="print-signature-cell">
-                        <div style="margin-bottom: 5px;">客戶簽名</div>
+                    <div class="signature-cell">
+                        <p class="mb-4">客戶簽名</p>
                     </div>
+                </div>
+
+                <!-- 轉移單號 -->
+                <div class="mt-8 text-right">
+                    <p>轉移單號：<span id="print_transfer_id"></span></p>
                 </div>
             </div>
         </div>
@@ -763,24 +611,32 @@
         const customerDatabase = {
             'A001': {
                 name: '王小明',
+                birthday: '1985-05-15',
+                idNumber: 'A123456789',
                 address: '台北市信義區信義路五段7號',
                 phone: '0912-345-678',
                 expiry: '2024-12-31'
             },
             'A002': {
                 name: '李小華',
+                birthday: '1990-08-22',
+                idNumber: 'B234567890',
                 address: '新北市板橋區文化路一段88號',
                 phone: '0923-456-789',
                 expiry: '2024-10-15'
             },
             'B001': {
                 name: '張大為',
+                birthday: '1982-03-10',
+                idNumber: 'C345678901',
                 address: '台中市西區民生路200號',
                 phone: '0934-567-890',
                 expiry: '2024-08-20'
             },
             'B002': {
                 name: '林美玲',
+                birthday: '1988-11-30',
+                idNumber: 'D456789012',
                 address: '高雄市前鎮區中山路99號',
                 phone: '0945-678-901',
                 expiry: '2024-09-05'
@@ -796,15 +652,6 @@
         // 隱藏載入指示器
         function hideLoading() {
             document.getElementById('loadingOverlay').style.display = 'none';
-        }
-
-        // 顯示下載成功通知
-        function showDownloadToast() {
-            const toast = document.getElementById('downloadToast');
-            toast.classList.add('show');
-            setTimeout(() => {
-                toast.classList.remove('show');
-            }, 3000);
         }
 
         // 計算兩個日期之間的天數差
@@ -847,6 +694,16 @@
             }
         }
 
+        // 生成隨機轉移單號
+        function generateTransferId() {
+            const date = new Date();
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+            return `T${year}${month}${day}${random}`;
+        }
+
         // 將天數轉換為月份和天數
         function daysToMonthsAndDays(days) {
             if (!days || isNaN(days)) return '';
@@ -876,6 +733,8 @@
             
             if (customer) {
                 document.getElementById('customerA_name').value = customer.name;
+                document.getElementById('customerA_birthday').value = customer.birthday;
+                document.getElementById('customerA_idNumber').value = customer.idNumber;
                 document.getElementById('customerA_address').value = customer.address;
                 document.getElementById('customerA_phone').value = customer.phone;
                 document.getElementById('customerA_expiry').value = customer.expiry;
@@ -906,6 +765,8 @@
             
             if (customer) {
                 document.getElementById('customerB_name').value = customer.name;
+                document.getElementById('customerB_birthday').value = customer.birthday;
+                document.getElementById('customerB_idNumber').value = customer.idNumber;
                 document.getElementById('customerB_address').value = customer.address;
                 document.getElementById('customerB_phone').value = customer.phone;
                 document.getElementById('customerB_currentExpiry').value = customer.expiry;
@@ -1005,6 +866,9 @@
                 }
             }
             
+            // 生成轉移單號
+            const transferId = generateTransferId();
+            
             // 隱藏表單，顯示結果
             document.getElementById('inputForm').classList.add('hidden');
             document.getElementById('resultArea').classList.remove('hidden');
@@ -1016,6 +880,8 @@
             // 填充轉讓戶資料
             document.getElementById('result_transferor_id').textContent = customerAId;
             document.getElementById('result_transferor_name').textContent = document.getElementById('customerA_name').value;
+            document.getElementById('result_transferor_birthday').textContent = formatDisplayDate(document.getElementById('customerA_birthday').value);
+            document.getElementById('result_transferor_idNumber').textContent = document.getElementById('customerA_idNumber').value;
             document.getElementById('result_transferor_address').textContent = document.getElementById('customerA_address').value;
             document.getElementById('result_transferor_phone').textContent = document.getElementById('customerA_phone').value;
             document.getElementById('result_transferor_expiry').textContent = formatDisplayDate(document.getElementById('customerA_expiry').value);
@@ -1024,6 +890,8 @@
             // 填充承接者資料
             document.getElementById('result_recipient_id').textContent = customerBId;
             document.getElementById('result_recipient_name').textContent = document.getElementById('customerB_name').value;
+            document.getElementById('result_recipient_birthday').textContent = formatDisplayDate(document.getElementById('customerB_birthday').value);
+            document.getElementById('result_recipient_idNumber').textContent = document.getElementById('customerB_idNumber').value;
             document.getElementById('result_recipient_address').textContent = document.getElementById('customerB_address').value;
             document.getElementById('result_recipient_phone').textContent = document.getElementById('customerB_phone').value;
             document.getElementById('result_recipient_oldExpiry').textContent = formatDisplayDate(document.getElementById('customerB_currentExpiry').value);
@@ -1031,12 +899,12 @@
             
             // 填充轉移詳情
             document.getElementById('result_transferDate').textContent = formatDisplayDate(transferDate);
+            document.getElementById('result_transferId').textContent = transferId;
             document.getElementById('result_transferNotes').textContent = document.getElementById('transferNotes').value || '無';
             
             // 填充列印區域資料
-            const currentDate = formatDisplayDate(new Date());
-            document.getElementById('print_application_date').textContent = currentDate;
             document.getElementById('print_transferor_id').textContent = customerAId;
+            document.getElementById('print_application_date').textContent = formatDisplayDate(new Date());
             document.getElementById('print_transferor_name').textContent = document.getElementById('customerA_name').value;
             document.getElementById('print_transferor_phone').textContent = document.getElementById('customerA_phone').value;
             document.getElementById('print_transferor_address').textContent = document.getElementById('customerA_address').value;
@@ -1048,21 +916,7 @@
             document.getElementById('print_transfer_start_date').textContent = formatDisplayDate(transferDate);
             document.getElementById('print_transfer_period').textContent = transferDays;
             document.getElementById('print_recipient_newExpiry').textContent = formatDisplayDate(newExpiry);
-            
-            // 填充PDF區域資料
-            document.getElementById('pdf_application_date').textContent = currentDate;
-            document.getElementById('pdf_transferor_id').textContent = customerAId;
-            document.getElementById('pdf_transferor_name').textContent = document.getElementById('customerA_name').value;
-            document.getElementById('pdf_transferor_phone').textContent = document.getElementById('customerA_phone').value;
-            document.getElementById('pdf_transferor_address').textContent = document.getElementById('customerA_address').value;
-            document.getElementById('pdf_transferor_expiry').textContent = formatDisplayDate(document.getElementById('customerA_expiry').value);
-            
-            document.getElementById('pdf_recipient_id').textContent = customerBId;
-            document.getElementById('pdf_recipient_name').textContent = document.getElementById('customerB_name').value;
-            document.getElementById('pdf_recipient_address').textContent = document.getElementById('customerB_address').value;
-            document.getElementById('pdf_transfer_start_date').textContent = formatDisplayDate(transferDate);
-            document.getElementById('pdf_transfer_period').textContent = transferDays;
-            document.getElementById('pdf_recipient_newExpiry').textContent = formatDisplayDate(newExpiry);
+            document.getElementById('print_transfer_id').textContent = transferId;
         });
 
         // 返回表單
@@ -1088,54 +942,59 @@
             }, 500);
         });
         
-        // 下載PDF
-        document.getElementById('downloadBtn').addEventListener('click', function() {
-            showLoading('正在生成PDF檔案，請稍候...');
+        // 下載PDF檔案 (使用html2canvas將列印區域轉換為圖像)
+        document.getElementById('downloadPdfBtn').addEventListener('click', function() {
+            showLoading('正在生成檔案，請稍候...');
             
-            // 顯示PDF容器
-            const pdfContainer = document.getElementById('pdfContainer');
-            pdfContainer.style.display = 'block';
+            // 獲取必要的數據
+            const customerAId = document.getElementById('result_transferor_id').textContent;
+            const customerBId = document.getElementById('result_recipient_id').textContent;
+            const transferId = document.getElementById('result_transferId').textContent;
             
-            // 使用setTimeout確保DOM已更新
+            // 顯示列印區域
+            const printArea = document.getElementById('printArea');
+            printArea.style.display = 'block';
+            
+            // 確保DOM已更新後再進行轉換
             setTimeout(function() {
-                try {
-                    // 獲取必要的數據
-                    const customerAId = document.getElementById('result_transferor_id').textContent;
-                    const customerBId = document.getElementById('result_recipient_id').textContent;
-                    
-                    // 檔案名稱
-                    const fileName = `月份轉移申請書_${customerAId}_${customerBId}`;
-                    
-                    // 使用html2pdf庫生成PDF
-                    const pdfElement = document.querySelector('.pdf-page');
-                    
-                    const opt = {
-                        margin: 0,
-                        filename: `${fileName}.pdf`,
-                        image: { type: 'jpeg', quality: 0.98 },
-                        html2canvas: { scale: 2, useCORS: true },
-                        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-                    };
-                    
-                    html2pdf().from(pdfElement).set(opt).save().then(() => {
-                        // 隱藏PDF容器和載入指示器
-                        pdfContainer.style.display = 'none';
-                        hideLoading();
+                // 使用html2canvas將列印區域轉換為圖像
+                html2canvas(printArea, {
+                    scale: 2, // 提高解析度
+                    useCORS: true, // 允許跨域圖片
+                    logging: false, // 關閉日誌
+                    backgroundColor: '#ffffff', // 確保背景為白色
+                    allowTaint: true, // 允許污染
+                    foreignObjectRendering: false // 不使用foreignObject渲染
+                }).then(function(canvas) {
+                    try {
+                        // 將canvas轉換為PNG圖像
+                        const imgData = canvas.toDataURL('image/png');
                         
-                        // 顯示下載成功通知
-                        showDownloadToast();
-                    }).catch(error => {
-                        console.error('PDF生成錯誤:', error);
-                        alert('PDF生成發生錯誤，請稍後再試。');
-                        pdfContainer.style.display = 'none';
+                        // 創建下載連結
+                        const link = document.createElement('a');
+                        link.href = imgData;
+                        link.download = `月份轉移申請書_${customerAId}_${customerBId}_${transferId}.png`;
+                        
+                        // 觸發下載
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        
+                        // 隱藏列印區域和載入指示器
+                        printArea.style.display = 'none';
                         hideLoading();
-                    });
-                } catch (error) {
-                    console.error('PDF生成錯誤:', error);
-                    alert('PDF生成發生錯誤，請稍後再試。');
-                    pdfContainer.style.display = 'none';
+                    } catch (error) {
+                        console.error('檔案下載錯誤:', error);
+                        alert('檔案下載發生錯誤，請稍後再試。');
+                        printArea.style.display = 'none';
+                        hideLoading();
+                    }
+                }).catch(function(error) {
+                    console.error('檔案生成錯誤:', error);
+                    alert('檔案生成發生錯誤，請稍後再試。');
+                    printArea.style.display = 'none';
                     hideLoading();
-                }
+                });
             }, 500);
         });
 
@@ -1144,6 +1003,8 @@
             // 重置A客戶資料
             document.getElementById('customerA_id').value = '';
             document.getElementById('customerA_name').value = '';
+            document.getElementById('customerA_birthday').value = '';
+            document.getElementById('customerA_idNumber').value = '';
             document.getElementById('customerA_address').value = '';
             document.getElementById('customerA_phone').value = '';
             document.getElementById('customerA_expiry').value = '';
@@ -1153,6 +1014,8 @@
             // 重置B客戶資料
             document.getElementById('customerB_id').value = '';
             document.getElementById('customerB_name').value = '';
+            document.getElementById('customerB_birthday').value = '';
+            document.getElementById('customerB_idNumber').value = '';
             document.getElementById('customerB_address').value = '';
             document.getElementById('customerB_phone').value = '';
             document.getElementById('customerB_currentExpiry').value = '';
@@ -1168,6 +1031,6 @@
         // 設置今天日期為轉移日期的預設值
         document.getElementById('transferDate').value = formatDate(new Date());
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'966223c67253f238',t:'MTc1MzY4MjI1NC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9659e3fa523df238',t:'MTc1MzU5NTc1NS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
 
