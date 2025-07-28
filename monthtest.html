@@ -107,68 +107,6 @@
             100% { transform: rotate(360deg); }
         }
         
-        /* 表格樣式 - 縮小間距 */
-        .print-table {
-            width: 100%;
-            border-collapse: collapse;
-            border: 1px solid #000;
-        }
-        .print-table th, .print-table td {
-            border: 1px solid #000;
-            padding: 4px; /* 縮小表格內間距 */
-            font-size: 11px; /* 縮小表格字體 */
-        }
-        .print-table th {
-            background-color: #f2f2f2;
-        }
-        
-        /* 注意事項和回傳方式框架 - 縮小間距 */
-        .notice-box {
-            border: 1px solid #000;
-            padding: 6px; /* 縮小內間距 */
-            margin-bottom: 10px; /* 縮小底部間距 */
-        }
-        
-        /* 注意事項標題置中 */
-        .notice-title {
-            text-align: center;
-            font-weight: bold;
-            margin-bottom: 5px; /* 縮小底部間距 */
-            font-size: 13px; /* 調整標題大小 */
-        }
-        
-        /* 簽名欄位 - 縮小高度 */
-        .signature-box {
-            display: flex;
-            width: 100%;
-            margin-top: 10px; /* 縮小頂部間距 */
-        }
-        .signature-cell {
-            flex: 1;
-            border: 1px solid #000;
-            height: 80px; /* 縮小簽名欄高度 */
-            padding: 5px;
-            text-align: center;
-            font-size: 11px; /* 縮小字體 */
-        }
-        
-        /* 注意事項列表左對齊 */
-        .notice-list {
-            text-align: left;
-            width: 100%;
-        }
-        
-        /* 注意事項列表項目 - 縮小間距和字體 */
-        .notice-list ol {
-            padding-left: 20px; /* 縮小左邊間距 */
-            margin: 5px 0; /* 縮小上下間距 */
-        }
-        .notice-list ol li {
-            font-size: 10px; /* 縮小列表項目字體 */
-            margin-bottom: 2px; /* 縮小項目間距 */
-            line-height: 1.3; /* 縮小行高 */
-        }
-
         /* Google文件風格的下載對話框 */
         .google-dialog {
             position: fixed;
@@ -268,27 +206,6 @@
             margin-right: 12px;
         }
         
-        /* 調整列印區域的間距 */
-        .print-container {
-            padding: 10px;
-        }
-        
-        /* 調整表頭間距 */
-        .print-header {
-            margin-bottom: 10px;
-            padding-bottom: 10px;
-        }
-        
-        /* 調整標題間距 */
-        .print-title {
-            margin-bottom: 10px;
-        }
-        
-        /* 調整區塊間距 */
-        .print-section {
-            margin-bottom: 10px;
-        }
-        
         /* 調整頁面縮放選項 */
         .page-scale-options {
             margin-top: 10px;
@@ -300,6 +217,129 @@
         .page-scale-options label {
             margin-right: 15px;
             cursor: pointer;
+        }
+        
+        /* 新的Google文件風格PDF樣式 */
+        .google-doc-container {
+            width: 210mm; /* A4寬度 */
+            padding: 20mm 15mm; /* 上下左右邊距 */
+            background-color: white;
+            box-sizing: border-box;
+            font-family: 'Noto Sans TC', Arial, sans-serif;
+            line-height: 1.5;
+        }
+        
+        .doc-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #000;
+            padding-bottom: 10px;
+        }
+        
+        .doc-header-left {
+            display: flex;
+            align-items: center;
+        }
+        
+        .doc-logo {
+            width: 120px;
+            margin-right: 15px;
+        }
+        
+        .doc-company-info {
+            font-size: 12px;
+        }
+        
+        .doc-company-name {
+            font-weight: bold;
+            font-size: 16px;
+            margin-bottom: 3px;
+        }
+        
+        .doc-header-right {
+            text-align: right;
+            font-size: 12px;
+        }
+        
+        .doc-title {
+            text-align: center;
+            font-size: 20px;
+            font-weight: bold;
+            margin: 15px 0;
+        }
+        
+        .doc-section {
+            margin-bottom: 15px;
+        }
+        
+        .doc-section-title {
+            background-color: #f2f2f2;
+            padding: 5px;
+            font-weight: bold;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+        
+        .doc-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 10px;
+        }
+        
+        .doc-table th, .doc-table td {
+            border: 1px solid #000;
+            padding: 5px;
+            font-size: 12px;
+        }
+        
+        .doc-table th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+            text-align: center;
+        }
+        
+        .doc-notice-box {
+            border: 1px solid #000;
+            padding: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .doc-notice-title {
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+        
+        .doc-notice-list {
+            padding-left: 20px;
+            font-size: 11px;
+        }
+        
+        .doc-notice-list li {
+            margin-bottom: 3px;
+        }
+        
+        .doc-signature-box {
+            display: flex;
+            width: 100%;
+            margin-top: 15px;
+        }
+        
+        .doc-signature-cell {
+            flex: 1;
+            border: 1px solid #000;
+            height: 70px;
+            padding: 5px;
+            text-align: center;
+            font-size: 12px;
+        }
+        
+        .doc-footer {
+            margin-top: 10px;
+            text-align: right;
+            font-size: 11px;
         }
     </style>
 </head>
@@ -641,135 +681,120 @@
             </div>
         </div>
 
-        <!-- 列印區域 -->
-        <div id="printArea">
-            <div class="print-container">
-                <!-- 表頭 -->
-                <div class="flex justify-between items-center mb-4 border-b pb-2 print-header">
-                    <div class="flex items-center">
-                        <!-- 今網智生活Logo -->
-                        <div class="mr-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 100 100" fill="#3b82f6">
-                                <path d="M50 0C22.4 0 0 22.4 0 50s22.4 50 50 50 50-22.4 50-50S77.6 0 50 0zm0 90c-22.1 0-40-17.9-40-40s17.9-40 40-40 40 17.9 40 40-17.9 40-40 40z"/>
-                                <path d="M65 35H35c-2.8 0-5 2.2-5 5v20c0 2.8 2.2 5 5 5h30c2.8 0 5-2.2 5-5V40c0-2.8-2.2-5-5-5zm-5 20H40V45h20v10z"/>
-                            </svg>
-                        </div>
-                        <!-- 公司名稱和統編 -->
-                        <div>
-                            <h2 class="text-base font-bold">今網智慧科技股份有限公司</h2>
-                            <p class="text-xs text-gray-600">統一編號：54307560</p>
-                        </div>
-                    </div>
-                    <!-- 版本號和申請日期 -->
-                    <div class="text-right">
-                        <p class="text-xs text-gray-600">版本：20250206_V1.0</p>
-                        <p class="text-xs text-gray-600">申請日期：<span id="print_application_date"></span></p>
+        <!-- 列印區域 - 使用Google文件風格 -->
+        <div id="printArea" class="google-doc-container">
+            <!-- 表頭 -->
+            <div class="doc-header">
+                <div class="doc-header-left">
+                    <!-- 今網智生活Logo -->
+                    <img src="https://lh3.googleusercontent.com/d/1Hs-Ug0Yx_Nh9Ov9HlIRuGpLRJO-nTMqn" alt="今網智生活Logo" class="doc-logo">
+                    <div class="doc-company-info">
+                        <div class="doc-company-name">今網智慧科技股份有限公司</div>
+                        <div>統一編號：54307560</div>
                     </div>
                 </div>
+                <div class="doc-header-right">
+                    <div>版本：20250206_V1.0</div>
+                    <div>申請日期：<span id="print_application_date"></span></div>
+                </div>
+            </div>
 
-                <!-- 標題 -->
-                <div class="text-center mb-4 print-title">
-                    <h1 class="text-xl font-bold">月份轉移申請書</h1>
-                </div>
+            <!-- 標題 -->
+            <div class="doc-title">月份轉移申請書</div>
 
-                <!-- 轉讓戶資料 -->
-                <div class="mb-4 print-section">
-                    <h3 class="text-sm font-bold mb-2 bg-gray-100 p-1">轉讓戶資料</h3>
-                    <table class="print-table">
-                        <tr>
-                            <td class="bg-gray-50 w-1/4">客戶編號</td>
-                            <td class="w-1/4" id="print_transferor_id"></td>
-                            <td class="bg-gray-50 w-1/4">客戶姓名</td>
-                            <td class="w-1/4" id="print_transferor_name"></td>
-                        </tr>
-                        <tr>
-                            <td class="bg-gray-50">電話</td>
-                            <td id="print_transferor_phone"></td>
-                            <td class="bg-gray-50">到期日</td>
-                            <td id="print_transferor_expiry"></td>
-                        </tr>
-                        <tr>
-                            <td class="bg-gray-50">地址</td>
-                            <td colspan="3" id="print_transferor_address"></td>
-                        </tr>
-                    </table>
-                </div>
+            <!-- 轉讓戶資料 -->
+            <div class="doc-section">
+                <div class="doc-section-title">轉讓戶資料</div>
+                <table class="doc-table">
+                    <tr>
+                        <td style="width: 25%; background-color: #f2f2f2;">客戶編號</td>
+                        <td style="width: 25%;" id="print_transferor_id"></td>
+                        <td style="width: 25%; background-color: #f2f2f2;">客戶姓名</td>
+                        <td style="width: 25%;" id="print_transferor_name"></td>
+                    </tr>
+                    <tr>
+                        <td style="background-color: #f2f2f2;">電話</td>
+                        <td id="print_transferor_phone"></td>
+                        <td style="background-color: #f2f2f2;">到期日</td>
+                        <td id="print_transferor_expiry"></td>
+                    </tr>
+                    <tr>
+                        <td style="background-color: #f2f2f2;">地址</td>
+                        <td colspan="3" id="print_transferor_address"></td>
+                    </tr>
+                </table>
+            </div>
 
-                <!-- 承接者資料 -->
-                <div class="mb-4 print-section">
-                    <h3 class="text-sm font-bold mb-2 bg-gray-100 p-1">承接者資料</h3>
-                    <table class="print-table">
-                        <tr>
-                            <td class="bg-gray-50 w-1/4">客戶編號</td>
-                            <td class="w-1/4" id="print_recipient_id"></td>
-                            <td class="bg-gray-50 w-1/4">客戶姓名</td>
-                            <td class="w-1/4" id="print_recipient_name"></td>
-                        </tr>
-                        <tr>
-                            <td class="bg-gray-50">地址</td>
-                            <td colspan="3" id="print_recipient_address"></td>
-                        </tr>
-                        <tr>
-                            <td class="bg-gray-50">轉移起始日</td>
-                            <td id="print_transfer_start_date"></td>
-                            <td class="bg-gray-50">轉移時間</td>
-                            <td id="print_transfer_period"></td>
-                        </tr>
-                        <tr>
-                            <td class="bg-gray-50">轉移後新到期日</td>
-                            <td colspan="3" id="print_recipient_newExpiry"></td>
-                        </tr>
-                    </table>
-                </div>
+            <!-- 承接者資料 -->
+            <div class="doc-section">
+                <div class="doc-section-title">承接者資料</div>
+                <table class="doc-table">
+                    <tr>
+                        <td style="width: 25%; background-color: #f2f2f2;">客戶編號</td>
+                        <td style="width: 25%;" id="print_recipient_id"></td>
+                        <td style="width: 25%; background-color: #f2f2f2;">客戶姓名</td>
+                        <td style="width: 25%;" id="print_recipient_name"></td>
+                    </tr>
+                    <tr>
+                        <td style="background-color: #f2f2f2;">地址</td>
+                        <td colspan="3" id="print_recipient_address"></td>
+                    </tr>
+                    <tr>
+                        <td style="background-color: #f2f2f2;">轉移起始日</td>
+                        <td id="print_transfer_start_date"></td>
+                        <td style="background-color: #f2f2f2;">轉移時間</td>
+                        <td id="print_transfer_period"></td>
+                    </tr>
+                    <tr>
+                        <td style="background-color: #f2f2f2;">轉移後新到期日</td>
+                        <td colspan="3" id="print_recipient_newExpiry"></td>
+                    </tr>
+                </table>
+            </div>
 
-                <!-- 注意事項 -->
-                <div class="mb-4 notice-box print-section">
-                    <h3 class="notice-title">【注意事項】</h3>
-                    <p class="text-center mb-1 text-xs">申請程序如下(未盡細項詳租用條款第七條各項)：</p>
-                    <div class="notice-list">
-                        <ol class="list-decimal pl-4 text-xs space-y-1">
-                            <li>各項異動服務需填具申請書/並檢附登記人雙證件影本方可辦理。</li>
-                            <li>每次暫停期間最長1年，暫停復訊後需屆滿15天，方可再辦理暫停。</li>
-                            <li>用戶有主分機者，辦理暫停則主分機將一併暫停。</li>
-                            <li>網路暫停天數將如數延長於網路到期日之後。</li>
-                            <li>接受月份轉移者，轉移之月份、天數不得再次轉移，亦不得列入退費計算。承接人享月份使用權益，退費權益仍屬原登記人，雙方因月份轉移而肇致糾紛，由轉移雙方當事人負責。</li>
-                            <li>本申請書之登記人及承接人應確實填具上開資料，如有錯誤或偽冒，願負法律責任。上開資料，本公司僅作申辦異動業務及聯絡使用。</li>
-                            <li>本公司保證依隱私權保護相關法令之規定，保護登記人及承接人所提供之資料，除依法律規定、法院命令或相關主管機關依法以書面申請，不得提供與第三人使用。</li>
-                        </ol>
-                    </div>
-                </div>
+            <!-- 注意事項 -->
+            <div class="doc-notice-box">
+                <div class="doc-notice-title">【注意事項】</div>
+                <div style="text-align: center; margin-bottom: 5px; font-size: 12px;">申請程序如下(未盡細項詳租用條款第七條各項)：</div>
+                <ol class="doc-notice-list">
+                    <li>各項異動服務需填具申請書/並檢附登記人雙證件影本方可辦理。</li>
+                    <li>每次暫停期間最長1年，暫停復訊後需屆滿15天，方可再辦理暫停。</li>
+                    <li>用戶有主分機者，辦理暫停則主分機將一併暫停。</li>
+                    <li>網路暫停天數將如數延長於網路到期日之後。</li>
+                    <li>接受月份轉移者，轉移之月份、天數不得再次轉移，亦不得列入退費計算。承接人享月份使用權益，退費權益仍屬原登記人，雙方因月份轉移而肇致糾紛，由轉移雙方當事人負責。</li>
+                    <li>本申請書之登記人及承接人應確實填具上開資料，如有錯誤或偽冒，願負法律責任。上開資料，本公司僅作申辦異動業務及聯絡使用。</li>
+                    <li>本公司保證依隱私權保護相關法令之規定，保護登記人及承接人所提供之資料，除依法律規定、法院命令或相關主管機關依法以書面申請，不得提供與第三人使用。</li>
+                </ol>
+            </div>
 
-                <!-- 回傳方式 -->
-                <div class="mb-4 notice-box print-section">
-                    <p class="text-center mb-1 text-xs font-bold">回傳方式：本申請書(含證件)，方可透過以下方式回傳並來電412-8166(手機需加區碼)確認，避免遺漏。</p>
-                    <div class="notice-list">
-                        <ol class="list-decimal pl-4 text-xs">
-                            <li>郵寄：40466-台中市北區太原北路130號10樓</li>
-                            <li>MAIL：service@smartdaily.com.tw</li>
-                        </ol>
-                    </div>
-                </div>
+            <!-- 回傳方式 -->
+            <div class="doc-notice-box">
+                <div style="text-align: center; margin-bottom: 5px; font-size: 12px; font-weight: bold;">回傳方式：本申請書(含證件)，方可透過以下方式回傳並來電412-8166(手機需加區碼)確認，避免遺漏。</div>
+                <ol class="doc-notice-list">
+                    <li>郵寄：40466-台中市北區太原北路130號10樓</li>
+                    <li>MAIL：service@smartdaily.com.tw</li>
+                </ol>
+            </div>
 
-                <!-- 簽名欄 -->
-                <div class="signature-box print-section">
-                    <div class="signature-cell">
-                        <p class="mb-2">會辦單位</p>
-                    </div>
-                    <div class="signature-cell">
-                        <p class="mb-2">主管</p>
-                    </div>
-                    <div class="signature-cell">
-                        <p class="mb-2">服務人員</p>
-                    </div>
-                    <div class="signature-cell">
-                        <p class="mb-2">客戶簽名</p>
-                    </div>
+            <!-- 簽名欄 -->
+            <div class="doc-signature-box">
+                <div class="doc-signature-cell">
+                    <div style="margin-bottom: 5px;">會辦單位</div>
                 </div>
+                <div class="doc-signature-cell">
+                    <div style="margin-bottom: 5px;">主管</div>
+                </div>
+                <div class="doc-signature-cell">
+                    <div style="margin-bottom: 5px;">服務人員</div>
+                </div>
+                <div class="doc-signature-cell">
+                    <div style="margin-bottom: 5px;">客戶簽名</div>
+                </div>
+            </div>
 
-                <!-- 轉移單號 -->
-                <div class="mt-4 text-right text-xs">
-                    <p>轉移單號：<span id="print_transfer_id"></span></p>
-                </div>
+            <!-- 轉移單號 -->
+            <div class="doc-footer">
+                <div>轉移單號：<span id="print_transfer_id"></span></div>
             </div>
         </div>
     </div>
@@ -1079,8 +1104,8 @@
             document.getElementById('result_transferNotes').textContent = document.getElementById('transferNotes').value || '無';
             
             // 填充列印區域資料
-            document.getElementById('print_transferor_id').textContent = customerAId;
             document.getElementById('print_application_date').textContent = formatDisplayDate(new Date());
+            document.getElementById('print_transferor_id').textContent = customerAId;
             document.getElementById('print_transferor_name').textContent = document.getElementById('customerA_name').value;
             document.getElementById('print_transferor_phone').textContent = document.getElementById('customerA_phone').value;
             document.getElementById('print_transferor_address').textContent = document.getElementById('customerA_address').value;
@@ -1153,105 +1178,122 @@
             const printArea = document.getElementById('printArea');
             printArea.style.display = 'block';
             
-            // 確保DOM已更新後再進行轉換
-            setTimeout(function() {
-                // 使用html2canvas將列印區域轉換為圖像
-                html2canvas(printArea, {
-                    scale: 2, // 提高解析度
-                    useCORS: true, // 允許跨域圖片
-                    logging: false, // 關閉日誌
-                    backgroundColor: '#ffffff', // 確保背景為白色
-                    allowTaint: true, // 允許污染
-                    foreignObjectRendering: false // 不使用foreignObject渲染
-                }).then(function(canvas) {
-                    try {
-                        if (fileFormat === 'pdf') {
-                            // 創建PDF
-                            const imgData = canvas.toDataURL('image/jpeg', 1.0);
-                            const pdf = new jsPDF({
-                                orientation: 'portrait',
-                                unit: 'mm',
-                                format: 'a4'
-                            });
-                            
-                            // 計算PDF頁面尺寸
-                            const imgWidth = 210; // A4寬度，單位mm
-                            const pageHeight = 297; // A4高度，單位mm
-                            
-                            if (pageScale === 'fit') {
-                                // 自動縮放至一頁
-                                const imgHeight = canvas.height * imgWidth / canvas.width;
+            // 確保圖片已載入
+            const logoImg = new Image();
+            logoImg.onload = function() {
+                // 確保DOM已更新後再進行轉換
+                setTimeout(function() {
+                    // 使用html2canvas將列印區域轉換為圖像
+                    html2canvas(printArea, {
+                        scale: 2, // 提高解析度
+                        useCORS: true, // 允許跨域圖片
+                        logging: false, // 關閉日誌
+                        backgroundColor: '#ffffff', // 確保背景為白色
+                        allowTaint: true, // 允許污染
+                        foreignObjectRendering: false // 不使用foreignObject渲染
+                    }).then(function(canvas) {
+                        try {
+                            if (fileFormat === 'pdf') {
+                                // 創建PDF
+                                const imgData = canvas.toDataURL('image/jpeg', 1.0);
+                                const pdf = new jsPDF({
+                                    orientation: 'portrait',
+                                    unit: 'mm',
+                                    format: 'a4'
+                                });
                                 
-                                // 如果內容高度超過A4高度，進行縮放
-                                if (imgHeight > pageHeight) {
-                                    const scale = pageHeight / imgHeight;
-                                    const scaledWidth = imgWidth * scale;
+                                // 計算PDF頁面尺寸
+                                const imgWidth = 210; // A4寬度，單位mm
+                                const pageHeight = 297; // A4高度，單位mm
+                                
+                                if (pageScale === 'fit') {
+                                    // 自動縮放至一頁
+                                    const imgHeight = canvas.height * imgWidth / canvas.width;
                                     
-                                    // 居中放置
-                                    const xOffset = (imgWidth - scaledWidth) / 2;
-                                    pdf.addImage(imgData, 'JPEG', xOffset, 0, scaledWidth, pageHeight);
+                                    // 如果內容高度超過A4高度，進行縮放
+                                    if (imgHeight > pageHeight) {
+                                        const scale = pageHeight / imgHeight;
+                                        const scaledWidth = imgWidth * scale;
+                                        
+                                        // 居中放置
+                                        const xOffset = (imgWidth - scaledWidth) / 2;
+                                        pdf.addImage(imgData, 'JPEG', xOffset, 0, scaledWidth, pageHeight);
+                                    } else {
+                                        // 不需要縮放，直接添加
+                                        pdf.addImage(imgData, 'JPEG', 0, 0, imgWidth, imgHeight);
+                                    }
                                 } else {
-                                    // 不需要縮放，直接添加
+                                    // 實際大小
+                                    const imgHeight = canvas.height * imgWidth / canvas.width;
                                     pdf.addImage(imgData, 'JPEG', 0, 0, imgWidth, imgHeight);
+                                    
+                                    // 如果內容超過一頁，添加新頁面
+                                    let heightLeft = imgHeight;
+                                    let position = 0;
+                                    
+                                    while (heightLeft > pageHeight) {
+                                        position = heightLeft - pageHeight;
+                                        pdf.addPage();
+                                        pdf.addImage(imgData, 'JPEG', 0, -position, imgWidth, imgHeight);
+                                        heightLeft -= pageHeight;
+                                    }
                                 }
-                            } else {
-                                // 實際大小
-                                const imgHeight = canvas.height * imgWidth / canvas.width;
-                                pdf.addImage(imgData, 'JPEG', 0, 0, imgWidth, imgHeight);
                                 
-                                // 如果內容超過一頁，添加新頁面
-                                let heightLeft = imgHeight;
-                                let position = 0;
-                                
-                                while (heightLeft > pageHeight) {
-                                    position = heightLeft - pageHeight;
-                                    pdf.addPage();
-                                    pdf.addImage(imgData, 'JPEG', 0, -position, imgWidth, imgHeight);
-                                    heightLeft -= pageHeight;
-                                }
+                                // 下載PDF
+                                pdf.save(`${fileName}.pdf`);
+                            } else if (fileFormat === 'png') {
+                                // 下載PNG
+                                const imgData = canvas.toDataURL('image/png');
+                                const link = document.createElement('a');
+                                link.href = imgData;
+                                link.download = `${fileName}.png`;
+                                document.body.appendChild(link);
+                                link.click();
+                                document.body.removeChild(link);
+                            } else if (fileFormat === 'jpg') {
+                                // 下載JPG
+                                const imgData = canvas.toDataURL('image/jpeg', 0.9);
+                                const link = document.createElement('a');
+                                link.href = imgData;
+                                link.download = `${fileName}.jpg`;
+                                document.body.appendChild(link);
+                                link.click();
+                                document.body.removeChild(link);
                             }
                             
-                            // 下載PDF
-                            pdf.save(`${fileName}.pdf`);
-                        } else if (fileFormat === 'png') {
-                            // 下載PNG
-                            const imgData = canvas.toDataURL('image/png');
-                            const link = document.createElement('a');
-                            link.href = imgData;
-                            link.download = `${fileName}.png`;
-                            document.body.appendChild(link);
-                            link.click();
-                            document.body.removeChild(link);
-                        } else if (fileFormat === 'jpg') {
-                            // 下載JPG
-                            const imgData = canvas.toDataURL('image/jpeg', 0.9);
-                            const link = document.createElement('a');
-                            link.href = imgData;
-                            link.download = `${fileName}.jpg`;
-                            document.body.appendChild(link);
-                            link.click();
-                            document.body.removeChild(link);
+                            // 隱藏列印區域和載入指示器
+                            printArea.style.display = 'none';
+                            hideLoading();
+                            
+                            // 顯示下載成功通知
+                            showDownloadToast();
+                        } catch (error) {
+                            console.error('檔案下載錯誤:', error);
+                            alert('檔案下載發生錯誤，請稍後再試。');
+                            printArea.style.display = 'none';
+                            hideLoading();
                         }
-                        
-                        // 隱藏列印區域和載入指示器
+                    }).catch(function(error) {
+                        console.error('檔案生成錯誤:', error);
+                        alert('檔案生成發生錯誤，請稍後再試。');
                         printArea.style.display = 'none';
                         hideLoading();
-                        
-                        // 顯示下載成功通知
-                        showDownloadToast();
-                    } catch (error) {
-                        console.error('檔案下載錯誤:', error);
-                        alert('檔案下載發生錯誤，請稍後再試。');
-                        printArea.style.display = 'none';
-                        hideLoading();
-                    }
-                }).catch(function(error) {
-                    console.error('檔案生成錯誤:', error);
-                    alert('檔案生成發生錯誤，請稍後再試。');
+                    });
+                }, 500);
+            };
+            
+            // 設置圖片來源，觸發載入
+            logoImg.src = "https://lh3.googleusercontent.com/d/1Hs-Ug0Yx_Nh9Ov9HlIRuGpLRJO-nTMqn";
+            
+            // 如果圖片已經在緩存中，可能不會觸發onload事件，所以添加一個備用計時器
+            setTimeout(function() {
+                if (!logoImg.complete) {
+                    // 如果圖片還沒載入完成，顯示錯誤
+                    alert('無法載入公司Logo，請確保網絡連接正常。');
                     printArea.style.display = 'none';
                     hideLoading();
-                });
-            }, 500);
+                }
+            }, 5000); // 5秒超時
         });
 
         // 重置表單
@@ -1288,8 +1330,9 @@
         // 設置今天日期為轉移日期的預設值
         document.getElementById('transferDate').value = formatDate(new Date());
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'966114ec16edf251',t:'MTc1MzY3MTE2MC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96612015233bf209',t:'MTc1MzY3MTYxNy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
+
 
 
 
