@@ -120,17 +120,21 @@
             margin-right: 12px;
         }
         
-        /* 列印區域樣式 */
-        #printArea {
+        /* PDF專用樣式 */
+        #pdfContainer {
             display: none;
-            background-color: white;
-            padding: 20px;
-            font-family: 'Noto Sans TC', sans-serif;
-            width: 210mm; /* A4寬度 */
-            height: 297mm; /* A4高度 */
+        }
+        
+        .pdf-page {
+            width: 210mm;
+            height: 297mm;
             margin: 0 auto;
+            background-color: white;
             position: relative;
             box-sizing: border-box;
+            padding: 15mm;
+            page-break-after: always;
+            overflow: hidden;
         }
         
         .print-header {
@@ -246,25 +250,17 @@
             font-size: 12px;
         }
         
-        /* PDF專用樣式 */
-        #pdfContainer {
+        /* 列印區域樣式 */
+        #printArea {
             display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-        }
-        
-        #pdfContent {
-            width: 210mm;
-            min-height: 297mm;
-            margin: 0 auto;
             background-color: white;
-            padding: 20mm;
-            box-sizing: border-box;
+            padding: 20px;
             font-family: 'Noto Sans TC', sans-serif;
+            width: 210mm;
+            height: 297mm;
+            margin: 0 auto;
+            position: relative;
+            box-sizing: border-box;
         }
     </style>
 </head>
@@ -548,7 +544,7 @@
 
         <!-- PDF專用容器 -->
         <div id="pdfContainer">
-            <div id="pdfContent">
+            <div class="pdf-page">
                 <div class="print-header">
                     <div class="print-header-left">
                         <div class="print-logo">今網智生活</div>
@@ -1116,17 +1112,17 @@
                     const fileName = `月份轉移申請書_${customerAId}_${customerBId}`;
                     
                     // 使用html2pdf庫生成PDF
-                    const pdfContent = document.getElementById('pdfContent');
+                    const pdfElement = document.querySelector('.pdf-page');
                     
                     const opt = {
-                        margin: 10,
+                        margin: 0,
                         filename: `${fileName}.pdf`,
                         image: { type: 'jpeg', quality: 0.98 },
                         html2canvas: { scale: 2, useCORS: true },
                         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
                     };
                     
-                    html2pdf().from(pdfContent).set(opt).save().then(() => {
+                    html2pdf().from(pdfElement).set(opt).save().then(() => {
                         // 隱藏PDF容器和載入指示器
                         pdfContainer.style.display = 'none';
                         hideLoading();
@@ -1177,8 +1173,9 @@
         // 設置今天日期為轉移日期的預設值
         document.getElementById('transferDate').value = formatDate(new Date());
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'966186fd364bf205',t:'MTc1MzY3NTgzMi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9661a88876f5f255',t:'MTc1MzY3NzIwNi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
+
 
 
 
