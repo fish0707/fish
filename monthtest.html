@@ -5,8 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>客戶資料轉移系統</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.5.0-beta4/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         body {
@@ -78,31 +76,7 @@
             100% { transform: rotate(360deg); }
         }
         
-        /* 下載成功通知 */
-        .download-toast {
-            position: fixed;
-            bottom: 24px;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: #323232;
-            color: white;
-            padding: 12px 24px;
-            border-radius: 4px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-            display: flex;
-            align-items: center;
-            z-index: 10001;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-        .download-toast.show {
-            opacity: 1;
-        }
-        .download-toast-icon {
-            margin-right: 12px;
-        }
-        
-        /* PDF和列印共用樣式 */
+        /* 列印樣式 */
         .document-container {
             width: 210mm;
             min-height: 297mm;
@@ -225,12 +199,9 @@
             font-size: 12px;
         }
         
-        /* PDF專用容器 */
-        #pdfContainer {
-            position: absolute;
-            left: -9999px;
-            top: -9999px;
-            visibility: hidden;
+        .document-divider {
+            border-top: 1px solid #000;
+            margin: 15px 0;
         }
         
         /* 列印樣式 */
@@ -268,16 +239,6 @@
             <div class="loading-spinner mx-auto mb-4"></div>
             <p id="loadingText" class="text-lg font-medium text-gray-700">正在處理，請稍候...</p>
         </div>
-    </div>
-
-    <!-- 下載成功通知 -->
-    <div id="downloadToast" class="download-toast">
-        <div class="download-toast-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" fill="white"/>
-            </svg>
-        </div>
-        <span>下載已完成</span>
     </div>
 
     <div class="container mx-auto px-4 py-8 max-w-6xl">
@@ -530,132 +491,6 @@
                     </svg>
                     列印轉移單
                 </button>
-                <button id="downloadBtn" class="btn-success text-white px-6 py-3 rounded-md font-medium flex items-center">
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
-                    </svg>
-                    下載PDF檔案
-                </button>
-            </div>
-        </div>
-
-        <!-- PDF專用容器 -->
-        <div id="pdfContainer">
-            <div class="document-container">
-                <!-- 表頭 -->
-                <div class="document-header">
-                    <div class="document-logo-container">
-                        <!-- 今網智生活Logo -->
-                        <div class="document-logo">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 100 100" fill="#3b82f6">
-                                <path d="M50 0C22.4 0 0 22.4 0 50s22.4 50 50 50 50-22.4 50-50S77.6 0 50 0zm0 90c-22.1 0-40-17.9-40-40s17.9-40 40-40 40 17.9 40 40-17.9 40-40 40z"/>
-                                <path d="M65 35H35c-2.8 0-5 2.2-5 5v20c0 2.8 2.2 5 5 5h30c2.8 0 5-2.2 5-5V40c0-2.8-2.2-5-5-5zm-5 20H40V45h20v10z"/>
-                            </svg>
-                        </div>
-                        <!-- 公司名稱和統編 -->
-                        <div>
-                            <div class="document-company-name">今網智慧科技股份有限公司</div>
-                            <div class="document-company-id">統一編號：54307560</div>
-                        </div>
-                    </div>
-                    <!-- 版本號和申請日期 -->
-                    <div class="document-version">
-                        <div>版本：20250206_V1.0</div>
-                        <div>申請日期：<span id="pdf_application_date"></span></div>
-                    </div>
-                </div>
-
-                <div class="document-title">月份轉移申請書</div>
-
-                <!-- 轉讓戶資料 -->
-                <div class="document-section">
-                    <div class="document-section-title">轉讓戶資料</div>
-                    <table class="document-table">
-                        <tr>
-                            <td style="width: 25%; background-color: #f2f2f2;">客戶編號</td>
-                            <td style="width: 25%;" id="pdf_transferor_id"></td>
-                            <td style="width: 25%; background-color: #f2f2f2;">客戶姓名</td>
-                            <td style="width: 25%;" id="pdf_transferor_name"></td>
-                        </tr>
-                        <tr>
-                            <td style="background-color: #f2f2f2;">電話</td>
-                            <td id="pdf_transferor_phone"></td>
-                            <td style="background-color: #f2f2f2;">到期日</td>
-                            <td id="pdf_transferor_expiry"></td>
-                        </tr>
-                        <tr>
-                            <td style="background-color: #f2f2f2;">地址</td>
-                            <td colspan="3" id="pdf_transferor_address"></td>
-                        </tr>
-                    </table>
-                </div>
-
-                <!-- 承接者資料 -->
-                <div class="document-section">
-                    <div class="document-section-title">承接者資料</div>
-                    <table class="document-table">
-                        <tr>
-                            <td style="width: 25%; background-color: #f2f2f2;">客戶編號</td>
-                            <td style="width: 25%;" id="pdf_recipient_id"></td>
-                            <td style="width: 25%; background-color: #f2f2f2;">客戶姓名</td>
-                            <td style="width: 25%;" id="pdf_recipient_name"></td>
-                        </tr>
-                        <tr>
-                            <td style="background-color: #f2f2f2;">地址</td>
-                            <td colspan="3" id="pdf_recipient_address"></td>
-                        </tr>
-                        <tr>
-                            <td style="background-color: #f2f2f2;">轉移起始日</td>
-                            <td id="pdf_transfer_start_date"></td>
-                            <td style="background-color: #f2f2f2;">轉移時間</td>
-                            <td id="pdf_transfer_period"></td>
-                        </tr>
-                        <tr>
-                            <td style="background-color: #f2f2f2;">轉移後新到期日</td>
-                            <td colspan="3" id="pdf_recipient_newExpiry"></td>
-                        </tr>
-                    </table>
-                </div>
-
-                <!-- 注意事項 -->
-                <div class="document-notice-box">
-                    <div class="document-notice-title">【注意事項】</div>
-                    <div style="text-align: center; margin-bottom: 5px; font-size: 12px;">申請程序如下(未盡細項詳租用條款第七條各項)：</div>
-                    <ol class="document-notice-list">
-                        <li>各項異動服務需填具申請書/並檢附登記人雙證件影本方可辦理。</li>
-                        <li>每次暫停期間最長1年，暫停復訊後需屆滿15天，方可再辦理暫停。</li>
-                        <li>用戶有主分機者，辦理暫停則主分機將一併暫停。</li>
-                        <li>網路暫停天數將如數延長於網路到期日之後。</li>
-                        <li>接受月份轉移者，轉移之月份、天數不得再次轉移，亦不得列入退費計算。承接人享月份使用權益，退費權益仍屬原登記人，雙方因月份轉移而肇致糾紛，由轉移雙方當事人負責。</li>
-                        <li>本申請書之登記人及承接人應確實填具上開資料，如有錯誤或偽冒，願負法律責任。上開資料，本公司僅作申辦異動業務及聯絡使用。</li>
-                        <li>本公司保證依隱私權保護相關法令之規定，保護登記人及承接人所提供之資料，除依法律規定、法院命令或相關主管機關依法以書面申請，不得提供與第三人使用。</li>
-                    </ol>
-                </div>
-
-                <!-- 回傳方式 -->
-                <div class="document-notice-box">
-                    <div style="text-align: center; margin-bottom: 5px; font-size: 12px; font-weight: bold;">回傳方式：本申請書(含證件)，方可透過以下方式回傳並來電412-8166(手機需加區碼)確認，避免遺漏。</div>
-                    <ol class="document-notice-list">
-                        <li>郵寄：40466-台中市北區太原北路130號10樓</li>
-                        <li>MAIL：service@smartdaily.com.tw</li>
-                    </ol>
-                </div>
-
-                <!-- 簽名欄 -->
-                <div class="document-signature-box">
-                    <div class="document-signature-cell">
-                        <div style="margin-bottom: 5px;">會辦單位</div>
-                    </div>
-                    <div class="document-signature-cell">
-                        <div style="margin-bottom: 5px;">主管</div>
-                    </div>
-                    <div class="document-signature-cell">
-                        <div style="margin-bottom: 5px;">服務人員</div>
-                    </div>
-                    <div class="document-signature-cell">
-                        <div style="margin-bottom: 5px;">客戶簽名</div>
-                    </div>
-                </div>
             </div>
         </div>
 
@@ -743,13 +578,23 @@
                     <div style="text-align: center; margin-bottom: 5px; font-size: 12px;">申請程序如下(未盡細項詳租用條款第七條各項)：</div>
                     <ol class="document-notice-list">
                         <li>各項異動服務需填具申請書/並檢附登記人雙證件影本方可辦理。</li>
-                        <li>每次暫停期間最長1年，暫停復訊後需屆滿15天，方可再辦理暫停。</li>
-                        <li>用戶有主分機者，辦理暫停則主分機將一併暫停。</li>
-                        <li>網路暫停天數將如數延長於網路到期日之後。</li>
                         <li>接受月份轉移者，轉移之月份、天數不得再次轉移，亦不得列入退費計算。承接人享月份使用權益，退費權益仍屬原登記人，雙方因月份轉移而肇致糾紛，由轉移雙方當事人負責。</li>
                         <li>本申請書之登記人及承接人應確實填具上開資料，如有錯誤或偽冒，願負法律責任。上開資料，本公司僅作申辦異動業務及聯絡使用。</li>
                         <li>本公司保證依隱私權保護相關法令之規定，保護登記人及承接人所提供之資料，除依法律規定、法院命令或相關主管機關依法以書面申請，不得提供與第三人使用。</li>
                     </ol>
+                </div>
+
+                <!-- 分隔線 -->
+                <div class="document-divider"></div>
+
+                <!-- 個人資料蒐集聲明 -->
+                <div class="document-notice-box">
+                    <div class="document-notice-title">個人資料蒐集暨營業規章與租用契約條款聲明</div>
+                    <div style="margin-bottom: 10px; font-size: 12px; font-weight: bold;">個人資料蒐集與利用</div>
+                    <p style="font-size: 12px; margin-bottom: 10px;">今網智慧科技(股)（以下稱「本公司」）基於契約、類似契約或其他法律關係，依據法律規定蒐集、處理及利用您的個人資料。蒐集目的包括但不限於：消費者管理與服務、調查、統計與研究分析、廣告或商業行為管理及個人資料之合法交易等。詳細的個人資料告知聲明，請參閱本公司網站：https://top1.kingnet.net.tw/rules-person.html</p>
+                    
+                    <div style="margin-bottom: 10px; font-size: 12px; font-weight: bold;">營業規章與租用契約條款</div>
+                    <p style="font-size: 12px;">本公司各產品之營業規章及租用契約條款，請參閱本公司網站：https://top1.kingnet.net.tw/rule.html</p>
                 </div>
 
                 <!-- 回傳方式 -->
@@ -818,15 +663,6 @@
         // 隱藏載入指示器
         function hideLoading() {
             document.getElementById('loadingOverlay').style.display = 'none';
-        }
-
-        // 顯示下載成功通知
-        function showDownloadToast() {
-            const toast = document.getElementById('downloadToast');
-            toast.classList.add('show');
-            setTimeout(() => {
-                toast.classList.remove('show');
-            }, 3000);
         }
 
         // 計算兩個日期之間的天數差
@@ -1070,21 +906,6 @@
             document.getElementById('print_transfer_start_date').textContent = formatDisplayDate(transferDate);
             document.getElementById('print_transfer_period').textContent = transferDays;
             document.getElementById('print_recipient_newExpiry').textContent = formatDisplayDate(newExpiry);
-            
-            // 填充PDF區域資料
-            document.getElementById('pdf_application_date').textContent = currentDate;
-            document.getElementById('pdf_transferor_id').textContent = customerAId;
-            document.getElementById('pdf_transferor_name').textContent = document.getElementById('customerA_name').value;
-            document.getElementById('pdf_transferor_phone').textContent = document.getElementById('customerA_phone').value;
-            document.getElementById('pdf_transferor_address').textContent = document.getElementById('customerA_address').value;
-            document.getElementById('pdf_transferor_expiry').textContent = formatDisplayDate(document.getElementById('customerA_expiry').value);
-            
-            document.getElementById('pdf_recipient_id').textContent = customerBId;
-            document.getElementById('pdf_recipient_name').textContent = document.getElementById('customerB_name').value;
-            document.getElementById('pdf_recipient_address').textContent = document.getElementById('customerB_address').value;
-            document.getElementById('pdf_transfer_start_date').textContent = formatDisplayDate(transferDate);
-            document.getElementById('pdf_transfer_period').textContent = transferDays;
-            document.getElementById('pdf_recipient_newExpiry').textContent = formatDisplayDate(newExpiry);
         });
 
         // 返回表單
@@ -1107,89 +928,6 @@
                 setTimeout(function() {
                     printArea.style.display = 'none';
                 }, 1000);
-            }, 500);
-        });
-        
-        // 下載PDF (使用html2canvas + jsPDF)
-        document.getElementById('downloadBtn').addEventListener('click', function() {
-            showLoading('正在生成PDF檔案，請稍候...');
-            
-            // 顯示PDF容器
-            const pdfContainer = document.getElementById('pdfContainer');
-            pdfContainer.style.visibility = 'visible';
-            pdfContainer.style.position = 'fixed';
-            pdfContainer.style.left = '0';
-            pdfContainer.style.top = '0';
-            pdfContainer.style.zIndex = '-1';
-            
-            // 使用setTimeout確保DOM已更新
-            setTimeout(function() {
-                try {
-                    // 獲取必要的數據
-                    const customerAId = document.getElementById('result_transferor_id').textContent;
-                    const customerBId = document.getElementById('result_recipient_id').textContent;
-                    
-                    // 檔案名稱
-                    const fileName = `月份轉移申請書_${customerAId}_${customerBId}`;
-                    
-                    // 使用html2canvas將內容轉為圖片
-                    const pdfElement = document.querySelector('#pdfContainer .document-container');
-                    
-                    html2canvas(pdfElement, {
-                        scale: 2, // 提高解析度
-                        useCORS: true,
-                        logging: false,
-                        allowTaint: true,
-                        backgroundColor: "#ffffff",
-                        windowWidth: pdfElement.scrollWidth,
-                        windowHeight: pdfElement.scrollHeight
-                    }).then(function(canvas) {
-                        // 創建PDF
-                        const { jsPDF } = window.jspdf;
-                        const pdf = new jsPDF('p', 'mm', 'a4');
-                        
-                        // 計算比例以適應A4紙張
-                        const imgWidth = 210; // A4寬度，單位mm
-                        const pageHeight = 297; // A4高度，單位mm
-                        const imgHeight = canvas.height * imgWidth / canvas.width;
-                        
-                        // 將圖片添加到PDF
-                        const imgData = canvas.toDataURL('image/jpeg', 1.0);
-                        pdf.addImage(imgData, 'JPEG', 0, 0, imgWidth, imgHeight);
-                        
-                        // 保存PDF
-                        pdf.save(`${fileName}.pdf`);
-                        
-                        // 隱藏PDF容器和載入指示器
-                        pdfContainer.style.visibility = 'hidden';
-                        pdfContainer.style.position = 'absolute';
-                        pdfContainer.style.left = '-9999px';
-                        pdfContainer.style.top = '-9999px';
-                        pdfContainer.style.zIndex = '-1';
-                        hideLoading();
-                        
-                        // 顯示下載成功通知
-                        showDownloadToast();
-                    }).catch(function(error) {
-                        console.error('Canvas生成錯誤:', error);
-                        alert('PDF生成發生錯誤，請稍後再試。');
-                        pdfContainer.style.visibility = 'hidden';
-                        pdfContainer.style.position = 'absolute';
-                        pdfContainer.style.left = '-9999px';
-                        pdfContainer.style.top = '-9999px';
-                        pdfContainer.style.zIndex = '-1';
-                        hideLoading();
-                    });
-                } catch (error) {
-                    console.error('PDF生成錯誤:', error);
-                    alert('PDF生成發生錯誤，請稍後再試。');
-                    pdfContainer.style.visibility = 'hidden';
-                    pdfContainer.style.position = 'absolute';
-                    pdfContainer.style.left = '-9999px';
-                    pdfContainer.style.top = '-9999px';
-                    pdfContainer.style.zIndex = '-1';
-                    hideLoading();
-                }
             }, 500);
         });
 
@@ -1222,8 +960,9 @@
         // 設置今天日期為轉移日期的預設值
         document.getElementById('transferDate').value = formatDate(new Date());
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96628bc23284f1f4',t:'MTc1MzY4NjUxMy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96629592b195f201',t:'MTc1MzY4NjkxNS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
+
 
 
 
