@@ -936,7 +936,24 @@
                 return;
             }
             
-            const confirmed = confirm(`確認設定轉移日期為 ${transferDate}？\n設定後將送交主管審核。`);
+            // 更新該工單的顯示，顯示確認按鈕
+            const ticketElement = document.querySelector(`[data-ticket-id="${ticketId}"]`);
+            const buttonContainer = ticketElement.querySelector('.flex.items-center.space-x-3');
+            
+            // 替換按鈕為確認狀態
+            buttonContainer.innerHTML = `
+                <input type="date" id="transfer-date-${ticketId.toLowerCase()}" class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" value="${transferDate}" readonly>
+                <button onclick="submitToApproval('${ticketId}', '${transferDate}')" class="bg-green-600 text-white px-3 py-2 rounded-md hover:bg-green-700 text-sm font-medium">
+                    送交主管審核
+                </button>
+            `;
+            
+            alert(`轉移日期已設定為 ${transferDate}，請點擊「送交主管審核」完成送審。`);
+        }
+
+        // 送交主管審核
+        function submitToApproval(ticketId, transferDate) {
+            const confirmed = confirm(`確認將 ${ticketId} 送交主管審核？\n轉移日期：${transferDate}`);
             
             if (confirmed) {
                 // 從追蹤中移除工單
@@ -945,7 +962,7 @@
                 // 加入主管簽核列表
                 addToApprovalList(ticketId, transferDate);
                 
-                alert(`${ticketId} 轉移日期已設定為 ${transferDate}\n工單已移至「主管簽核」狀態`);
+                alert(`${ticketId} 已送交主管審核\n轉移日期：${transferDate}\n工單已移至「主管簽核」狀態`);
                 
                 // 自動切換到主管簽核頁籤
                 switchTab('approval');
@@ -1134,7 +1151,7 @@
                                 <div class="flex items-center space-x-3">
                                     <input type="date" id="transfer-date-${ticketId.toLowerCase()}" class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                                     <button onclick="setTransferDate('${ticketId}')" class="bg-blue-600 text-white px-3 py-2 rounded-md hover:bg-blue-700 text-sm font-medium">
-                                        重新設定
+                                        設定
                                     </button>
                                 </div>
                             </div>
@@ -1162,5 +1179,6 @@
             switchTab('pending');
         });
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9692223151edf244',t:'MTc1NDE4NTUwNS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9692270e9232f1c8',t:'MTc1NDE4NTcwNS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
+
