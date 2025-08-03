@@ -102,28 +102,235 @@
                     </div>
                 </div>
 
-                <!-- 其他狀態內容 -->
+                <!-- 處理中內容 -->
                 <div id="processing-content" class="tab-content hidden">
-                    <div class="text-center py-8 text-gray-500">
-                        <p>目前有 2 個工單正在處理中</p>
+                    <div class="space-y-4">
+                        <div class="border border-orange-200 rounded-lg p-4 bg-orange-50">
+                            <div class="flex justify-between items-start">
+                                <div class="flex-1">
+                                    <div class="flex items-center space-x-4 mb-2">
+                                        <span class="text-lg font-semibold text-gray-900">客訴單號: CS-2024-003</span>
+                                        <span class="bg-orange-100 text-orange-800 px-2 py-1 rounded-full text-xs font-medium">正在安裝</span>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-4 text-sm text-gray-600 mb-3">
+                                        <div><span class="font-medium">工單號碼:</span> WO-2024-001</div>
+                                        <div><span class="font-medium">客戶編號:</span> C001236</div>
+                                        <div><span class="font-medium">新社區:</span> 松山新城</div>
+                                        <div><span class="font-medium">安裝進度:</span> 設備安裝中</div>
+                                    </div>
+                                    <div class="text-sm text-gray-700">
+                                        <strong>安裝項目:</strong> 網路服務、有線電視
+                                    </div>
+                                </div>
+                                <div class="ml-4 text-right">
+                                    <div class="text-sm text-gray-500 mb-2">預計完成時間</div>
+                                    <div class="text-sm font-medium text-orange-600">2024-01-16 15:00</div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
+                <!-- 追蹤中內容 -->
                 <div id="tracking-content" class="tab-content hidden">
-                    <div class="text-center py-8 text-gray-500">
-                        <p>目前有 1 個工單正在追蹤中</p>
+                    <div class="space-y-4">
+                        <div class="border border-red-200 rounded-lg p-4 bg-red-50">
+                            <div class="flex justify-between items-start">
+                                <div class="flex-1">
+                                    <div class="flex items-center space-x-4 mb-2">
+                                        <span class="text-lg font-semibold text-gray-900">客訴單號: CS-2024-004</span>
+                                        <span class="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-medium">出現問題</span>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-4 text-sm text-gray-600 mb-3">
+                                        <div><span class="font-medium">工單號碼:</span> WO-2024-002</div>
+                                        <div><span class="font-medium">客戶編號:</span> C001237</div>
+                                        <div><span class="font-medium">問題類型:</span> 設備故障</div>
+                                        <div><span class="font-medium">回報時間:</span> 2024-01-15 16:30</div>
+                                    </div>
+                                    <div class="text-sm text-gray-700 bg-white p-3 rounded">
+                                        <strong>問題描述:</strong> 安裝過程中發現線路老舊，需要更換主線路，預計延後2天完成
+                                    </div>
+                                </div>
+                                <button onclick="handleProblem('CS-2024-004')" class="ml-4 bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 text-sm font-medium">
+                                    處理問題
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="border border-blue-200 rounded-lg p-4 bg-blue-50">
+                            <div class="flex justify-between items-start">
+                                <div class="flex-1">
+                                    <div class="flex items-center space-x-4 mb-2">
+                                        <span class="text-lg font-semibold text-gray-900">客訴單號: CS-2024-005</span>
+                                        <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">工單完成</span>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-4 text-sm text-gray-600 mb-3">
+                                        <div><span class="font-medium">工單號碼:</span> WO-2024-003</div>
+                                        <div><span class="font-medium">客戶編號:</span> C001238</div>
+                                        <div><span class="font-medium">完成時間:</span> 2024-01-15 14:30</div>
+                                        <div><span class="font-medium">轉移日期:</span> 2024-01-20</div>
+                                    </div>
+                                    <div class="text-sm text-gray-700">
+                                        <strong>安裝項目:</strong> 網路服務、固網電話 - 已完成安裝
+                                    </div>
+                                </div>
+                                <button onclick="confirmTransferDate('CS-2024-005')" class="ml-4 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 text-sm font-medium">
+                                    確認轉移
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
+                <!-- 主管簽核內容 -->
                 <div id="approval-content" class="tab-content hidden">
-                    <div class="text-center py-8 text-gray-500">
-                        <p>目前有 1 個工單等待主管簽核</p>
+                    <div class="space-y-4">
+                        <div class="border border-purple-200 rounded-lg p-4 bg-purple-50">
+                            <div class="flex justify-between items-start">
+                                <div class="flex-1">
+                                    <div class="flex items-center space-x-4 mb-2">
+                                        <span class="text-lg font-semibold text-gray-900">客訴單號: CS-2024-006</span>
+                                        <span class="bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs font-medium">等待簽核</span>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-4 text-sm text-gray-600 mb-3">
+                                        <div><span class="font-medium">工單號碼:</span> WO-2024-004</div>
+                                        <div><span class="font-medium">客戶編號:</span> C001239</div>
+                                        <div><span class="font-medium">轉移日期:</span> 2024-01-18</div>
+                                        <div><span class="font-medium">送審時間:</span> 2024-01-15 17:00</div>
+                                    </div>
+                                    <div class="text-sm text-gray-700 bg-white p-3 rounded">
+                                        <strong>轉移原因:</strong> 客戶搬遷至新址，原服務地址：台北市中山區，新服務地址：台北市內湖區
+                                    </div>
+                                </div>
+                                <div class="ml-4 space-y-2">
+                                    <button onclick="approveTransfer('CS-2024-006')" class="block w-full bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 text-sm font-medium">
+                                        核准
+                                    </button>
+                                    <button onclick="rejectTransfer('CS-2024-006')" class="block w-full bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 text-sm font-medium">
+                                        駁回
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
+                <!-- 結案內容 -->
                 <div id="closed-content" class="tab-content hidden">
-                    <div class="text-center py-8 text-gray-500">
-                        <p>已結案工單共 15 筆</p>
+                    <div class="space-y-4">
+                        <div class="border border-green-200 rounded-lg p-4 bg-green-50">
+                            <div class="flex justify-between items-start">
+                                <div class="flex-1">
+                                    <div class="flex items-center space-x-4 mb-2">
+                                        <span class="text-lg font-semibold text-gray-900">客訴單號: CS-2024-007</span>
+                                        <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium">已結案</span>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-4 text-sm text-gray-600 mb-3">
+                                        <div><span class="font-medium">工單號碼:</span> WO-2024-005</div>
+                                        <div><span class="font-medium">客戶編號:</span> C001240</div>
+                                        <div><span class="font-medium">結案時間:</span> 2024-01-14 16:45</div>
+                                        <div><span class="font-medium">轉移完成:</span> 2024-01-14 16:45</div>
+                                    </div>
+                                    <div class="text-sm text-gray-700">
+                                        <strong>處理結果:</strong> 服務已成功轉移至新址，客戶確認服務正常
+                                    </div>
+                                </div>
+                                <div class="ml-4 text-right">
+                                    <div class="text-sm text-green-600 font-medium">轉移成功</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="text-center py-4 text-gray-500">
+                            <p>顯示最近結案的工單，共 15 筆</p>
+                            <button class="mt-2 text-blue-600 hover:text-blue-800 text-sm">查看全部結案工單</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 工單建立視窗 -->
+    <div id="work-order-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-60">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-lg font-semibold text-gray-900">建立工單</h3>
+                        <button onclick="closeWorkOrderModal()" class="text-gray-400 hover:text-gray-600">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="p-6">
+                    <form id="work-order-form" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">客戶新地址</label>
+                            <input type="text" id="new-address" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                                   placeholder="請輸入客戶新地址" required>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">新社區名稱</label>
+                            <input type="text" id="new-community" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                                   placeholder="請輸入新社區名稱" required>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">商品品項</label>
+                            <div class="space-y-2">
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="products" value="網路服務" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                                    <span class="ml-2 text-sm text-gray-700">網路服務</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="products" value="有線電視" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                                    <span class="ml-2 text-sm text-gray-700">有線電視</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="products" value="固網電話" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                                    <span class="ml-2 text-sm text-gray-700">固網電話</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="products" value="MOD服務" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                                    <span class="ml-2 text-gray-700">MOD服務</span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">預計安裝日期</label>
+                                <input type="date" id="install-date" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">聯絡時間</label>
+                                <select id="contact-time" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                    <option value="上午">上午 (09:00-12:00)</option>
+                                    <option value="下午">下午 (13:00-17:00)</option>
+                                    <option value="晚上">晚上 (18:00-21:00)</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">備註</label>
+                            <textarea id="work-order-notes" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                                      placeholder="請輸入特殊需求或備註事項"></textarea>
+                        </div>
+                    </form>
+                    
+                    <div class="flex justify-end space-x-3 mt-6">
+                        <button onclick="closeWorkOrderModal()" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
+                            取消
+                        </button>
+                        <button onclick="submitWorkOrder()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                            建立工單
+                        </button>
                     </div>
                 </div>
             </div>
@@ -404,26 +611,114 @@
 
         // 建立工單
         function createWorkOrder() {
-            const btn = document.getElementById('create-work-order-btn');
-            btn.textContent = '建立中...';
-            btn.disabled = true;
+            // 開啟工單建立視窗
+            document.getElementById('work-order-modal').classList.remove('hidden');
             
+            // 設定預設安裝日期為明天
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            document.getElementById('install-date').value = tomorrow.toISOString().split('T')[0];
+        }
+
+        // 關閉工單建立視窗
+        function closeWorkOrderModal() {
+            document.getElementById('work-order-modal').classList.add('hidden');
+            // 清空表單
+            document.getElementById('work-order-form').reset();
+        }
+
+        // 提交工單
+        function submitWorkOrder() {
+            const newAddress = document.getElementById('new-address').value;
+            const newCommunity = document.getElementById('new-community').value;
+            const installDate = document.getElementById('install-date').value;
+            const contactTime = document.getElementById('contact-time').value;
+            const notes = document.getElementById('work-order-notes').value;
+            
+            // 獲取選中的商品品項
+            const selectedProducts = [];
+            const productCheckboxes = document.querySelectorAll('input[name="products"]:checked');
+            productCheckboxes.forEach(checkbox => {
+                selectedProducts.push(checkbox.value);
+            });
+            
+            if (!newAddress || !newCommunity || !installDate || selectedProducts.length === 0) {
+                alert('請填寫所有必填欄位並選擇至少一項商品品項');
+                return;
+            }
+            
+            // 生成工單號碼
+            const workOrderNumber = 'WO-' + new Date().getTime();
+            
+            // 關閉工單建立視窗
+            closeWorkOrderModal();
+            
+            // 更新處理頁面的按鈕狀態
+            const btn = document.getElementById('create-work-order-btn');
+            btn.textContent = '工單已建立';
+            btn.disabled = true;
+            btn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+            btn.classList.add('bg-green-600');
+            
+            // 啟用步驟2
+            const step2 = document.getElementById('step-2');
+            step2.classList.remove('opacity-50');
+            step2.querySelector('.w-8').classList.remove('bg-gray-400');
+            step2.querySelector('.w-8').classList.add('bg-green-500');
+            
+            document.getElementById('schedule-work-btn').disabled = false;
+            document.getElementById('work-status').textContent = '工單已建立，等待其他單位處理';
+            
+            // 儲存工單資訊到全域變數
+            window.currentWorkOrder = {
+                number: workOrderNumber,
+                address: newAddress,
+                community: newCommunity,
+                products: selectedProducts,
+                installDate: installDate,
+                contactTime: contactTime,
+                notes: notes,
+                status: 'created'
+            };
+            
+            alert(`工單建立成功！\n工單編號：${workOrderNumber}\n新地址：${newAddress}\n新社區：${newCommunity}\n安裝項目：${selectedProducts.join('、')}\n\n工單已送交其他單位處理，請等待安裝完成通知。`);
+            
+            // 模擬其他單位處理工單
+            simulateExternalProcessing(workOrderNumber);
+        }
+
+        // 模擬其他單位處理工單
+        function simulateExternalProcessing(workOrderNumber) {
+            // 5秒後模擬工單完成
             setTimeout(() => {
-                btn.textContent = '工單已建立';
-                btn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
-                btn.classList.add('bg-green-600');
+                // 生成結案時間（轉移日期）
+                const completionDate = new Date();
+                completionDate.setDate(completionDate.getDate() + 3); // 3天後完成
+                const transferDate = completionDate.toISOString().split('T')[0];
                 
-                // 啟用步驟2
-                const step2 = document.getElementById('step-2');
-                step2.classList.remove('opacity-50');
-                step2.querySelector('.w-8').classList.remove('bg-gray-400');
-                step2.querySelector('.w-8').classList.add('bg-green-500');
+                // 更新工單狀態
+                if (window.currentWorkOrder) {
+                    window.currentWorkOrder.status = 'completed';
+                    window.currentWorkOrder.completionDate = completionDate.toISOString();
+                    window.currentWorkOrder.transferDate = transferDate;
+                }
                 
-                document.getElementById('schedule-work-btn').disabled = false;
-                document.getElementById('work-status').textContent = '可以開始約工';
+                // 更新處理頁面狀態
+                document.getElementById('work-status').textContent = '其他單位已完成處理，工單已結案';
                 
-                alert('工單建立成功！工單編號：WO-' + new Date().getTime());
-            }, 2000);
+                // 啟用步驟3
+                const step3 = document.getElementById('step-3');
+                step3.classList.remove('opacity-50');
+                step3.querySelector('.w-8').classList.remove('bg-gray-400');
+                step3.querySelector('.w-8').classList.add('bg-blue-500');
+                
+                document.getElementById('transfer-date').disabled = false;
+                document.getElementById('set-transfer-btn').disabled = false;
+                document.getElementById('transfer-date').value = transferDate;
+                
+                alert(`工單處理完成通知：\n工單編號：${workOrderNumber}\n完成時間：${completionDate.toLocaleString('zh-TW')}\n系統自動設定轉移日期：${transferDate}\n\n請確認轉移日期是否正確。`);
+                
+            }, 5000);
         }
 
         // 開啟約工能量表
@@ -502,10 +797,57 @@
             alert('進度已儲存');
         }
 
+        // 處理問題工單
+        function handleProblem(ticketId) {
+            const action = confirm('選擇處理方式：\n確定 - 重新安排安裝\n取消 - 標記為待處理');
+            
+            if (action) {
+                alert(`${ticketId} 已重新安排安裝，預計2天後完成`);
+                // 這裡可以更新工單狀態
+            } else {
+                alert(`${ticketId} 已標記為待處理，等待進一步指示`);
+            }
+        }
+
+        // 確認轉移日期
+        function confirmTransferDate(ticketId) {
+            const confirmed = confirm('確認轉移日期正確，將送交主管審核？');
+            
+            if (confirmed) {
+                alert(`${ticketId} 轉移日期已確認，已送交主管審核`);
+                // 移動到主管簽核狀態
+                // 這裡可以實作實際的狀態更新邏輯
+            }
+        }
+
+        // 核准轉移
+        function approveTransfer(ticketId) {
+            const confirmed = confirm('確定核准此轉移申請？');
+            
+            if (confirmed) {
+                alert(`${ticketId} 轉移申請已核准，系統將自動執行轉移並結案`);
+                
+                // 模擬系統自動轉移
+                setTimeout(() => {
+                    alert(`${ticketId} 轉移已完成，工單已自動結案`);
+                }, 2000);
+            }
+        }
+
+        // 駁回轉移
+        function rejectTransfer(ticketId) {
+            const reason = prompt('請輸入駁回原因：');
+            
+            if (reason) {
+                alert(`${ticketId} 轉移申請已駁回\n駁回原因：${reason}\n工單已退回追蹤中狀態`);
+            }
+        }
+
         // 初始化頁面
         document.addEventListener('DOMContentLoaded', function() {
             switchTab('pending');
         });
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9691fb19d2b8f21c',t:'MTc1NDE4MzkwNC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9692133c02b0f1f8',t:'MTc1NDE4NDg5My4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
+
