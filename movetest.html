@@ -928,26 +928,100 @@
 
         // 設定轉移日期
         function setTransferDate(ticketId) {
-            const dateInput = document.getElementById(`transfer-date-${ticketId.toLowerCase()}`);
+            console.log('設定轉移日期被呼叫，工單ID:', ticketId);
+            
+            // 嘗試多種方式找到日期輸入欄位
+            let dateInput = document.getElementById(`transfer-date-${ticketId.toLowerCase()}`);
+            if (!dateInput) {
+                // 如果找不到，嘗試其他可能的ID格式
+                dateInput = document.getElementById(`transfer-date-cs-${ticketId.split('-')[2]}`);
+            }
+            if (!dateInput) {
+                // 最後嘗試通過查詢選擇器找到
+                const trackingContent = document.getElementById('tracking-content');
+                const allDateInputs = trackingContent.querySelectorAll('input[type="date"]');
+                console.log('找到的日期輸入欄位數量:', allDateInputs.length);
+                
+                // 找到包含該工單ID的容器中的日期輸入欄位
+                for (let input of allDateInputs) {
+                    const container = input.closest('.border');
+                    if (container && container.textContent.includes(ticketId)) {
+                        dateInput = input;
+                        break;
+                    }
+                }
+            }
+            
+            if (!dateInput) {
+                console.error('找不到日期輸入欄位，工單ID:', ticketId);
+                alert('系統錯誤：找不到日期輸入欄位');
+                return;
+            }
+            
             const transferDate = dateInput.value;
+            console.log('選擇的轉移日期:', transferDate);
             
             if (!transferDate) {
                 alert('請選擇轉移日期');
                 return;
             }
             
-            // 更新該工單的顯示，顯示確認按鈕
-            const ticketElement = document.querySelector(`[data-ticket-id="${ticketId}"]`);
-            const buttonContainer = ticketElement.querySelector('.flex.items-center.space-x-3');
+            // 找到該工單的容器
+            let ticketElement = document.querySelector(`[data-ticket-id="${ticketId}"]`);
+            if (!ticketElement) {
+                // 如果沒有data-ticket-id，則查找包含該ID的元素
+                const trackingContent = document.getElementById('tracking-content');
+                const allTickets = trackingContent.querySelectorAll('.border');
+                for (let ticket of allTickets) {
+                    if (ticket.textContent.includes(ticketId)) {
+                        ticketElement = ticket;
+                        break;
+                    }
+                }
+            }
+            
+            if (!ticketElement) {
+                console.error('找不到工單元素:', ticketId);
+                alert('系統錯誤：找不到工單元素');
+                return;
+            }
+            
+            console.log('找到工單元素:', ticketElement);
+            
+            // 找到按鈕容器 - 使用更寬鬆的選擇器
+            let buttonContainer = ticketElement.querySelector('.flex.items-center.space-x-3');
+            if (!buttonContainer) {
+                // 嘗試其他可能的選擇器
+                buttonContainer = ticketElement.querySelector('.flex[class*="space-x"]');
+            }
+            if (!buttonContainer) {
+                // 最後嘗試找到包含按鈕的容器
+                const buttons = ticketElement.querySelectorAll('button');
+                for (let button of buttons) {
+                    if (button.textContent.includes('設定')) {
+                        buttonContainer = button.parentElement;
+                        break;
+                    }
+                }
+            }
+            
+            if (!buttonContainer) {
+                console.error('找不到按鈕容器');
+                alert('系統錯誤：找不到按鈕容器');
+                return;
+            }
+            
+            console.log('找到按鈕容器:', buttonContainer);
             
             // 替換按鈕為確認狀態
             buttonContainer.innerHTML = `
-                <input type="date" id="transfer-date-${ticketId.toLowerCase()}" class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" value="${transferDate}" readonly>
+                <input type="date" id="transfer-date-${ticketId.toLowerCase()}-readonly" class="px-3 py-2 border border-gray-300 rounded-md bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" value="${transferDate}" readonly>
                 <button onclick="submitToApproval('${ticketId}', '${transferDate}')" class="bg-green-600 text-white px-3 py-2 rounded-md hover:bg-green-700 text-sm font-medium">
                     送交主管審核
                 </button>
             `;
             
+            console.log('按鈕已替換為送交主管審核');
             alert(`轉移日期已設定為 ${transferDate}，請點擊「送交主管審核」完成送審。`);
         }
 
@@ -1179,6 +1253,7 @@
             switchTab('pending');
         });
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9692270e9232f1c8',t:'MTc1NDE4NTcwNS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96922d59f714f1c8',t:'MTc1NDE4NTk2Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
+
 
