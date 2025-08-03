@@ -1030,6 +1030,20 @@
             const confirmed = confirm(`確認將 ${ticketId} 送交主管審核？\n轉移日期：${transferDate}`);
             
             if (confirmed) {
+                // 儲存工單資訊以便駁回時恢復
+                const trackingContent = document.getElementById('tracking-content');
+                const ticketElement = trackingContent.querySelector(`[data-ticket-id="${ticketId}"]`) || 
+                                    Array.from(trackingContent.querySelectorAll('.border')).find(el => el.textContent.includes(ticketId));
+                
+                if (ticketElement) {
+                    // 儲存原始工單資訊
+                    window.originalTicketData = window.originalTicketData || {};
+                    window.originalTicketData[ticketId] = {
+                        html: ticketElement.outerHTML,
+                        workOrder: window.currentWorkOrder
+                    };
+                }
+                
                 // 從追蹤中移除工單
                 removeFromTrackingList(ticketId);
                 
@@ -1201,48 +1215,99 @@
         // 將工單退回追蹤中列表
         function addBackToTrackingList(ticketId, rejectReason) {
             const trackingContent = document.getElementById('tracking-content');
-            const workOrder = window.currentWorkOrder;
             
-            const workOrderHtml = `
-                <div class="border border-red-200 rounded-lg p-4 bg-red-50" data-ticket-id="${ticketId}">
-                    <div class="flex justify-between items-start">
-                        <div class="flex-1">
-                            <div class="flex items-center space-x-4 mb-2">
-                                <span class="text-lg font-semibold text-gray-900">客訴單號: ${ticketId}</span>
-                                <span class="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-medium">需重新設定</span>
-                            </div>
-                            <div class="grid grid-cols-2 gap-4 text-sm text-gray-600 mb-3">
-                                <div><span class="font-medium">工單號碼:</span> ${workOrder ? workOrder.number : 'WO-2024-XXX'}</div>
-                                <div><span class="font-medium">客戶編號:</span> ${workOrder ? workOrder.customerId : 'C001XXX'}</div>
-                                <div><span class="font-medium">駁回時間:</span> ${new Date().toLocaleString('zh-TW')}</div>
-                                <div><span class="font-medium">新地址:</span> ${workOrder ? workOrder.address : '新地址'}</div>
-                            </div>
-                            <div class="text-sm text-gray-700 mb-3 bg-white p-3 rounded border">
-                                <strong>駁回原因:</strong> ${rejectReason}
-                            </div>
-                            <div class="bg-white p-3 rounded border">
-                                <label class="block text-sm font-medium text-gray-700 mb-2">重新設定轉移日期（月份開始日）</label>
-                                <div class="flex items-center space-x-3">
-                                    <input type="date" id="transfer-date-${ticketId.toLowerCase()}" class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                                    <button onclick="setTransferDate('${ticketId}')" class="bg-blue-600 text-white px-3 py-2 rounded-md hover:bg-blue-700 text-sm font-medium">
-                                        設定
-                                    </button>
+            // 嘗試恢復原始工單資訊
+            if (window.originalTicketData && window.originalTicketData[ticketId]) {
+                const originalData = window.originalTicketData[ticketId];
+                
+                // 恢復原始工單，但修改狀態為駁回
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(originalData.html, 'text/html');
+                const ticketElement = doc.querySelector('.border');
+                
+                // 修改狀態標籤
+                const statusSpan = ticketElement.querySelector('.bg-blue-100');
+                if (statusSpan) {
+                    statusSpan.className = 'bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-medium';
+                    statusSpan.textContent = '需重新設定';
+                }
+                
+                // 修改容器樣式
+                ticketElement.className = 'border border-red-200 rounded-lg p-4 bg-red-50';
+                ticketElement.setAttribute('data-ticket-id', ticketId);
+                
+                // 在設定轉移日期區域前加入駁回原因
+                const transferSection = ticketElement.querySelector('.bg-white.p-3.rounded.border');
+                if (transferSection) {
+                    const rejectReasonHtml = `
+                        <div class="text-sm text-gray-700 mb-3 bg-red-50 p-3 rounded border border-red-200">
+                            <strong class="text-red-800">駁回原因:</strong> <span class="text-red-700">${rejectReason}</span>
+                        </div>
+                    `;
+                    transferSection.insertAdjacentHTML('beforebegin', rejectReasonHtml);
+                }
+                
+                // 插入到追蹤中列表的最前面
+                const spaceDiv = trackingContent.querySelector('.space-y-4');
+                spaceDiv.insertAdjacentHTML('afterbegin', ticketElement.outerHTML);
+                
+                // 設定預設轉移日期為明天
+                setTimeout(() => {
+                    const dateInput = document.getElementById(`transfer-date-${ticketId.toLowerCase()}`);
+                    if (dateInput) {
+                        const tomorrow = new Date();
+                        tomorrow.setDate(tomorrow.getDate() + 1);
+                        dateInput.value = tomorrow.toISOString().split('T')[0];
+                    }
+                }, 100);
+                
+                // 清除已使用的原始資料
+                delete window.originalTicketData[ticketId];
+            } else {
+                // 如果沒有原始資料，使用預設模板
+                const workOrder = window.currentWorkOrder;
+                
+                const workOrderHtml = `
+                    <div class="border border-red-200 rounded-lg p-4 bg-red-50" data-ticket-id="${ticketId}">
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1">
+                                <div class="flex items-center space-x-4 mb-2">
+                                    <span class="text-lg font-semibold text-gray-900">客訴單號: ${ticketId}</span>
+                                    <span class="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-medium">需重新設定</span>
+                                </div>
+                                <div class="grid grid-cols-2 gap-4 text-sm text-gray-600 mb-3">
+                                    <div><span class="font-medium">工單號碼:</span> ${workOrder ? workOrder.number : 'WO-2024-XXX'}</div>
+                                    <div><span class="font-medium">客戶編號:</span> ${workOrder ? workOrder.customerId : 'C001XXX'}</div>
+                                    <div><span class="font-medium">駁回時間:</span> ${new Date().toLocaleString('zh-TW')}</div>
+                                    <div><span class="font-medium">新地址:</span> ${workOrder ? workOrder.address : '新地址'}</div>
+                                </div>
+                                <div class="text-sm text-gray-700 mb-3 bg-red-50 p-3 rounded border border-red-200">
+                                    <strong class="text-red-800">駁回原因:</strong> <span class="text-red-700">${rejectReason}</span>
+                                </div>
+                                <div class="bg-white p-3 rounded border">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">重新設定轉移日期（月份開始日）</label>
+                                    <div class="flex items-center space-x-3">
+                                        <input type="date" id="transfer-date-${ticketId.toLowerCase()}" class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                        <button onclick="setTransferDate('${ticketId}')" class="bg-blue-600 text-white px-3 py-2 rounded-md hover:bg-blue-700 text-sm font-medium">
+                                            設定
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            `;
-            
-            const spaceDiv = trackingContent.querySelector('.space-y-4');
-            spaceDiv.insertAdjacentHTML('afterbegin', workOrderHtml);
-            
-            // 設定預設轉移日期為明天
-            setTimeout(() => {
-                const tomorrow = new Date();
-                tomorrow.setDate(tomorrow.getDate() + 1);
-                document.getElementById(`transfer-date-${ticketId.toLowerCase()}`).value = tomorrow.toISOString().split('T')[0];
-            }, 100);
+                `;
+                
+                const spaceDiv = trackingContent.querySelector('.space-y-4');
+                spaceDiv.insertAdjacentHTML('afterbegin', workOrderHtml);
+                
+                // 設定預設轉移日期為明天
+                setTimeout(() => {
+                    const tomorrow = new Date();
+                    tomorrow.setDate(tomorrow.getDate() + 1);
+                    document.getElementById(`transfer-date-${ticketId.toLowerCase()}`).value = tomorrow.toISOString().split('T')[0];
+                }, 100);
+            }
             
             // 更新追蹤中數量
             updateTabCount('tracking', 1);
@@ -1253,7 +1318,8 @@
             switchTab('pending');
         });
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96922d59f714f1c8',t:'MTc1NDE4NTk2Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9692368ef7e6f1d0',t:'MTc1NDE4NjMzOS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
+
 
 
