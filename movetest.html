@@ -168,15 +168,21 @@
                                         <div><span class="font-medium">工單號碼:</span> WO-2024-003</div>
                                         <div><span class="font-medium">客戶編號:</span> C001238</div>
                                         <div><span class="font-medium">完成時間:</span> 2024-01-15 14:30</div>
-                                        <div><span class="font-medium">轉移日期:</span> 2024-01-20</div>
+                                        <div><span class="font-medium">新地址:</span> 台北市內湖區內湖路一段123號</div>
                                     </div>
-                                    <div class="text-sm text-gray-700">
+                                    <div class="text-sm text-gray-700 mb-3">
                                         <strong>安裝項目:</strong> 網路服務、固網電話 - 已完成安裝
                                     </div>
+                                    <div class="bg-white p-3 rounded border">
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">設定轉移日期（月份開始日）</label>
+                                        <div class="flex items-center space-x-3">
+                                            <input type="date" id="transfer-date-cs-005" class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" value="2024-01-20">
+                                            <button onclick="setTransferDate('CS-2024-005')" class="bg-blue-600 text-white px-3 py-2 rounded-md hover:bg-blue-700 text-sm font-medium">
+                                                設定
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
-                                <button onclick="confirmTransferDate('CS-2024-005')" class="ml-4 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 text-sm font-medium">
-                                    確認轉移
-                                </button>
                             </div>
                         </div>
                     </div>
@@ -650,24 +656,9 @@
             // 生成工單號碼
             const workOrderNumber = 'WO-' + new Date().getTime();
             
-            // 關閉工單建立視窗
+            // 關閉工單建立視窗和處理視窗
             closeWorkOrderModal();
-            
-            // 更新處理頁面的按鈕狀態
-            const btn = document.getElementById('create-work-order-btn');
-            btn.textContent = '工單已建立';
-            btn.disabled = true;
-            btn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
-            btn.classList.add('bg-green-600');
-            
-            // 啟用步驟2
-            const step2 = document.getElementById('step-2');
-            step2.classList.remove('opacity-50');
-            step2.querySelector('.w-8').classList.remove('bg-gray-400');
-            step2.querySelector('.w-8').classList.add('bg-green-500');
-            
-            document.getElementById('schedule-work-btn').disabled = false;
-            document.getElementById('work-status').textContent = '工單已建立，等待其他單位處理';
+            closeProcessingModal();
             
             // 儲存工單資訊到全域變數
             window.currentWorkOrder = {
@@ -678,10 +669,22 @@
                 installDate: installDate,
                 contactTime: contactTime,
                 notes: notes,
-                status: 'created'
+                status: 'processing',
+                ticketId: document.getElementById('modal-ticket-id').textContent,
+                customerName: document.getElementById('modal-customer-name').textContent,
+                customerId: document.getElementById('modal-customer-id').textContent
             };
             
-            alert(`工單建立成功！\n工單編號：${workOrderNumber}\n新地址：${newAddress}\n新社區：${newCommunity}\n安裝項目：${selectedProducts.join('、')}\n\n工單已送交其他單位處理，請等待安裝完成通知。`);
+            // 將工單加入處理中列表
+            addToProcessingList(window.currentWorkOrder);
+            
+            // 從代處理中移除該工單
+            removeFromPendingList(window.currentWorkOrder.ticketId);
+            
+            alert(`工單建立成功！\n工單編號：${workOrderNumber}\n新地址：${newAddress}\n新社區：${newCommunity}\n安裝項目：${selectedProducts.join('、')}\n\n工單已移至「處理中」狀態，等待其他單位安裝完成。`);
+            
+            // 自動切換到處理中頁籤
+            switchTab('processing');
             
             // 模擬其他單位處理工單
             simulateExternalProcessing(workOrderNumber);
@@ -691,34 +694,148 @@
         function simulateExternalProcessing(workOrderNumber) {
             // 5秒後模擬工單完成
             setTimeout(() => {
-                // 生成結案時間（轉移日期）
+                // 生成結案時間
                 const completionDate = new Date();
-                completionDate.setDate(completionDate.getDate() + 3); // 3天後完成
-                const transferDate = completionDate.toISOString().split('T')[0];
                 
                 // 更新工單狀態
                 if (window.currentWorkOrder) {
                     window.currentWorkOrder.status = 'completed';
                     window.currentWorkOrder.completionDate = completionDate.toISOString();
-                    window.currentWorkOrder.transferDate = transferDate;
                 }
                 
-                // 更新處理頁面狀態
-                document.getElementById('work-status').textContent = '其他單位已完成處理，工單已結案';
+                // 從處理中移除，加入追蹤中
+                removeFromProcessingList(window.currentWorkOrder.ticketId);
+                addToTrackingList(window.currentWorkOrder);
                 
-                // 啟用步驟3
-                const step3 = document.getElementById('step-3');
-                step3.classList.remove('opacity-50');
-                step3.querySelector('.w-8').classList.remove('bg-gray-400');
-                step3.querySelector('.w-8').classList.add('bg-blue-500');
+                alert(`工單處理完成通知：\n工單編號：${workOrderNumber}\n完成時間：${completionDate.toLocaleString('zh-TW')}\n\n工單已移至「追蹤中」狀態，請設定轉移日期。`);
                 
-                document.getElementById('transfer-date').disabled = false;
-                document.getElementById('set-transfer-btn').disabled = false;
-                document.getElementById('transfer-date').value = transferDate;
-                
-                alert(`工單處理完成通知：\n工單編號：${workOrderNumber}\n完成時間：${completionDate.toLocaleString('zh-TW')}\n系統自動設定轉移日期：${transferDate}\n\n請確認轉移日期是否正確。`);
+                // 自動切換到追蹤中頁籤
+                switchTab('tracking');
                 
             }, 5000);
+        }
+
+        // 將工單加入處理中列表
+        function addToProcessingList(workOrder) {
+            const processingContent = document.getElementById('processing-content');
+            const workOrderHtml = `
+                <div class="border border-orange-200 rounded-lg p-4 bg-orange-50" data-ticket-id="${workOrder.ticketId}">
+                    <div class="flex justify-between items-start">
+                        <div class="flex-1">
+                            <div class="flex items-center space-x-4 mb-2">
+                                <span class="text-lg font-semibold text-gray-900">客訴單號: ${workOrder.ticketId}</span>
+                                <span class="bg-orange-100 text-orange-800 px-2 py-1 rounded-full text-xs font-medium">正在安裝</span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4 text-sm text-gray-600 mb-3">
+                                <div><span class="font-medium">工單號碼:</span> ${workOrder.number}</div>
+                                <div><span class="font-medium">客戶編號:</span> ${workOrder.customerId}</div>
+                                <div><span class="font-medium">新社區:</span> ${workOrder.community}</div>
+                                <div><span class="font-medium">安裝進度:</span> 設備安裝中</div>
+                            </div>
+                            <div class="text-sm text-gray-700">
+                                <strong>安裝項目:</strong> ${workOrder.products.join('、')}
+                            </div>
+                        </div>
+                        <div class="ml-4 text-right">
+                            <div class="text-sm text-gray-500 mb-2">預計完成時間</div>
+                            <div class="text-sm font-medium text-orange-600">${workOrder.installDate} 15:00</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            const spaceDiv = processingContent.querySelector('.space-y-4');
+            spaceDiv.insertAdjacentHTML('beforeend', workOrderHtml);
+            
+            // 更新處理中數量
+            updateTabCount('processing', 1);
+        }
+
+        // 從代處理中移除工單
+        function removeFromPendingList(ticketId) {
+            const pendingContent = document.getElementById('pending-content');
+            const ticketElement = pendingContent.querySelector(`[data-ticket-id="${ticketId}"]`);
+            if (!ticketElement) {
+                // 如果沒有data-ticket-id，則查找包含該ID的元素
+                const allTickets = pendingContent.querySelectorAll('.border');
+                allTickets.forEach(ticket => {
+                    if (ticket.textContent.includes(ticketId)) {
+                        ticket.remove();
+                    }
+                });
+            } else {
+                ticketElement.remove();
+            }
+            
+            // 更新代處理數量
+            updateTabCount('pending', -1);
+        }
+
+        // 從處理中移除工單
+        function removeFromProcessingList(ticketId) {
+            const processingContent = document.getElementById('processing-content');
+            const ticketElement = processingContent.querySelector(`[data-ticket-id="${ticketId}"]`);
+            if (ticketElement) {
+                ticketElement.remove();
+            }
+            
+            // 更新處理中數量
+            updateTabCount('processing', -1);
+        }
+
+        // 將工單加入追蹤中列表
+        function addToTrackingList(workOrder) {
+            const trackingContent = document.getElementById('tracking-content');
+            const workOrderHtml = `
+                <div class="border border-blue-200 rounded-lg p-4 bg-blue-50" data-ticket-id="${workOrder.ticketId}">
+                    <div class="flex justify-between items-start">
+                        <div class="flex-1">
+                            <div class="flex items-center space-x-4 mb-2">
+                                <span class="text-lg font-semibold text-gray-900">客訴單號: ${workOrder.ticketId}</span>
+                                <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">工單完成</span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4 text-sm text-gray-600 mb-3">
+                                <div><span class="font-medium">工單號碼:</span> ${workOrder.number}</div>
+                                <div><span class="font-medium">客戶編號:</span> ${workOrder.customerId}</div>
+                                <div><span class="font-medium">完成時間:</span> ${new Date(workOrder.completionDate).toLocaleString('zh-TW')}</div>
+                                <div><span class="font-medium">新地址:</span> ${workOrder.address}</div>
+                            </div>
+                            <div class="text-sm text-gray-700 mb-3">
+                                <strong>安裝項目:</strong> ${workOrder.products.join('、')} - 已完成安裝
+                            </div>
+                            <div class="bg-white p-3 rounded border">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">設定轉移日期（月份開始日）</label>
+                                <div class="flex items-center space-x-3">
+                                    <input type="date" id="transfer-date-${workOrder.ticketId.toLowerCase()}" class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                    <button onclick="setTransferDate('${workOrder.ticketId}')" class="bg-blue-600 text-white px-3 py-2 rounded-md hover:bg-blue-700 text-sm font-medium">
+                                        設定
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            const spaceDiv = trackingContent.querySelector('.space-y-4');
+            spaceDiv.insertAdjacentHTML('beforeend', workOrderHtml);
+            
+            // 設定預設轉移日期為明天
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            document.getElementById(`transfer-date-${workOrder.ticketId.toLowerCase()}`).value = tomorrow.toISOString().split('T')[0];
+            
+            // 更新追蹤中數量
+            updateTabCount('tracking', 1);
+        }
+
+        // 更新頁籤數量
+        function updateTabCount(tabName, change) {
+            const tabButton = document.getElementById(`tab-${tabName}`);
+            const countSpan = tabButton.querySelector('span');
+            const currentCount = parseInt(countSpan.textContent);
+            const newCount = Math.max(0, currentCount + change);
+            countSpan.textContent = newCount;
         }
 
         // 開啟約工能量表
@@ -809,7 +926,87 @@
             }
         }
 
-        // 確認轉移日期
+        // 設定轉移日期
+        function setTransferDate(ticketId) {
+            const dateInput = document.getElementById(`transfer-date-${ticketId.toLowerCase()}`);
+            const transferDate = dateInput.value;
+            
+            if (!transferDate) {
+                alert('請選擇轉移日期');
+                return;
+            }
+            
+            const confirmed = confirm(`確認設定轉移日期為 ${transferDate}？\n設定後將送交主管審核。`);
+            
+            if (confirmed) {
+                // 從追蹤中移除工單
+                removeFromTrackingList(ticketId);
+                
+                // 加入主管簽核列表
+                addToApprovalList(ticketId, transferDate);
+                
+                alert(`${ticketId} 轉移日期已設定為 ${transferDate}\n工單已移至「主管簽核」狀態`);
+                
+                // 自動切換到主管簽核頁籤
+                switchTab('approval');
+            }
+        }
+
+        // 從追蹤中移除工單
+        function removeFromTrackingList(ticketId) {
+            const trackingContent = document.getElementById('tracking-content');
+            const ticketElement = trackingContent.querySelector(`[data-ticket-id="${ticketId}"]`);
+            if (ticketElement) {
+                ticketElement.remove();
+            }
+            
+            // 更新追蹤中數量
+            updateTabCount('tracking', -1);
+        }
+
+        // 將工單加入主管簽核列表
+        function addToApprovalList(ticketId, transferDate) {
+            const approvalContent = document.getElementById('approval-content');
+            const workOrder = window.currentWorkOrder; // 使用全域工單資訊
+            
+            const workOrderHtml = `
+                <div class="border border-purple-200 rounded-lg p-4 bg-purple-50" data-ticket-id="${ticketId}">
+                    <div class="flex justify-between items-start">
+                        <div class="flex-1">
+                            <div class="flex items-center space-x-4 mb-2">
+                                <span class="text-lg font-semibold text-gray-900">客訴單號: ${ticketId}</span>
+                                <span class="bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs font-medium">等待簽核</span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4 text-sm text-gray-600 mb-3">
+                                <div><span class="font-medium">工單號碼:</span> ${workOrder ? workOrder.number : 'WO-2024-XXX'}</div>
+                                <div><span class="font-medium">客戶編號:</span> ${workOrder ? workOrder.customerId : 'C001XXX'}</div>
+                                <div><span class="font-medium">轉移日期:</span> ${transferDate}</div>
+                                <div><span class="font-medium">送審時間:</span> ${new Date().toLocaleString('zh-TW')}</div>
+                            </div>
+                            <div class="text-sm text-gray-700 bg-white p-3 rounded">
+                                <strong>轉移原因:</strong> 客戶搬遷至新址，新服務地址：${workOrder ? workOrder.address : '新地址'}
+                            </div>
+                        </div>
+                        <div class="ml-4 space-y-2">
+                            <button onclick="approveTransfer('${ticketId}', '${transferDate}')" class="block w-full bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 text-sm font-medium">
+                                核准
+                            </button>
+                            <button onclick="rejectTransfer('${ticketId}')" class="block w-full bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 text-sm font-medium">
+                                駁回
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            const spaceDiv = approvalContent.querySelector('.space-y-4');
+            spaceDiv.insertAdjacentHTML('beforeend', workOrderHtml);
+            
+            // 更新主管簽核數量
+            updateTabCount('approval', 1);
+        }
+
+        // 確認轉移日期（保留原有功能）
         function confirmTransferDate(ticketId) {
             const confirmed = confirm('確認轉移日期正確，將送交主管審核？');
             
@@ -821,15 +1018,24 @@
         }
 
         // 核准轉移
-        function approveTransfer(ticketId) {
+        function approveTransfer(ticketId, transferDate) {
             const confirmed = confirm('確定核准此轉移申請？');
             
             if (confirmed) {
+                // 從主管簽核中移除工單
+                removeFromApprovalList(ticketId);
+                
+                // 加入結案列表
+                addToClosedList(ticketId, transferDate);
+                
                 alert(`${ticketId} 轉移申請已核准，系統將自動執行轉移並結案`);
                 
                 // 模擬系統自動轉移
                 setTimeout(() => {
                     alert(`${ticketId} 轉移已完成，工單已自動結案`);
+                    
+                    // 自動切換到結案頁籤
+                    switchTab('closed');
                 }, 2000);
             }
         }
@@ -839,8 +1045,116 @@
             const reason = prompt('請輸入駁回原因：');
             
             if (reason) {
+                // 從主管簽核中移除工單
+                removeFromApprovalList(ticketId);
+                
+                // 重新加入追蹤中列表（需要重新設定轉移日期）
+                addBackToTrackingList(ticketId, reason);
+                
                 alert(`${ticketId} 轉移申請已駁回\n駁回原因：${reason}\n工單已退回追蹤中狀態`);
+                
+                // 自動切換到追蹤中頁籤
+                switchTab('tracking');
             }
+        }
+
+        // 從主管簽核中移除工單
+        function removeFromApprovalList(ticketId) {
+            const approvalContent = document.getElementById('approval-content');
+            const ticketElement = approvalContent.querySelector(`[data-ticket-id="${ticketId}"]`);
+            if (ticketElement) {
+                ticketElement.remove();
+            }
+            
+            // 更新主管簽核數量
+            updateTabCount('approval', -1);
+        }
+
+        // 將工單加入結案列表
+        function addToClosedList(ticketId, transferDate) {
+            const closedContent = document.getElementById('closed-content');
+            const workOrder = window.currentWorkOrder;
+            
+            const workOrderHtml = `
+                <div class="border border-green-200 rounded-lg p-4 bg-green-50" data-ticket-id="${ticketId}">
+                    <div class="flex justify-between items-start">
+                        <div class="flex-1">
+                            <div class="flex items-center space-x-4 mb-2">
+                                <span class="text-lg font-semibold text-gray-900">客訴單號: ${ticketId}</span>
+                                <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium">已結案</span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4 text-sm text-gray-600 mb-3">
+                                <div><span class="font-medium">工單號碼:</span> ${workOrder ? workOrder.number : 'WO-2024-XXX'}</div>
+                                <div><span class="font-medium">客戶編號:</span> ${workOrder ? workOrder.customerId : 'C001XXX'}</div>
+                                <div><span class="font-medium">結案時間:</span> ${new Date().toLocaleString('zh-TW')}</div>
+                                <div><span class="font-medium">轉移完成:</span> ${transferDate}</div>
+                            </div>
+                            <div class="text-sm text-gray-700">
+                                <strong>處理結果:</strong> 服務已成功轉移至新址：${workOrder ? workOrder.address : '新地址'}，客戶確認服務正常
+                            </div>
+                        </div>
+                        <div class="ml-4 text-right">
+                            <div class="text-sm text-green-600 font-medium">轉移成功</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            const spaceDiv = closedContent.querySelector('.space-y-4');
+            spaceDiv.insertAdjacentHTML('afterbegin', workOrderHtml);
+            
+            // 更新結案數量
+            updateTabCount('closed', 1);
+        }
+
+        // 將工單退回追蹤中列表
+        function addBackToTrackingList(ticketId, rejectReason) {
+            const trackingContent = document.getElementById('tracking-content');
+            const workOrder = window.currentWorkOrder;
+            
+            const workOrderHtml = `
+                <div class="border border-red-200 rounded-lg p-4 bg-red-50" data-ticket-id="${ticketId}">
+                    <div class="flex justify-between items-start">
+                        <div class="flex-1">
+                            <div class="flex items-center space-x-4 mb-2">
+                                <span class="text-lg font-semibold text-gray-900">客訴單號: ${ticketId}</span>
+                                <span class="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-medium">需重新設定</span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4 text-sm text-gray-600 mb-3">
+                                <div><span class="font-medium">工單號碼:</span> ${workOrder ? workOrder.number : 'WO-2024-XXX'}</div>
+                                <div><span class="font-medium">客戶編號:</span> ${workOrder ? workOrder.customerId : 'C001XXX'}</div>
+                                <div><span class="font-medium">駁回時間:</span> ${new Date().toLocaleString('zh-TW')}</div>
+                                <div><span class="font-medium">新地址:</span> ${workOrder ? workOrder.address : '新地址'}</div>
+                            </div>
+                            <div class="text-sm text-gray-700 mb-3 bg-white p-3 rounded border">
+                                <strong>駁回原因:</strong> ${rejectReason}
+                            </div>
+                            <div class="bg-white p-3 rounded border">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">重新設定轉移日期（月份開始日）</label>
+                                <div class="flex items-center space-x-3">
+                                    <input type="date" id="transfer-date-${ticketId.toLowerCase()}" class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                    <button onclick="setTransferDate('${ticketId}')" class="bg-blue-600 text-white px-3 py-2 rounded-md hover:bg-blue-700 text-sm font-medium">
+                                        重新設定
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            const spaceDiv = trackingContent.querySelector('.space-y-4');
+            spaceDiv.insertAdjacentHTML('afterbegin', workOrderHtml);
+            
+            // 設定預設轉移日期為明天
+            setTimeout(() => {
+                const tomorrow = new Date();
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                document.getElementById(`transfer-date-${ticketId.toLowerCase()}`).value = tomorrow.toISOString().split('T')[0];
+            }, 100);
+            
+            // 更新追蹤中數量
+            updateTabCount('tracking', 1);
         }
 
         // 初始化頁面
@@ -848,6 +1162,5 @@
             switchTab('pending');
         });
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9692133c02b0f1f8',t:'MTc1NDE4NDg5My4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9692223151edf244',t:'MTc1NDE4NTUwNS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
-
