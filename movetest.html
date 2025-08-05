@@ -255,6 +255,13 @@
             const customerPhone = document.getElementById('customer-phone').value.trim();
             const customerIdNumber = document.getElementById('customer-id-number').value.trim();
 
+            console.log('開始查詢，輸入的資料：', {
+                customerId: customerId,
+                customerName: customerName,
+                customerPhone: customerPhone,
+                customerIdNumber: customerIdNumber
+            });
+
             // 檢查是否至少輸入一個查詢條件
             if (!customerId && !customerName && !customerPhone && !customerIdNumber) {
                 alert('請至少輸入一個查詢條件');
@@ -267,34 +274,43 @@
             setTimeout(() => {
                 let foundCustomer = null;
 
-                // 根據不同條件查詢 - 修正查詢邏輯
+                console.log('資料庫內容：', customerDatabase);
+
+                // 根據不同條件查詢
                 for (let id in customerDatabase) {
                     const customer = customerDatabase[id];
+                    console.log('檢查客戶：', customer);
                     
-                    // 客戶編號查詢（完全匹配或部分匹配）
-                    if (customerId && (customer.customerId === customerId || customer.customerId.toLowerCase().includes(customerId.toLowerCase()))) {
+                    // 客戶編號查詢（完全匹配）
+                    if (customerId && customer.customerId === customerId) {
+                        console.log('找到匹配的客戶編號：', customer);
                         foundCustomer = customer;
                         break;
                     }
                     
                     // 客戶姓名查詢（部分匹配）
                     if (customerName && customer.customerName.includes(customerName)) {
+                        console.log('找到匹配的客戶姓名：', customer);
                         foundCustomer = customer;
                         break;
                     }
                     
                     // 電話查詢（部分匹配）
                     if (customerPhone && customer.phone.includes(customerPhone)) {
+                        console.log('找到匹配的電話：', customer);
                         foundCustomer = customer;
                         break;
                     }
                     
-                    // 身分證字號查詢（完全匹配或部分匹配）
-                    if (customerIdNumber && (customer.idNumber === customerIdNumber || customer.idNumber.toLowerCase().includes(customerIdNumber.toLowerCase()))) {
+                    // 身分證字號查詢（完全匹配）
+                    if (customerIdNumber && customer.idNumber === customerIdNumber) {
+                        console.log('找到匹配的身分證字號：', customer);
                         foundCustomer = customer;
                         break;
                     }
                 }
+
+                console.log('查詢結果：', foundCustomer);
 
                 hideLoading();
 
@@ -342,10 +358,6 @@
             document.getElementById('result-area').textContent = customer.area;
             document.getElementById('result-community').textContent = customer.community;
             document.getElementById('result-address').textContent = customer.address;
-
-            // 更新聯絡方式確認欄位
-            document.getElementById('contact-phone-confirm').value = customer.phone;
-            document.getElementById('contact-mobile-confirm').value = customer.mobile;
 
             // 儲存當前客戶資料到全域變數
             window.currentCustomer = customer;
@@ -446,7 +458,7 @@
             }
         });
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96a281347701f1c8',t:'MTc1NDM1NzE2OS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96a28d3b64e6f1c8',t:'MTc1NDM1NzY2Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
 
 <!DOCTYPE html>
@@ -1799,6 +1811,7 @@
     </script>
 </body>
 </html>
+
 
 
 
