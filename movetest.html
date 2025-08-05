@@ -198,7 +198,7 @@
                     <p class="text-sm text-gray-500 mb-6">申請將轉入後台處理系統，相關人員會盡快與您聯絡</p>
                     
                     <div class="space-y-3">
-                        <button onclick="goToBackend()" class="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                        <button id="backend-btn" class="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
                             進入後台處理系統
                         </button>
                         <button onclick="closeSuccessModal()" class="w-full bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition-colors">
@@ -242,6 +242,9 @@
                         </button>
                         <button id="tab-processing" onclick="switchTab('processing')" class="py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">
                             處理中 <span class="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded-full ml-2">0</span>
+                        </button>
+                        <button id="tab-approval" onclick="switchTab('approval')" class="py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                            主管簽核 <span class="bg-purple-100 text-purple-800 text-xs font-medium px-2.5 py-0.5 rounded-full ml-2">0</span>
                         </button>
                         <button id="tab-completed" onclick="switchTab('completed')" class="py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">
                             已完成 <span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full ml-2">0</span>
@@ -304,7 +307,10 @@
 
                 <!-- 處理中內容 -->
                 <div id="processing-content" class="p-6 hidden">
-                    <div class="text-center py-12">
+                    <div class="space-y-4" id="processing-list">
+                        <!-- 處理中的工單會動態加入這裡 -->
+                    </div>
+                    <div id="processing-empty" class="text-center py-12">
                         <div class="text-gray-400 mb-4">
                             <svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
@@ -315,9 +321,28 @@
                     </div>
                 </div>
 
+                <!-- 主管簽核內容 -->
+                <div id="approval-content" class="p-6 hidden">
+                    <div class="space-y-4" id="approval-list">
+                        <!-- 等待主管簽核的工單會動態加入這裡 -->
+                    </div>
+                    <div id="approval-empty" class="text-center py-12">
+                        <div class="text-gray-400 mb-4">
+                            <svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-medium text-gray-900 mb-2">目前沒有等待簽核的工單</h3>
+                        <p class="text-gray-500">等待主管簽核的工單會顯示在這裡</p>
+                    </div>
+                </div>
+
                 <!-- 已完成內容 -->
                 <div id="completed-content" class="p-6 hidden">
-                    <div class="text-center py-12">
+                    <div class="space-y-4" id="completed-list">
+                        <!-- 已完成的工單會動態加入這裡 -->
+                    </div>
+                    <div id="completed-empty" class="text-center py-12">
                         <div class="text-gray-400 mb-4">
                             <svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
@@ -325,6 +350,151 @@
                         </div>
                         <h3 class="text-lg font-medium text-gray-900 mb-2">目前沒有已完成的工單</h3>
                         <p class="text-gray-500">已完成的工單會顯示在這裡</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 退回理由模態框 -->
+        <div id="rejection-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+            <div class="flex items-center justify-center min-h-screen p-4">
+                <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
+                    <div class="p-6">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="text-xl font-semibold text-gray-900">退回工單</h3>
+                            <button onclick="closeRejectionModal()" class="text-gray-400 hover:text-gray-600">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                        </div>
+
+                        <div class="mb-4">
+                            <p class="text-sm text-gray-600 mb-2">工單編號：<span id="rejection-work-order-number" class="font-semibold"></span></p>
+                            <p class="text-sm text-gray-600">請說明退回理由：</p>
+                        </div>
+
+                        <div class="mb-6">
+                            <textarea id="rejection-reason" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 resize-none" 
+                                      placeholder="請詳細說明退回原因，例如：地址資訊不完整、安裝日期需要調整、缺少必要文件等..."></textarea>
+                        </div>
+
+                        <div class="flex justify-end space-x-3">
+                            <button onclick="closeRejectionModal()" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
+                                取消
+                            </button>
+                            <button onclick="confirmRejection()" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">
+                                確認退回
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 工單修正模態框 -->
+        <div id="reprocess-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+            <div class="flex items-center justify-center min-h-screen p-4">
+                <div class="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-screen overflow-y-auto">
+                    <div class="p-6">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="text-xl font-semibold text-gray-900">修正工單</h3>
+                            <button onclick="closeReprocessModal()" class="text-gray-400 hover:text-gray-600">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                        </div>
+
+                        <!-- 工單基本資訊 -->
+                        <div class="bg-gray-50 rounded-lg p-4 mb-6">
+                            <h4 class="font-semibold text-gray-900 mb-3">工單資訊</h4>
+                            <div class="grid grid-cols-2 gap-4 text-sm">
+                                <div><span class="font-medium">工單編號:</span> <span id="reprocess-work-order-number">-</span></div>
+                                <div><span class="font-medium">客戶編號:</span> <span id="reprocess-customer-id">-</span></div>
+                                <div><span class="font-medium">客戶姓名:</span> <span id="reprocess-customer-name">-</span></div>
+                                <div><span class="font-medium">新地址:</span> <span id="reprocess-address">-</span></div>
+                                <div><span class="font-medium">新社區:</span> <span id="reprocess-community">-</span></div>
+                                <div><span class="font-medium">聯絡時間:</span> <span id="reprocess-contact-time">-</span></div>
+                                <div><span class="font-medium">原址暫停:</span> <span id="reprocess-suspend-original">-</span></div>
+                                <div><span class="font-medium">轉移日期確認:</span> <span id="reprocess-transfer-confirmed">-</span></div>
+                                <div class="col-span-2"><span class="font-medium">原備註:</span> <span id="reprocess-original-notes">-</span></div>
+                            </div>
+                        </div>
+
+                        <!-- 退回理由顯示 -->
+                        <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+                            <h4 class="font-semibold text-red-900 mb-2 flex items-center">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                                </svg>
+                                主管退回理由
+                            </h4>
+                            <p class="text-red-800" id="reprocess-rejection-reason">-</p>
+                        </div>
+
+                        <!-- 修正資料區域 -->
+                        <div id="reprocess-data-section">
+                            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                                <h4 class="font-semibold text-blue-900 mb-4 flex items-center">
+                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                    </svg>
+                                    修正資料
+                                </h4>
+                                
+                                <div class="space-y-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">安裝日期 *</label>
+                                        <input type="date" id="reprocess-install-date" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">修正說明 *</label>
+                                        <textarea id="reprocess-correction-notes" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" 
+                                                  placeholder="請詳細說明針對主管退回理由所做的修正內容..." required></textarea>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex justify-end mt-6">
+                                    <button onclick="confirmReprocessData()" class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 font-medium">
+                                        確認資料無誤
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 確認送出區域 -->
+                        <div id="reprocess-confirm-section" class="hidden">
+                            <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+                                <h4 class="font-semibold text-green-900 mb-4 flex items-center">
+                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    確認修正內容
+                                </h4>
+                                
+                                <div class="space-y-3 text-sm">
+                                    <div class="flex justify-between">
+                                        <span class="font-medium text-gray-700">修正後安裝日期:</span>
+                                        <span id="confirm-install-date" class="text-gray-900">-</span>
+                                    </div>
+                                    <div>
+                                        <span class="font-medium text-gray-700">修正說明:</span>
+                                        <div id="confirm-correction-notes" class="mt-1 p-2 bg-white rounded border text-gray-900">-</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex justify-between mt-6">
+                                    <button onclick="backToReprocessData()" class="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600">
+                                        返回修改
+                                    </button>
+                                    <button onclick="submitReprocessedWorkOrder()" class="bg-green-600 text-white px-6 py-2 rounded-md hover:bg-green-700 font-medium">
+                                        送出修正工單
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -383,6 +553,21 @@
                                         <option value="晚上">晚上 (18:00-21:00)</option>
                                         <option value="全天">全天 (09:00-21:00)</option>
                                     </select>
+                                </div>
+                            </div>
+
+                            <!-- 勾選選項 -->
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <h5 class="text-sm font-medium text-gray-900 mb-3">移機相關設定</h5>
+                                <div class="space-y-3">
+                                    <div class="flex items-center">
+                                        <input type="checkbox" id="suspend-original" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                        <label for="suspend-original" class="ml-2 text-sm text-gray-700">原址需要暫停服務</label>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <input type="checkbox" id="transfer-date-confirmed" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                        <label for="transfer-date-confirmed" class="ml-2 text-sm text-gray-700">新址預計轉移日期已確認</label>
+                                    </div>
                                 </div>
                             </div>
 
@@ -589,7 +774,7 @@
 
             // 驗證必填欄位
             if (!moveNotes) {
-                alert('請填寫備註說明');
+                showNotification('請填寫備註說明', 'warning');
                 return;
             }
 
@@ -623,6 +808,8 @@
 
         // 進入後台處理系統
         function goToBackend() {
+            console.log('進入後台系統');
+            
             // 將新申請資料儲存到 localStorage 供後台系統讀取
             const ticketId = document.getElementById('generated-ticket-id').textContent;
             const applicationData = JSON.parse(localStorage.getItem('moveApplication_' + ticketId));
@@ -638,8 +825,11 @@
             }
             
             // 切換到後台系統
-            document.querySelector('body > div:first-child').classList.add('hidden'); // 隱藏前台
-            document.getElementById('backend-system').classList.remove('hidden'); // 顯示後台
+            const frontendSystem = document.querySelector('.max-w-6xl');
+            const backendSystem = document.getElementById('backend-system');
+            
+            if (frontendSystem) frontendSystem.style.display = 'none';
+            if (backendSystem) backendSystem.classList.remove('hidden');
             
             // 載入後台資料
             loadBackendData();
@@ -649,8 +839,13 @@
 
         // 返回前台系統
         function goToFrontend() {
-            document.getElementById('backend-system').classList.add('hidden'); // 隱藏後台
-            document.querySelector('body > div:first-child').classList.remove('hidden'); // 顯示前台
+            console.log('返回前台系統');
+            
+            const frontendSystem = document.querySelector('.max-w-6xl');
+            const backendSystem = document.getElementById('backend-system');
+            
+            if (backendSystem) backendSystem.classList.add('hidden');
+            if (frontendSystem) frontendSystem.style.display = 'block';
         }
 
         // 載入後台資料
@@ -705,11 +900,13 @@
             // 隱藏所有內容
             document.getElementById('pending-content').classList.add('hidden');
             document.getElementById('processing-content').classList.add('hidden');
+            document.getElementById('approval-content').classList.add('hidden');
             document.getElementById('completed-content').classList.add('hidden');
             
             // 移除所有標籤的活動狀態
             document.getElementById('tab-pending').className = 'py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300';
             document.getElementById('tab-processing').className = 'py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300';
+            document.getElementById('tab-approval').className = 'py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300';
             document.getElementById('tab-completed').className = 'py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300';
             
             // 顯示選中的內容和標籤
@@ -804,26 +1001,35 @@
             document.getElementById('install-date').value = '';
             document.getElementById('contact-time').value = '上午';
             document.getElementById('work-order-notes').value = '';
+            document.getElementById('suspend-original').checked = false;
+            document.getElementById('transfer-date-confirmed').checked = false;
         }
 
         // 提交工單
         function submitWorkOrder() {
-            const newAddress = document.getElementById('new-address').value;
-            const newCommunity = document.getElementById('new-community').value;
+            console.log('submitWorkOrder 函數被調用');
+            
+            const newAddress = document.getElementById('new-address').value.trim();
+            const newCommunity = document.getElementById('new-community').value.trim();
             const installDate = document.getElementById('install-date').value;
             const contactTime = document.getElementById('contact-time').value;
-            const notes = document.getElementById('work-order-notes').value;
+            const notes = document.getElementById('work-order-notes').value.trim();
+            const suspendOriginal = document.getElementById('suspend-original').checked;
+            const transferDateConfirmed = document.getElementById('transfer-date-confirmed').checked;
+            
+            console.log('表單資料:', {
+                newAddress, newCommunity, installDate, contactTime, notes, 
+                suspendOriginal, transferDateConfirmed
+            });
             
             if (!newAddress || !newCommunity || !installDate) {
-                alert('請填寫所有必填欄位');
+                showNotification('請填寫所有必填欄位（新地址、新社區、預約安裝日期）', 'warning');
                 return;
             }
             
             // 生成工單號碼
             const workOrderNumber = 'WO-' + new Date().getTime();
-            
-            // 關閉工單建立視窗
-            closeWorkOrderModal();
+            console.log('生成工單號碼:', workOrderNumber);
             
             // 儲存工單資訊
             const workOrder = {
@@ -833,37 +1039,45 @@
                 installDate: installDate,
                 contactTime: contactTime,
                 notes: notes,
+                suspendOriginal: suspendOriginal,
+                transferDateConfirmed: transferDateConfirmed,
                 status: 'processing',
                 ticketId: window.currentProcessingTicketId,
                 customerName: document.getElementById('modal-customer-name').textContent,
-                customerId: document.getElementById('modal-customer-id').textContent
+                customerId: document.getElementById('modal-customer-id').textContent,
+                createTime: new Date().toISOString()
             };
             
-            // 將工單加入處理中列表
-            addToProcessingList(workOrder);
+            console.log('工單資訊:', workOrder);
+            
+            // 關閉工單建立視窗
+            closeWorkOrderModal();
+            
+            // 將工單加入主管簽核列表
+            addToApprovalList(workOrder);
             
             // 從待處理中移除該工單
             removeFromPendingList(window.currentProcessingTicketId);
             
-            alert(`工單建立成功！\n工單編號：${workOrderNumber}\n新地址：${newAddress}\n新社區：${newCommunity}\n\n工單已移至「處理中」狀態，等待其他單位安裝完成。`);
-            
-            // 自動切換到處理中頁籤
-            switchTab('processing');
-            
-            // 模擬其他單位處理工單
-            simulateExternalProcessing(workOrderNumber);
+            // 顯示成功訊息
+            setTimeout(() => {
+                showNotification(`工單建立成功！\n\n工單編號：${workOrderNumber}\n新地址：${newAddress}\n新社區：${newCommunity}\n安裝日期：${installDate}\n原址暫停：${suspendOriginal ? '是' : '否'}\n轉移日期確認：${transferDateConfirmed ? '是' : '否'}\n\n工單已送至主管簽核。`, 'success');
+                
+                // 自動切換到主管簽核頁籤
+                switchTab('approval');
+            }, 100);
         }
 
-        // 將工單加入處理中列表
-        function addToProcessingList(workOrder) {
-            const processingContent = document.getElementById('processing-content');
+        // 將工單加入主管簽核列表
+        function addToApprovalList(workOrder) {
+            const approvalList = document.getElementById('approval-list');
+            const approvalEmpty = document.getElementById('approval-empty');
             
-            // 如果是空狀態，先清空
-            if (processingContent.querySelector('.text-center')) {
-                processingContent.innerHTML = '<div class="space-y-4"></div>';
-            }
+            // 隱藏空狀態提示
+            approvalEmpty.style.display = 'none';
             
-            const spaceDiv = processingContent.querySelector('.space-y-4') || processingContent;
+            const suspendText = workOrder.suspendOriginal ? '是' : '否';
+            const transferText = workOrder.transferDateConfirmed ? '是' : '否';
             
             const workOrderHtml = `
                 <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow" data-work-order="${workOrder.number}">
@@ -871,7 +1085,7 @@
                         <div class="flex-1">
                             <div class="flex items-center space-x-4 mb-2">
                                 <span class="text-lg font-semibold text-gray-900">工單編號: ${workOrder.number}</span>
-                                <span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs font-medium">處理中</span>
+                                <span class="bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs font-medium">等待主管簽核</span>
                             </div>
                             <div class="grid grid-cols-2 gap-4 text-sm text-gray-600 mb-3">
                                 <div><span class="font-medium">客戶編號:</span> ${workOrder.customerId}</div>
@@ -880,20 +1094,139 @@
                                 <div><span class="font-medium">新社區:</span> ${workOrder.community}</div>
                                 <div><span class="font-medium">安裝日期:</span> ${workOrder.installDate}</div>
                                 <div><span class="font-medium">聯絡時間:</span> ${workOrder.contactTime}</div>
+                                <div><span class="font-medium">原址暫停:</span> ${suspendText}</div>
+                                <div><span class="font-medium">轉移日期確認:</span> ${transferText}</div>
                             </div>
                             <div class="text-sm text-gray-700">
                                 <strong>處理項目:</strong> 移機服務安裝
                             </div>
                             ${workOrder.notes ? `<div class="text-sm text-gray-600 mt-2 bg-gray-50 p-2 rounded"><strong>備註:</strong> ${workOrder.notes}</div>` : ''}
                         </div>
-                        <div class="ml-4 text-sm text-gray-500">
-                            等待其他單位處理...
+                        <div class="ml-4 flex flex-col space-y-2">
+                            <button onclick="approveWorkOrder('${workOrder.number}')" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 text-sm font-medium">
+                                ✓ 核准
+                            </button>
+                            <button onclick="showRejectionModal('${workOrder.number}')" class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 text-sm font-medium">
+                                ✗ 退回
+                            </button>
                         </div>
                     </div>
                 </div>
             `;
             
-            spaceDiv.insertAdjacentHTML('beforeend', workOrderHtml);
+            approvalList.insertAdjacentHTML('beforeend', workOrderHtml);
+            
+            // 更新主管簽核數量
+            updateTabCount('approval', 1);
+        }
+        
+        // 將重新送審的工單加入主管簽核列表
+        function addToApprovalListAsResubmit(workOrder) {
+            const approvalList = document.getElementById('approval-list');
+            const approvalEmpty = document.getElementById('approval-empty');
+            
+            // 隱藏空狀態提示
+            approvalEmpty.style.display = 'none';
+            
+            const suspendText = workOrder.suspendOriginal ? '是' : '否';
+            const transferText = workOrder.transferDateConfirmed ? '是' : '否';
+            
+            const workOrderHtml = `
+                <div class="border border-blue-200 rounded-lg p-4 hover:shadow-md transition-shadow bg-blue-50" data-work-order="${workOrder.number}">
+                    <div class="flex justify-between items-start">
+                        <div class="flex-1">
+                            <div class="flex items-center space-x-4 mb-2">
+                                <span class="text-lg font-semibold text-gray-900">工單編號: ${workOrder.number}</span>
+                                <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">重新送審</span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4 text-sm text-gray-600 mb-3">
+                                <div><span class="font-medium">客戶編號:</span> ${workOrder.customerId}</div>
+                                <div><span class="font-medium">客戶姓名:</span> ${workOrder.customerName}</div>
+                                <div><span class="font-medium">新地址:</span> ${workOrder.address}</div>
+                                <div><span class="font-medium">新社區:</span> ${workOrder.community}</div>
+                                <div><span class="font-medium">安裝日期:</span> ${workOrder.installDate}</div>
+                                <div><span class="font-medium">聯絡時間:</span> ${workOrder.contactTime}</div>
+                                <div><span class="font-medium">原址暫停:</span> ${suspendText}</div>
+                                <div><span class="font-medium">轉移日期確認:</span> ${transferText}</div>
+                            </div>
+                            <div class="text-sm text-gray-700 mb-2">
+                                <strong>處理項目:</strong> 移機服務安裝
+                            </div>
+                            ${workOrder.previousRejectionReason ? `<div class="text-sm text-gray-600 mb-2 bg-gray-100 p-2 rounded border-l-4 border-gray-400"><strong>前次退回理由:</strong> ${workOrder.previousRejectionReason}</div>` : ''}
+                            <div class="text-sm text-blue-700 bg-blue-100 p-3 rounded border border-blue-200">
+                                <strong>修正說明:</strong> ${workOrder.correctionNotes}
+                            </div>
+                            <div class="text-xs text-gray-500 mt-2">
+                                重新送審時間：${new Date(workOrder.resubmitTime).toLocaleString('zh-TW')}
+                            </div>
+                            ${workOrder.notes ? `<div class="text-sm text-gray-600 mt-2 bg-gray-50 p-2 rounded"><strong>原備註:</strong> ${workOrder.notes}</div>` : ''}
+                        </div>
+                        <div class="ml-4 flex flex-col space-y-2">
+                            <button onclick="approveWorkOrder('${workOrder.number}')" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 text-sm font-medium">
+                                ✓ 核准
+                            </button>
+                            <button onclick="showRejectionModal('${workOrder.number}')" class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 text-sm font-medium">
+                                ✗ 退回
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            approvalList.insertAdjacentHTML('beforeend', workOrderHtml);
+            
+            // 更新主管簽核數量
+            updateTabCount('approval', 1);
+        }
+
+        // 將工單加入處理中列表
+        function addToProcessingList(workOrder) {
+            const processingList = document.getElementById('processing-list');
+            const processingEmpty = document.getElementById('processing-empty');
+            
+            // 隱藏空狀態提示
+            processingEmpty.style.display = 'none';
+            
+            const suspendText = workOrder.suspendOriginal ? '是' : '否';
+            const transferText = workOrder.transferDateConfirmed ? '是' : '否';
+            
+            const workOrderHtml = `
+                <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow" data-work-order="${workOrder.number}">
+                    <div class="flex justify-between items-start">
+                        <div class="flex-1">
+                            <div class="flex items-center space-x-4 mb-2">
+                                <span class="text-lg font-semibold text-gray-900">工單編號: ${workOrder.number}</span>
+                                <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">主管已簽核</span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4 text-sm text-gray-600 mb-3">
+                                <div><span class="font-medium">客戶編號:</span> ${workOrder.customerId}</div>
+                                <div><span class="font-medium">客戶姓名:</span> ${workOrder.customerName}</div>
+                                <div><span class="font-medium">新地址:</span> ${workOrder.address}</div>
+                                <div><span class="font-medium">新社區:</span> ${workOrder.community}</div>
+                                <div><span class="font-medium">安裝日期:</span> ${workOrder.installDate}</div>
+                                <div><span class="font-medium">聯絡時間:</span> ${workOrder.contactTime}</div>
+                                <div><span class="font-medium">原址暫停:</span> ${suspendText}</div>
+                                <div><span class="font-medium">轉移日期確認:</span> ${transferText}</div>
+                            </div>
+                            <div class="text-sm text-gray-700">
+                                <strong>處理項目:</strong> 移機服務安裝
+                            </div>
+                            ${workOrder.notes ? `<div class="text-sm text-gray-600 mt-2 bg-gray-50 p-2 rounded"><strong>備註:</strong> ${workOrder.notes}</div>` : ''}
+                        </div>
+                        <div class="ml-4 text-sm text-blue-600 font-medium">
+                            <div class="text-blue-600 font-medium">
+                                <svg class="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                主管已簽核
+                            </div>
+                            <div class="text-xs text-gray-500 mt-1">等待安裝單位處理...</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            processingList.insertAdjacentHTML('beforeend', workOrderHtml);
             
             // 更新處理中數量
             updateTabCount('processing', 1);
@@ -924,41 +1257,479 @@
             }
         }
 
+        // 主管核准工單
+        function approveWorkOrder(workOrderNumber) {
+            // 從主管簽核列表移除
+            const approvalElement = document.querySelector(`#approval-list [data-work-order="${workOrderNumber}"]`);
+            if (approvalElement) {
+                approvalElement.remove();
+                
+                // 檢查是否需要顯示空狀態
+                const approvalList = document.getElementById('approval-list');
+                const approvalEmpty = document.getElementById('approval-empty');
+                if (approvalList.children.length === 0) {
+                    approvalEmpty.style.display = 'block';
+                }
+                
+                // 更新主管簽核數量
+                const approvalTab = document.getElementById('tab-approval');
+                const approvalSpan = approvalTab.querySelector('span');
+                const approvalCount = parseInt(approvalSpan.textContent);
+                if (approvalCount > 0) {
+                    approvalSpan.textContent = approvalCount - 1;
+                }
+                
+                // 取得工單資料並加入處理中列表
+                const workOrderData = {
+                    number: workOrderNumber,
+                    customerId: 'C001234', // 這裡應該從實際資料取得
+                    customerName: '王小明', // 這裡應該從實際資料取得
+                    address: '新地址', // 這裡應該從實際資料取得
+                    community: '新社區', // 這裡應該從實際資料取得
+                    installDate: '2024-01-16', // 這裡應該從實際資料取得
+                    contactTime: '上午', // 這裡應該從實際資料取得
+                    suspendOriginal: false, // 這裡應該從實際資料取得
+                    transferDateConfirmed: true, // 這裡應該從實際資料取得
+                    notes: '' // 這裡應該從實際資料取得
+                };
+                
+                addToProcessingList(workOrderData);
+                
+                showNotification(`✅ 工單 ${workOrderNumber} 已核准！\n\n工單已移至「處理中」狀態\n將轉送安裝單位進行後續處理`, 'success');
+                
+                // 自動切換到處理中頁籤
+                switchTab('processing');
+                
+                // 繼續模擬安裝流程
+                simulateExternalProcessing(workOrderNumber);
+            }
+        }
+
+        // 顯示退回理由模態框
+        function showRejectionModal(workOrderNumber) {
+            document.getElementById('rejection-work-order-number').textContent = workOrderNumber;
+            document.getElementById('rejection-reason').value = '';
+            document.getElementById('rejection-modal').classList.remove('hidden');
+            window.currentRejectionWorkOrder = workOrderNumber;
+        }
+
+        // 關閉退回理由模態框
+        function closeRejectionModal() {
+            document.getElementById('rejection-modal').classList.add('hidden');
+            document.getElementById('rejection-reason').value = '';
+            window.currentRejectionWorkOrder = null;
+        }
+
+        // 確認退回工單
+        function confirmRejection() {
+            const reason = document.getElementById('rejection-reason').value.trim();
+            const workOrderNumber = window.currentRejectionWorkOrder;
+            
+            console.log('確認退回 - 理由:', reason);
+            console.log('確認退回 - 工單編號:', workOrderNumber);
+            
+            if (!reason) {
+                showNotification('請填寫退回理由', 'warning');
+                return;
+            }
+            
+            if (!workOrderNumber) {
+                showNotification('系統錯誤：找不到工單編號', 'error');
+                return;
+            }
+            
+            // 從主管簽核列表移除
+            const approvalElement = document.querySelector(`#approval-list [data-work-order="${workOrderNumber}"]`);
+            console.log('找到的簽核元素:', approvalElement);
+            
+            if (approvalElement) {
+                // 直接從HTML內容中提取資料
+                const htmlContent = approvalElement.innerHTML;
+                console.log('HTML內容:', htmlContent);
+                
+                // 使用更簡單的方式提取資料
+                const workOrderData = {
+                    number: workOrderNumber,
+                    customerId: extractDataFromHTML(htmlContent, '客戶編號:') || 'C001234',
+                    customerName: extractDataFromHTML(htmlContent, '客戶姓名:') || '王小明',
+                    address: extractDataFromHTML(htmlContent, '新地址:') || '新地址',
+                    community: extractDataFromHTML(htmlContent, '新社區:') || '新社區',
+                    installDate: extractDataFromHTML(htmlContent, '安裝日期:') || '2024-01-16',
+                    contactTime: extractDataFromHTML(htmlContent, '聯絡時間:') || '上午',
+                    suspendOriginal: extractDataFromHTML(htmlContent, '原址暫停:') === '是',
+                    transferDateConfirmed: extractDataFromHTML(htmlContent, '轉移日期確認:') === '是',
+                    notes: extractDataFromHTML(htmlContent, '備註:') || '',
+                    rejectionReason: reason,
+                    rejectionTime: new Date().toISOString(),
+                    status: 'rejected'
+                };
+                
+                console.log('提取的工單資料:', workOrderData);
+                
+                // 移除簽核列表中的工單
+                approvalElement.remove();
+                
+                // 檢查是否需要顯示空狀態
+                const approvalList = document.getElementById('approval-list');
+                const approvalEmpty = document.getElementById('approval-empty');
+                if (approvalList.children.length === 0) {
+                    approvalEmpty.style.display = 'block';
+                }
+                
+                // 更新主管簽核數量
+                const approvalTab = document.getElementById('tab-approval');
+                const approvalSpan = approvalTab.querySelector('span');
+                const approvalCount = parseInt(approvalSpan.textContent);
+                if (approvalCount > 0) {
+                    approvalSpan.textContent = approvalCount - 1;
+                }
+                
+                // 將工單加回處理中列表（顯示為退回狀態）
+                addToProcessingListAsRejected(workOrderData);
+                
+                showNotification(`❌ 工單 ${workOrderNumber} 已退回！\n\n退回理由：${reason}\n\n工單已退回至「處理中」狀態\n處理人員需要重新檢視並修正`, 'warning');
+                
+                // 關閉模態框
+                closeRejectionModal();
+                
+                // 切換到處理中頁籤
+                switchTab('processing');
+            } else {
+                showNotification('系統錯誤：找不到對應的工單', 'error');
+            }
+        }
+        
+        // 輔助函數：從HTML內容中提取資料
+        function extractDataFromHTML(htmlContent, label) {
+            // 移除HTML標籤，只保留文字內容
+            const textContent = htmlContent.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ');
+            console.log('處理後的文字內容:', textContent);
+            
+            // 尋找標籤後的內容
+            const regex = new RegExp(label + '\\s*([^\\n\\r]+?)(?=\\s*[\\w\\u4e00-\\u9fff]+:|$)', 'i');
+            const match = textContent.match(regex);
+            const result = match ? match[1].trim() : '';
+            console.log(`提取 ${label}:`, result);
+            return result;
+        }
+        
+        // 輔助函數：從元素中提取冒號後的文字
+        function extractTextAfterColon(element, label) {
+            const text = element.textContent || element.innerText;
+            const regex = new RegExp(label + '\\s*([^\\n\\r]+)', 'i');
+            const match = text.match(regex);
+            return match ? match[1].trim() : '';
+        }
+        
+        // 輔助函數：從元素中提取備註
+        function extractNotesFromElement(element) {
+            const notesElement = element.querySelector('div:contains("備註:")');
+            if (notesElement) {
+                const text = notesElement.textContent || notesElement.innerText;
+                const match = text.match(/備註:\s*(.+)/);
+                return match ? match[1].trim() : '';
+            }
+            return '';
+        }
+
+        // 從工單元素中提取資料
+        function extractWorkOrderData(element) {
+            const workOrderNumber = element.querySelector('[data-work-order]').getAttribute('data-work-order');
+            const textContent = element.textContent;
+            
+            // 簡化的資料提取（實際應用中應該有更完整的資料結構）
+            return {
+                number: workOrderNumber,
+                customerId: 'C001234', // 從實際元素中提取
+                customerName: '王小明', // 從實際元素中提取
+                address: '新地址', // 從實際元素中提取
+                community: '新社區', // 從實際元素中提取
+                installDate: '2024-01-16', // 從實際元素中提取
+                contactTime: '上午', // 從實際元素中提取
+                suspendOriginal: false,
+                transferDateConfirmed: true,
+                notes: '',
+                status: 'rejected'
+            };
+        }
+
+        // 將退回的工單加入處理中列表
+        function addToProcessingListAsRejected(workOrder) {
+            const processingList = document.getElementById('processing-list');
+            const processingEmpty = document.getElementById('processing-empty');
+            
+            // 隱藏空狀態提示
+            processingEmpty.style.display = 'none';
+            
+            const suspendText = workOrder.suspendOriginal ? '是' : '否';
+            const transferText = workOrder.transferDateConfirmed ? '是' : '否';
+            
+            const workOrderHtml = `
+                <div class="border border-red-200 rounded-lg p-4 hover:shadow-md transition-shadow bg-red-50" data-work-order="${workOrder.number}">
+                    <div class="flex justify-between items-start">
+                        <div class="flex-1">
+                            <div class="flex items-center space-x-4 mb-2">
+                                <span class="text-lg font-semibold text-gray-900">工單編號: ${workOrder.number}</span>
+                                <span class="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-medium">主管退回</span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4 text-sm text-gray-600 mb-3">
+                                <div><span class="font-medium">客戶編號:</span> ${workOrder.customerId}</div>
+                                <div><span class="font-medium">客戶姓名:</span> ${workOrder.customerName}</div>
+                                <div><span class="font-medium">新地址:</span> ${workOrder.address}</div>
+                                <div><span class="font-medium">新社區:</span> ${workOrder.community}</div>
+                                <div><span class="font-medium">安裝日期:</span> ${workOrder.installDate}</div>
+                                <div><span class="font-medium">聯絡時間:</span> ${workOrder.contactTime}</div>
+                                <div><span class="font-medium">原址暫停:</span> ${suspendText}</div>
+                                <div><span class="font-medium">轉移日期確認:</span> ${transferText}</div>
+                            </div>
+                            <div class="text-sm text-gray-700 mb-2">
+                                <strong>處理項目:</strong> 移機服務安裝
+                            </div>
+                            <div class="text-sm text-red-700 bg-red-100 p-3 rounded border border-red-200">
+                                <strong>退回理由:</strong> ${workOrder.rejectionReason}
+                            </div>
+                            <div class="text-xs text-gray-500 mt-2">
+                                退回時間：${new Date(workOrder.rejectionTime).toLocaleString('zh-TW')}
+                            </div>
+                            ${workOrder.notes ? `<div class="text-sm text-gray-600 mt-2 bg-gray-50 p-2 rounded"><strong>原備註:</strong> ${workOrder.notes}</div>` : ''}
+                        </div>
+                        <div class="ml-4 flex flex-col space-y-2">
+                            <button onclick="reprocessWorkOrder('${workOrder.number}')" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 text-sm font-medium">
+                                重新處理
+                            </button>
+                            <div class="text-sm text-red-600 font-medium text-center">
+                                <svg class="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                                </svg>
+                                需要修正
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            processingList.insertAdjacentHTML('afterbegin', workOrderHtml);
+            
+            // 更新處理中數量
+            updateTabCount('processing', 1);
+        }
+
+        // 重新處理工單
+        function reprocessWorkOrder(workOrderNumber) {
+            // 從處理中的工單元素取得原始資料
+            const processingElement = document.querySelector(`#processing-list [data-work-order="${workOrderNumber}"]`);
+            if (!processingElement) {
+                showNotification('找不到對應的工單', 'error');
+                return;
+            }
+            
+            // 提取工單資料
+            const htmlContent = processingElement.innerHTML;
+            const workOrderData = {
+                number: workOrderNumber,
+                customerId: extractDataFromHTML(htmlContent, '客戶編號:') || 'C001234',
+                customerName: extractDataFromHTML(htmlContent, '客戶姓名:') || '王小明',
+                address: extractDataFromHTML(htmlContent, '新地址:') || '新地址',
+                community: extractDataFromHTML(htmlContent, '新社區:') || '新社區',
+                installDate: extractDataFromHTML(htmlContent, '安裝日期:') || '2024-01-16',
+                contactTime: extractDataFromHTML(htmlContent, '聯絡時間:') || '上午',
+                suspendOriginal: extractDataFromHTML(htmlContent, '原址暫停:') === '是',
+                transferDateConfirmed: extractDataFromHTML(htmlContent, '轉移日期確認:') === '是',
+                notes: extractDataFromHTML(htmlContent, '原備註:') || '',
+                rejectionReason: extractDataFromHTML(htmlContent, '退回理由:') || ''
+            };
+            
+            // 開啟修正工單模態框
+            openReprocessModal(workOrderData);
+        }
+        
+        // 開啟修正工單模態框
+        function openReprocessModal(workOrderData) {
+            // 填入工單資料到修正模態框
+            document.getElementById('reprocess-work-order-number').textContent = workOrderData.number;
+            document.getElementById('reprocess-customer-id').textContent = workOrderData.customerId;
+            document.getElementById('reprocess-customer-name').textContent = workOrderData.customerName;
+            document.getElementById('reprocess-address').textContent = workOrderData.address;
+            document.getElementById('reprocess-community').textContent = workOrderData.community;
+            document.getElementById('reprocess-contact-time').textContent = workOrderData.contactTime;
+            document.getElementById('reprocess-suspend-original').textContent = workOrderData.suspendOriginal ? '是' : '否';
+            document.getElementById('reprocess-transfer-confirmed').textContent = workOrderData.transferDateConfirmed ? '是' : '否';
+            document.getElementById('reprocess-original-notes').textContent = workOrderData.notes || '無';
+            document.getElementById('reprocess-rejection-reason').textContent = workOrderData.rejectionReason;
+            
+            // 設定可修改的欄位
+            document.getElementById('reprocess-install-date').value = workOrderData.installDate;
+            document.getElementById('reprocess-correction-notes').value = '';
+            
+            // 儲存工單資料供後續使用
+            window.currentReprocessWorkOrder = workOrderData;
+            
+            // 顯示模態框
+            document.getElementById('reprocess-modal').classList.remove('hidden');
+        }
+        
+        // 關閉修正工單模態框
+        function closeReprocessModal() {
+            document.getElementById('reprocess-modal').classList.add('hidden');
+            document.getElementById('reprocess-correction-notes').value = '';
+            window.currentReprocessWorkOrder = null;
+        }
+        
+        // 確認資料無誤
+        function confirmReprocessData() {
+            const installDate = document.getElementById('reprocess-install-date').value;
+            const correctionNotes = document.getElementById('reprocess-correction-notes').value.trim();
+            
+            if (!installDate) {
+                showNotification('請選擇安裝日期', 'warning');
+                return;
+            }
+            
+            if (!correctionNotes) {
+                showNotification('請填寫修正說明', 'warning');
+                return;
+            }
+            
+            // 更新工單資料
+            window.currentReprocessWorkOrder.installDate = installDate;
+            window.currentReprocessWorkOrder.correctionNotes = correctionNotes;
+            
+            // 顯示確認按鈕
+            document.getElementById('reprocess-confirm-section').classList.remove('hidden');
+            document.getElementById('reprocess-data-section').classList.add('hidden');
+            
+            // 顯示確認資料
+            document.getElementById('confirm-install-date').textContent = installDate;
+            document.getElementById('confirm-correction-notes').textContent = correctionNotes;
+        }
+        
+        // 返回修改資料
+        function backToReprocessData() {
+            document.getElementById('reprocess-confirm-section').classList.add('hidden');
+            document.getElementById('reprocess-data-section').classList.remove('hidden');
+        }
+        
+        // 送出修正後的工單
+        function submitReprocessedWorkOrder() {
+            const workOrderData = window.currentReprocessWorkOrder;
+            
+            if (!workOrderData) {
+                showNotification('系統錯誤：找不到工單資料', 'error');
+                return;
+            }
+            
+            // 從處理中移除原工單
+            const processingElement = document.querySelector(`#processing-list [data-work-order="${workOrderData.number}"]`);
+            if (processingElement) {
+                processingElement.remove();
+                
+                // 檢查是否需要顯示空狀態
+                const processingList = document.getElementById('processing-list');
+                const processingEmpty = document.getElementById('processing-empty');
+                if (processingList.children.length === 0) {
+                    processingEmpty.style.display = 'block';
+                }
+                
+                // 更新處理中數量
+                const processingTab = document.getElementById('tab-processing');
+                const processingSpan = processingTab.querySelector('span');
+                const processingCount = parseInt(processingSpan.textContent);
+                if (processingCount > 0) {
+                    processingSpan.textContent = processingCount - 1;
+                }
+            }
+            
+            // 準備重新送審的工單資料
+            const resubmitWorkOrder = {
+                number: workOrderData.number,
+                customerId: workOrderData.customerId,
+                customerName: workOrderData.customerName,
+                address: workOrderData.address,
+                community: workOrderData.community,
+                installDate: workOrderData.installDate,
+                contactTime: workOrderData.contactTime,
+                suspendOriginal: workOrderData.suspendOriginal,
+                transferDateConfirmed: workOrderData.transferDateConfirmed,
+                notes: workOrderData.notes,
+                correctionNotes: workOrderData.correctionNotes,
+                previousRejectionReason: workOrderData.rejectionReason,
+                resubmitTime: new Date().toISOString()
+            };
+            
+            // 重新加入主管簽核列表
+            addToApprovalListAsResubmit(resubmitWorkOrder);
+            
+            // 關閉模態框
+            closeReprocessModal();
+            
+            showNotification(`✅ 工單 ${workOrderData.number} 修正完成！\n\n📅 新安裝日期：${workOrderData.installDate}\n📝 修正說明：${workOrderData.correctionNotes}\n\n已重新送交主管簽核`, 'success');
+            
+            // 切換到主管簽核頁籤
+            switchTab('approval');
+        }
+
         // 模擬其他單位處理工單
         function simulateExternalProcessing(workOrderNumber) {
             setTimeout(() => {
-                // 將工單從處理中移至已完成
-                const processingElement = document.querySelector(`[data-work-order="${workOrderNumber}"]`);
-                if (processingElement) {
-                    // 移除處理中的工單
-                    processingElement.remove();
+                // 更新工單狀態為處理中
+                const statusElement = document.getElementById(`status-${workOrderNumber}`);
+                const actionElement = document.getElementById(`action-${workOrderNumber}`);
+                
+                if (statusElement && actionElement) {
+                    statusElement.textContent = '安裝中';
+                    statusElement.className = 'bg-orange-100 text-orange-800 px-2 py-1 rounded-full text-xs font-medium';
+                    actionElement.innerHTML = `
+                        <div class="text-orange-600 font-medium">
+                            <svg class="w-4 h-4 inline-block mr-1 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                            </svg>
+                            安裝進行中
+                        </div>
+                        <div class="text-xs text-gray-500 mt-1">安裝人員已到現場...</div>
+                    `;
                     
-                    // 更新處理中數量
-                    const processingTab = document.getElementById('tab-processing');
-                    const processingSpan = processingTab.querySelector('span');
-                    const processingCount = parseInt(processingSpan.textContent);
-                    if (processingCount > 0) {
-                        processingSpan.textContent = processingCount - 1;
-                    }
+                    showNotification(`🔧 工單 ${workOrderNumber} 開始安裝！\n\n👷 安裝人員已派遣\n📍 正在前往客戶新址\n⏱️ 預計安裝時間：2-3小時`, 'info');
                     
-                    // 加入已完成列表
-                    addToCompletedList(workOrderNumber);
-                    
-                    alert(`工單 ${workOrderNumber} 已完成安裝！\n\n移機服務已完成，客戶可正常使用服務。`);
+                    // 再過一段時間完成安裝
+                    setTimeout(() => {
+                        // 將工單從處理中移至已完成
+                        const processingElement = document.querySelector(`[data-work-order="${workOrderNumber}"]`);
+                        if (processingElement) {
+                            // 移除處理中的工單
+                            processingElement.remove();
+                            
+                            // 檢查是否需要顯示空狀態
+                            const processingList = document.getElementById('processing-list');
+                            const processingEmpty = document.getElementById('processing-empty');
+                            if (processingList.children.length === 0) {
+                                processingEmpty.style.display = 'block';
+                            }
+                            
+                            // 更新處理中數量
+                            const processingTab = document.getElementById('tab-processing');
+                            const processingSpan = processingTab.querySelector('span');
+                            const processingCount = parseInt(processingSpan.textContent);
+                            if (processingCount > 0) {
+                                processingSpan.textContent = processingCount - 1;
+                            }
+                            
+                            // 加入已完成列表
+                            addToCompletedList(workOrderNumber);
+                            
+                            showNotification(`🎉 工單 ${workOrderNumber} 安裝完成！\n\n✅ 移機服務已完成\n📶 網路服務正常運作\n📞 客戶已確認服務正常\n\n感謝您的耐心等候！`, 'success');
+                        }
+                    }, 8000); // 8秒後完成安裝
                 }
-            }, 10000); // 10秒後完成
+            }, 3000); // 3秒後開始安裝
         }
 
         // 將工單加入已完成列表
         function addToCompletedList(workOrderNumber) {
-            const completedContent = document.getElementById('completed-content');
+            const completedList = document.getElementById('completed-list');
+            const completedEmpty = document.getElementById('completed-empty');
             
-            // 如果是空狀態，先清空
-            if (completedContent.querySelector('.text-center')) {
-                completedContent.innerHTML = '<div class="space-y-4"></div>';
-            }
-            
-            const spaceDiv = completedContent.querySelector('.space-y-4') || completedContent;
+            // 隱藏空狀態提示
+            completedEmpty.style.display = 'none';
             
             const completedHtml = `
                 <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
@@ -982,16 +1753,84 @@
                 </div>
             `;
             
-            spaceDiv.insertAdjacentHTML('beforeend', completedHtml);
+            completedList.insertAdjacentHTML('beforeend', completedHtml);
             
             // 更新已完成數量
             updateTabCount('completed', 1);
+        }
+
+        // 通知系統
+        function showNotification(message, type = 'info') {
+            // 移除現有通知
+            const existingNotification = document.getElementById('notification');
+            if (existingNotification) {
+                existingNotification.remove();
+            }
+            
+            // 設定通知樣式
+            let bgColor, textColor, icon;
+            switch (type) {
+                case 'success':
+                    bgColor = 'bg-green-500';
+                    textColor = 'text-white';
+                    icon = '✓';
+                    break;
+                case 'warning':
+                    bgColor = 'bg-yellow-500';
+                    textColor = 'text-white';
+                    icon = '⚠';
+                    break;
+                case 'error':
+                    bgColor = 'bg-red-500';
+                    textColor = 'text-white';
+                    icon = '✗';
+                    break;
+                default:
+                    bgColor = 'bg-blue-500';
+                    textColor = 'text-white';
+                    icon = 'ℹ';
+            }
+            
+            // 建立通知元素
+            const notification = document.createElement('div');
+            notification.id = 'notification';
+            notification.className = `fixed top-4 right-4 ${bgColor} ${textColor} px-6 py-4 rounded-lg shadow-lg z-50 max-w-md`;
+            notification.style.whiteSpace = 'pre-line';
+            notification.innerHTML = `
+                <div class="flex items-start">
+                    <span class="text-xl mr-3">${icon}</span>
+                    <div class="flex-1">
+                        <div class="font-medium">${message}</div>
+                    </div>
+                    <button onclick="this.parentElement.parentElement.remove()" class="ml-4 text-white hover:text-gray-200">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+            `;
+            
+            // 加入到頁面
+            document.body.appendChild(notification);
+            
+            // 自動移除通知
+            setTimeout(() => {
+                if (notification && notification.parentElement) {
+                    notification.remove();
+                }
+            }, 5000);
         }
 
         // 頁面載入時的初始化
         document.addEventListener('DOMContentLoaded', function() {
             // 可以在這裡加入初始化邏輯
             console.log('客戶查詢系統已載入');
+            
+            // 綁定後台按鈕事件
+            const backendBtn = document.getElementById('backend-btn');
+            if (backendBtn) {
+                backendBtn.addEventListener('click', goToBackend);
+            }
         });
 
         // Enter 鍵搜尋功能
@@ -1007,8 +1846,9 @@
             }
         });
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96a2d83f5619f251',t:'MTc1NDM2MDczNC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96a4f1058161f220',t:'MTc1NDM4MjcyMS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
+
 
 
 
