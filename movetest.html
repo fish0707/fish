@@ -267,13 +267,30 @@
             setTimeout(() => {
                 let foundCustomer = null;
 
-                // 根據不同條件查詢
+                // 根據不同條件查詢 - 修正查詢邏輯
                 for (let id in customerDatabase) {
                     const customer = customerDatabase[id];
-                    if ((customerId && customer.customerId === customerId) ||
-                        (customerName && customer.customerName === customerName) ||
-                        (customerPhone && customer.phone === customerPhone) ||
-                        (customerIdNumber && customer.idNumber === customerIdNumber)) {
+                    
+                    // 客戶編號查詢（完全匹配或部分匹配）
+                    if (customerId && (customer.customerId === customerId || customer.customerId.toLowerCase().includes(customerId.toLowerCase()))) {
+                        foundCustomer = customer;
+                        break;
+                    }
+                    
+                    // 客戶姓名查詢（部分匹配）
+                    if (customerName && customer.customerName.includes(customerName)) {
+                        foundCustomer = customer;
+                        break;
+                    }
+                    
+                    // 電話查詢（部分匹配）
+                    if (customerPhone && customer.phone.includes(customerPhone)) {
+                        foundCustomer = customer;
+                        break;
+                    }
+                    
+                    // 身分證字號查詢（完全匹配或部分匹配）
+                    if (customerIdNumber && (customer.idNumber === customerIdNumber || customer.idNumber.toLowerCase().includes(customerIdNumber.toLowerCase()))) {
                         foundCustomer = customer;
                         break;
                     }
@@ -286,7 +303,7 @@
                 } else {
                     showNoResults();
                 }
-            }, 1500);
+            }, 1000);
         }
 
         // 顯示載入狀態
@@ -429,7 +446,7 @@
             }
         });
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96a26f73f079f234',t:'MTc1NDM1NjQ0My4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96a281347701f1c8',t:'MTc1NDM1NzE2OS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
 
 <!DOCTYPE html>
@@ -1782,5 +1799,6 @@
     </script>
 </body>
 </html>
+
 
 
