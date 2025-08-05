@@ -210,6 +210,202 @@
         </div>
     </div>
 
+    <!-- 後台處理系統 -->
+    <div id="backend-system" class="hidden">
+        <!-- 後台導航 -->
+        <nav class="bg-gray-800 shadow-lg border-b">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between h-16">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <h1 class="text-2xl font-bold text-white">後台處理系統</h1>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <span class="text-sm text-gray-300">處理專員：李大華</span>
+                        <button onclick="goToFrontend()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 transition-colors">
+                            返回客戶系統
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- 後台主要內容 -->
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <!-- 標籤頁導航 -->
+            <div class="bg-white rounded-lg shadow-lg mb-6">
+                <div class="border-b border-gray-200">
+                    <nav class="-mb-px flex space-x-8 px-6">
+                        <button id="tab-pending" onclick="switchTab('pending')" class="py-4 px-1 border-b-2 border-blue-500 font-medium text-sm text-blue-600">
+                            代處理 <span class="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded-full ml-2">2</span>
+                        </button>
+                        <button id="tab-processing" onclick="switchTab('processing')" class="py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                            處理中 <span class="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded-full ml-2">0</span>
+                        </button>
+                        <button id="tab-completed" onclick="switchTab('completed')" class="py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                            已完成 <span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full ml-2">0</span>
+                        </button>
+                    </nav>
+                </div>
+
+                <!-- 代處理內容 -->
+                <div id="pending-content" class="p-6">
+                    <div class="space-y-4">
+                        <!-- 示例工單 1 -->
+                        <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                            <div class="flex justify-between items-start">
+                                <div class="flex-1">
+                                    <div class="flex items-center space-x-4 mb-2">
+                                        <span class="text-lg font-semibold text-gray-900">客訴單號: CS-2024-001</span>
+                                        <span class="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-medium">緊急</span>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-4 text-sm text-gray-600 mb-3">
+                                        <div><span class="font-medium">客戶編號:</span> C001234</div>
+                                        <div><span class="font-medium">社區名稱:</span> 信義花園</div>
+                                        <div><span class="font-medium">地區:</span> 台北市信義區</div>
+                                        <div><span class="font-medium">建立時間:</span> 2024-01-15 14:30</div>
+                                    </div>
+                                    <div class="text-sm text-gray-700 bg-gray-50 p-3 rounded">
+                                        <strong>客訴內容:</strong> 需要辦理移機服務，搬遷至新地址，請安排相關作業。
+                                    </div>
+                                </div>
+                                <button onclick="startProcessing('CS-2024-001')" class="ml-4 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 text-sm font-medium">
+                                    開始處理
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 示例工單 2 -->
+                        <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                            <div class="flex justify-between items-start">
+                                <div class="flex-1">
+                                    <div class="flex items-center space-x-4 mb-2">
+                                        <span class="text-lg font-semibold text-gray-900">客訴單號: CS-2024-002</span>
+                                        <span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs font-medium">一般</span>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-4 text-sm text-gray-600 mb-3">
+                                        <div><span class="font-medium">客戶編號:</span> C001235</div>
+                                        <div><span class="font-medium">社區名稱:</span> 大安御品</div>
+                                        <div><span class="font-medium">地區:</span> 台北市大安區</div>
+                                        <div><span class="font-medium">建立時間:</span> 2024-01-15 16:45</div>
+                                    </div>
+                                    <div class="text-sm text-gray-700 bg-gray-50 p-3 rounded">
+                                        <strong>客訴內容:</strong> 需要辦理移機服務，搬遷至新地址，請安排相關作業。
+                                    </div>
+                                </div>
+                                <button onclick="startProcessing('CS-2024-002')" class="ml-4 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 text-sm font-medium">
+                                    開始處理
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 處理中內容 -->
+                <div id="processing-content" class="p-6 hidden">
+                    <div class="text-center py-12">
+                        <div class="text-gray-400 mb-4">
+                            <svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-medium text-gray-900 mb-2">目前沒有處理中的工單</h3>
+                        <p class="text-gray-500">處理中的工單會顯示在這裡</p>
+                    </div>
+                </div>
+
+                <!-- 已完成內容 -->
+                <div id="completed-content" class="p-6 hidden">
+                    <div class="text-center py-12">
+                        <div class="text-gray-400 mb-4">
+                            <svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-medium text-gray-900 mb-2">目前沒有已完成的工單</h3>
+                        <p class="text-gray-500">已完成的工單會顯示在這裡</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 工單建立模態框 -->
+        <div id="work-order-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+            <div class="flex items-center justify-center min-h-screen p-4">
+                <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-screen overflow-y-auto">
+                    <div class="p-6">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="text-xl font-semibold text-gray-900">建立工單</h3>
+                            <button onclick="closeWorkOrderModal()" class="text-gray-400 hover:text-gray-600">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                        </div>
+
+                        <!-- 客戶資訊顯示 -->
+                        <div class="bg-gray-50 rounded-lg p-4 mb-6">
+                            <h4 class="font-semibold text-gray-900 mb-3">客戶資訊</h4>
+                            <div class="grid grid-cols-2 gap-4 text-sm">
+                                <div><span class="font-medium">客訴單號:</span> <span id="modal-ticket-id">-</span></div>
+                                <div><span class="font-medium">客戶編號:</span> <span id="modal-customer-id">-</span></div>
+                                <div><span class="font-medium">客戶姓名:</span> <span id="modal-customer-name">-</span></div>
+                                <div><span class="font-medium">地區:</span> <span id="modal-area">-</span></div>
+                                <div><span class="font-medium">社區:</span> <span id="modal-community">-</span></div>
+                                <div><span class="font-medium">電話:</span> <span id="modal-phone">-</span></div>
+                                <div><span class="font-medium">手機:</span> <span id="modal-mobile">-</span></div>
+                                <div class="col-span-2"><span class="font-medium">地址:</span> <span id="modal-address">-</span></div>
+                                <div class="col-span-2"><span class="font-medium">客訴內容:</span> <span id="modal-complaint-content">-</span></div>
+                            </div>
+                        </div>
+
+                        <!-- 工單表單 -->
+                        <form class="space-y-4">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">新地址 *</label>
+                                    <input type="text" id="new-address" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">新社區 *</label>
+                                    <input type="text" id="new-community" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">預約安裝日期 *</label>
+                                    <input type="date" id="install-date" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">聯絡時間</label>
+                                    <select id="contact-time" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        <option value="上午">上午 (09:00-12:00)</option>
+                                        <option value="下午">下午 (13:00-17:00)</option>
+                                        <option value="晚上">晚上 (18:00-21:00)</option>
+                                        <option value="全天">全天 (09:00-21:00)</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">備註</label>
+                                <textarea id="work-order-notes" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="其他特殊需求或注意事項..."></textarea>
+                            </div>
+
+                            <div class="flex justify-end space-x-3 pt-4">
+                                <button type="button" onclick="closeWorkOrderModal()" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
+                                    取消
+                                </button>
+                                <button type="button" onclick="submitWorkOrder()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                                    建立工單
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // 模擬客戶資料庫
         const customerDatabase = {
@@ -398,7 +594,7 @@
             }
 
             // 生成客訴單號
-            const ticketId = 'CS-' + new Date().getFullYear() + '-' + String(Date.now()).slice(-3);
+            const ticketId = 'CS-' + new Date().getFullYear() + '-' + String(Date.now()).slice(-6);
 
             // 儲存申請資料到 localStorage（模擬傳送到後台）
             const applicationData = {
@@ -427,16 +623,369 @@
 
         // 進入後台處理系統
         function goToBackend() {
-            // 這裡可以開啟新視窗或跳轉到後台系統
-            // 為了示範，我們使用 alert 提示
-            alert('正在跳轉到後台處理系統...\n\n在實際應用中，這裡會跳轉到工單處理系統頁面');
+            // 將新申請資料儲存到 localStorage 供後台系統讀取
+            const ticketId = document.getElementById('generated-ticket-id').textContent;
+            const applicationData = JSON.parse(localStorage.getItem('moveApplication_' + ticketId));
             
-            // 實際應用中可以使用：
-            // window.open('backend-system.html', '_blank');
-            // 或
-            // window.location.href = 'backend-system.html';
+            if (applicationData) {
+                // 將資料加入到待處理列表
+                let pendingApplications = JSON.parse(localStorage.getItem('pendingApplications') || '[]');
+                pendingApplications.push(applicationData);
+                localStorage.setItem('pendingApplications', JSON.stringify(pendingApplications));
+                
+                // 觸發後台系統更新事件
+                localStorage.setItem('newApplicationAdded', Date.now().toString());
+            }
+            
+            // 切換到後台系統
+            document.querySelector('body > div:first-child').classList.add('hidden'); // 隱藏前台
+            document.getElementById('backend-system').classList.remove('hidden'); // 顯示後台
+            
+            // 載入後台資料
+            loadBackendData();
             
             closeSuccessModal();
+        }
+
+        // 返回前台系統
+        function goToFrontend() {
+            document.getElementById('backend-system').classList.add('hidden'); // 隱藏後台
+            document.querySelector('body > div:first-child').classList.remove('hidden'); // 顯示前台
+        }
+
+        // 載入後台資料
+        function loadBackendData() {
+            const pendingApplications = JSON.parse(localStorage.getItem('pendingApplications') || '[]');
+            const pendingContent = document.getElementById('pending-content');
+            const spaceDiv = pendingContent.querySelector('.space-y-4');
+            
+            // 清空現有的新申請（保留示例工單）
+            const existingTickets = spaceDiv.querySelectorAll('[data-new-application]');
+            existingTickets.forEach(ticket => ticket.remove());
+            
+            // 加入新申請
+            pendingApplications.forEach(app => {
+                const priority = Math.random() > 0.5 ? '緊急' : '一般';
+                const priorityClass = priority === '緊急' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800';
+                
+                const ticketHtml = `
+                    <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow" data-new-application="true">
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1">
+                                <div class="flex items-center space-x-4 mb-2">
+                                    <span class="text-lg font-semibold text-gray-900">客訴單號: ${app.ticketId}</span>
+                                    <span class="${priorityClass} px-2 py-1 rounded-full text-xs font-medium">${priority}</span>
+                                </div>
+                                <div class="grid grid-cols-2 gap-4 text-sm text-gray-600 mb-3">
+                                    <div><span class="font-medium">客戶編號:</span> ${app.customer.customerId}</div>
+                                    <div><span class="font-medium">社區名稱:</span> ${app.customer.community}</div>
+                                    <div><span class="font-medium">地區:</span> ${app.customer.area}</div>
+                                    <div><span class="font-medium">建立時間:</span> ${new Date(app.submitTime).toLocaleString('zh-TW')}</div>
+                                </div>
+                                <div class="text-sm text-gray-700 bg-gray-50 p-3 rounded">
+                                    <strong>客訴內容:</strong> ${app.notes}
+                                </div>
+                            </div>
+                            <button onclick="startProcessing('${app.ticketId}')" class="ml-4 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 text-sm font-medium">
+                                開始處理
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                spaceDiv.insertAdjacentHTML('afterbegin', ticketHtml);
+            });
+            
+            // 更新待處理數量
+            updateTabCount('pending', pendingApplications.length);
+        }
+
+        // 切換標籤頁
+        function switchTab(tabName) {
+            // 隱藏所有內容
+            document.getElementById('pending-content').classList.add('hidden');
+            document.getElementById('processing-content').classList.add('hidden');
+            document.getElementById('completed-content').classList.add('hidden');
+            
+            // 移除所有標籤的活動狀態
+            document.getElementById('tab-pending').className = 'py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300';
+            document.getElementById('tab-processing').className = 'py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300';
+            document.getElementById('tab-completed').className = 'py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300';
+            
+            // 顯示選中的內容和標籤
+            document.getElementById(tabName + '-content').classList.remove('hidden');
+            document.getElementById('tab-' + tabName).className = 'py-4 px-1 border-b-2 border-blue-500 font-medium text-sm text-blue-600';
+        }
+
+        // 更新標籤數量
+        function updateTabCount(tabName, additionalCount = 0) {
+            const tab = document.getElementById('tab-' + tabName);
+            const span = tab.querySelector('span');
+            const currentCount = parseInt(span.textContent);
+            span.textContent = currentCount + additionalCount;
+        }
+
+        // 開始處理工單
+        function startProcessing(ticketId) {
+            // 檢查是否為新申請的工單
+            let data = null;
+            const pendingApplications = JSON.parse(localStorage.getItem('pendingApplications') || '[]');
+            const newApp = pendingApplications.find(app => app.ticketId === ticketId);
+            
+            if (newApp) {
+                data = {
+                    customerId: newApp.customer.customerId,
+                    customerName: newApp.customer.customerName,
+                    area: newApp.customer.area,
+                    community: newApp.customer.community,
+                    phone: newApp.customer.phone,
+                    mobile: newApp.customer.mobile,
+                    address: newApp.customer.address,
+                    complaint: newApp.notes
+                };
+            } else {
+                // 如果不是新申請，使用示例資料
+                const customerData = {
+                    'CS-2024-001': {
+                        customerId: 'C001234',
+                        customerName: '王小明',
+                        area: '台北市信義區',
+                        community: '信義花園',
+                        phone: '02-2345-6789',
+                        mobile: '0912-345-678',
+                        address: '台北市信義區信義路五段7號',
+                        complaint: '需要辦理移機服務，搬遷至新地址，請安排相關作業。'
+                    },
+                    'CS-2024-002': {
+                        customerId: 'C001235',
+                        customerName: '李小華',
+                        area: '台北市大安區',
+                        community: '大安御品',
+                        phone: '02-2876-5432',
+                        mobile: '0923-456-789',
+                        address: '台北市大安區復興南路一段390號',
+                        complaint: '需要辦理移機服務，搬遷至新地址，請安排相關作業。'
+                    }
+                };
+                data = customerData[ticketId];
+            }
+
+            if (data) {
+                document.getElementById('modal-ticket-id').textContent = ticketId;
+                document.getElementById('modal-customer-id').textContent = data.customerId;
+                document.getElementById('modal-customer-name').textContent = data.customerName;
+                document.getElementById('modal-area').textContent = data.area;
+                document.getElementById('modal-community').textContent = data.community;
+                document.getElementById('modal-phone').textContent = data.phone;
+                document.getElementById('modal-mobile').textContent = data.mobile;
+                document.getElementById('modal-address').textContent = data.address;
+                document.getElementById('modal-complaint-content').textContent = data.complaint;
+            }
+
+            // 直接開啟工單建立視窗
+            document.getElementById('work-order-modal').classList.remove('hidden');
+            
+            // 設定預設安裝日期為明天
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            document.getElementById('install-date').value = tomorrow.toISOString().split('T')[0];
+            
+            // 儲存當前處理的工單ID
+            window.currentProcessingTicketId = ticketId;
+        }
+
+        // 關閉工單建立模態框
+        function closeWorkOrderModal() {
+            document.getElementById('work-order-modal').classList.add('hidden');
+            
+            // 清空表單
+            document.getElementById('new-address').value = '';
+            document.getElementById('new-community').value = '';
+            document.getElementById('install-date').value = '';
+            document.getElementById('contact-time').value = '上午';
+            document.getElementById('work-order-notes').value = '';
+        }
+
+        // 提交工單
+        function submitWorkOrder() {
+            const newAddress = document.getElementById('new-address').value;
+            const newCommunity = document.getElementById('new-community').value;
+            const installDate = document.getElementById('install-date').value;
+            const contactTime = document.getElementById('contact-time').value;
+            const notes = document.getElementById('work-order-notes').value;
+            
+            if (!newAddress || !newCommunity || !installDate) {
+                alert('請填寫所有必填欄位');
+                return;
+            }
+            
+            // 生成工單號碼
+            const workOrderNumber = 'WO-' + new Date().getTime();
+            
+            // 關閉工單建立視窗
+            closeWorkOrderModal();
+            
+            // 儲存工單資訊
+            const workOrder = {
+                number: workOrderNumber,
+                address: newAddress,
+                community: newCommunity,
+                installDate: installDate,
+                contactTime: contactTime,
+                notes: notes,
+                status: 'processing',
+                ticketId: window.currentProcessingTicketId,
+                customerName: document.getElementById('modal-customer-name').textContent,
+                customerId: document.getElementById('modal-customer-id').textContent
+            };
+            
+            // 將工單加入處理中列表
+            addToProcessingList(workOrder);
+            
+            // 從待處理中移除該工單
+            removeFromPendingList(window.currentProcessingTicketId);
+            
+            alert(`工單建立成功！\n工單編號：${workOrderNumber}\n新地址：${newAddress}\n新社區：${newCommunity}\n\n工單已移至「處理中」狀態，等待其他單位安裝完成。`);
+            
+            // 自動切換到處理中頁籤
+            switchTab('processing');
+            
+            // 模擬其他單位處理工單
+            simulateExternalProcessing(workOrderNumber);
+        }
+
+        // 將工單加入處理中列表
+        function addToProcessingList(workOrder) {
+            const processingContent = document.getElementById('processing-content');
+            
+            // 如果是空狀態，先清空
+            if (processingContent.querySelector('.text-center')) {
+                processingContent.innerHTML = '<div class="space-y-4"></div>';
+            }
+            
+            const spaceDiv = processingContent.querySelector('.space-y-4') || processingContent;
+            
+            const workOrderHtml = `
+                <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow" data-work-order="${workOrder.number}">
+                    <div class="flex justify-between items-start">
+                        <div class="flex-1">
+                            <div class="flex items-center space-x-4 mb-2">
+                                <span class="text-lg font-semibold text-gray-900">工單編號: ${workOrder.number}</span>
+                                <span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs font-medium">處理中</span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4 text-sm text-gray-600 mb-3">
+                                <div><span class="font-medium">客戶編號:</span> ${workOrder.customerId}</div>
+                                <div><span class="font-medium">客戶姓名:</span> ${workOrder.customerName}</div>
+                                <div><span class="font-medium">新地址:</span> ${workOrder.address}</div>
+                                <div><span class="font-medium">新社區:</span> ${workOrder.community}</div>
+                                <div><span class="font-medium">安裝日期:</span> ${workOrder.installDate}</div>
+                                <div><span class="font-medium">聯絡時間:</span> ${workOrder.contactTime}</div>
+                            </div>
+                            <div class="text-sm text-gray-700">
+                                <strong>處理項目:</strong> 移機服務安裝
+                            </div>
+                            ${workOrder.notes ? `<div class="text-sm text-gray-600 mt-2 bg-gray-50 p-2 rounded"><strong>備註:</strong> ${workOrder.notes}</div>` : ''}
+                        </div>
+                        <div class="ml-4 text-sm text-gray-500">
+                            等待其他單位處理...
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            spaceDiv.insertAdjacentHTML('beforeend', workOrderHtml);
+            
+            // 更新處理中數量
+            updateTabCount('processing', 1);
+        }
+
+        // 從待處理列表移除工單
+        function removeFromPendingList(ticketId) {
+            // 從 localStorage 移除
+            let pendingApplications = JSON.parse(localStorage.getItem('pendingApplications') || '[]');
+            pendingApplications = pendingApplications.filter(app => app.ticketId !== ticketId);
+            localStorage.setItem('pendingApplications', JSON.stringify(pendingApplications));
+            
+            // 從 DOM 移除
+            const pendingContent = document.getElementById('pending-content');
+            const ticketElements = pendingContent.querySelectorAll('[data-new-application]');
+            ticketElements.forEach(element => {
+                if (element.textContent.includes(ticketId)) {
+                    element.remove();
+                }
+            });
+            
+            // 更新待處理數量
+            const tab = document.getElementById('tab-pending');
+            const span = tab.querySelector('span');
+            const currentCount = parseInt(span.textContent);
+            if (currentCount > 0) {
+                span.textContent = currentCount - 1;
+            }
+        }
+
+        // 模擬其他單位處理工單
+        function simulateExternalProcessing(workOrderNumber) {
+            setTimeout(() => {
+                // 將工單從處理中移至已完成
+                const processingElement = document.querySelector(`[data-work-order="${workOrderNumber}"]`);
+                if (processingElement) {
+                    // 移除處理中的工單
+                    processingElement.remove();
+                    
+                    // 更新處理中數量
+                    const processingTab = document.getElementById('tab-processing');
+                    const processingSpan = processingTab.querySelector('span');
+                    const processingCount = parseInt(processingSpan.textContent);
+                    if (processingCount > 0) {
+                        processingSpan.textContent = processingCount - 1;
+                    }
+                    
+                    // 加入已完成列表
+                    addToCompletedList(workOrderNumber);
+                    
+                    alert(`工單 ${workOrderNumber} 已完成安裝！\n\n移機服務已完成，客戶可正常使用服務。`);
+                }
+            }, 10000); // 10秒後完成
+        }
+
+        // 將工單加入已完成列表
+        function addToCompletedList(workOrderNumber) {
+            const completedContent = document.getElementById('completed-content');
+            
+            // 如果是空狀態，先清空
+            if (completedContent.querySelector('.text-center')) {
+                completedContent.innerHTML = '<div class="space-y-4"></div>';
+            }
+            
+            const spaceDiv = completedContent.querySelector('.space-y-4') || completedContent;
+            
+            const completedHtml = `
+                <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                    <div class="flex justify-between items-start">
+                        <div class="flex-1">
+                            <div class="flex items-center space-x-4 mb-2">
+                                <span class="text-lg font-semibold text-gray-900">工單編號: ${workOrderNumber}</span>
+                                <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium">已完成</span>
+                            </div>
+                            <div class="text-sm text-gray-700 mb-3">
+                                <strong>處理項目:</strong> 移機服務安裝 - 已完成安裝
+                            </div>
+                            <div class="text-sm text-gray-600">
+                                <strong>完成時間:</strong> ${new Date().toLocaleString('zh-TW')}
+                            </div>
+                        </div>
+                        <div class="ml-4 text-sm text-green-600 font-medium">
+                            ✓ 安裝完成
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            spaceDiv.insertAdjacentHTML('beforeend', completedHtml);
+            
+            // 更新已完成數量
+            updateTabCount('completed', 1);
         }
 
         // 頁面載入時的初始化
@@ -458,1359 +1007,9 @@
             }
         });
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96a28d3b64e6f1c8',t:'MTc1NDM1NzY2Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96a2d83f5619f251',t:'MTc1NDM2MDczNC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
 
-<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>工單處理系統</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&display=swap');
-        body { font-family: 'Noto Sans TC', sans-serif; }
-    </style>
-</head>
-<body class="bg-gray-50 min-h-screen">
-    <!-- 頂部導航 -->
-    <nav class="bg-white shadow-sm border-b">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16">
-                <div class="flex items-center">
-                    <h1 class="text-xl font-semibold text-gray-900">工單處理系統</h1>
-                </div>
-                <div class="flex items-center space-x-4">
-                    <span class="text-sm text-gray-500">管理員</span>
-                    <button class="bg-blue-600 text-white px-4 py-2 rounded-md text-sm hover:bg-blue-700">登出</button>
-                </div>
-            </div>
-        </div>
-    </nav>
-
-    <!-- 狀態選項卡 -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div class="bg-white rounded-lg shadow">
-            <div class="border-b border-gray-200">
-                <nav class="-mb-px flex space-x-8 px-6">
-                    <button onclick="switchTab('pending')" id="tab-pending" class="tab-button active border-blue-500 text-blue-600 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
-                        代處理 <span class="bg-red-100 text-red-800 ml-2 px-2 py-1 rounded-full text-xs">2</span>
-                    </button>
-                    <button onclick="switchTab('processing')" id="tab-processing" class="tab-button border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
-                        處理中 <span class="bg-yellow-100 text-yellow-800 ml-2 px-2 py-1 rounded-full text-xs">2</span>
-                    </button>
-                    <button onclick="switchTab('tracking')" id="tab-tracking" class="tab-button border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
-                        追蹤中 <span class="bg-blue-100 text-blue-800 ml-2 px-2 py-1 rounded-full text-xs">1</span>
-                    </button>
-                    <button onclick="switchTab('approval')" id="tab-approval" class="tab-button border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
-                        主管簽核 <span class="bg-purple-100 text-purple-800 ml-2 px-2 py-1 rounded-full text-xs">1</span>
-                    </button>
-                    <button onclick="switchTab('closed')" id="tab-closed" class="tab-button border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
-                        結案 <span class="bg-green-100 text-green-800 ml-2 px-2 py-1 rounded-full text-xs">15</span>
-                    </button>
-                </nav>
-            </div>
-
-            <!-- 工單列表 -->
-            <div id="ticket-list" class="p-6">
-                <!-- 代處理工單 -->
-                <div id="pending-content" class="tab-content">
-                    <div class="space-y-4">
-                        <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                            <div class="flex justify-between items-start">
-                                <div class="flex-1">
-                                    <div class="flex items-center space-x-4 mb-2">
-                                        <span class="text-lg font-semibold text-gray-900">客訴單號: CS-2024-001</span>
-                                        <span class="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-medium">緊急</span>
-                                    </div>
-                                    <div class="grid grid-cols-2 gap-4 text-sm text-gray-600 mb-3">
-                                        <div><span class="font-medium">客戶編號:</span> C001234</div>
-                                        <div><span class="font-medium">社區名稱:</span> 信義花園</div>
-                                        <div><span class="font-medium">地區:</span> 台北市信義區</div>
-                                        <div><span class="font-medium">建立時間:</span> 2024-01-15 09:30</div>
-                                    </div>
-                                    <div class="text-sm text-gray-700 bg-gray-50 p-3 rounded">
-                                        <strong>客訴內容:</strong> 需要辦理移機服務，搬遷至新地址，請安排相關作業。
-                                    </div>
-                                </div>
-                                <button onclick="startProcessing('CS-2024-001')" class="ml-4 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 text-sm font-medium">
-                                    開始處理
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                            <div class="flex justify-between items-start">
-                                <div class="flex-1">
-                                    <div class="flex items-center space-x-4 mb-2">
-                                        <span class="text-lg font-semibold text-gray-900">客訴單號: CS-2024-002</span>
-                                        <span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs font-medium">一般</span>
-                                    </div>
-                                    <div class="grid grid-cols-2 gap-4 text-sm text-gray-600 mb-3">
-                                        <div><span class="font-medium">客戶編號:</span> C001235</div>
-                                        <div><span class="font-medium">社區名稱:</span> 大安御品</div>
-                                        <div><span class="font-medium">地區:</span> 台北市大安區</div>
-                                        <div><span class="font-medium">建立時間:</span> 2024-01-15 14:20</div>
-                                    </div>
-                                    <div class="text-sm text-gray-700 bg-gray-50 p-3 rounded">
-                                        <strong>客訴內容:</strong> 需要辦理移機服務，搬遷至新地址，請安排相關作業。
-                                    </div>
-                                </div>
-                                <button onclick="startProcessing('CS-2024-002')" class="ml-4 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 text-sm font-medium">
-                                    開始處理
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 處理中內容 -->
-                <div id="processing-content" class="tab-content hidden">
-                    <div class="space-y-4">
-                        <div class="border border-orange-200 rounded-lg p-4 bg-orange-50">
-                            <div class="flex justify-between items-start">
-                                <div class="flex-1">
-                                    <div class="flex items-center space-x-4 mb-2">
-                                        <span class="text-lg font-semibold text-gray-900">客訴單號: CS-2024-003</span>
-                                        <span class="bg-orange-100 text-orange-800 px-2 py-1 rounded-full text-xs font-medium">正在安裝</span>
-                                    </div>
-                                    <div class="grid grid-cols-2 gap-4 text-sm text-gray-600 mb-3">
-                                        <div><span class="font-medium">工單號碼:</span> WO-2024-001</div>
-                                        <div><span class="font-medium">客戶編號:</span> C001236</div>
-                                        <div><span class="font-medium">新社區:</span> 松山新城</div>
-                                        <div><span class="font-medium">安裝進度:</span> 設備安裝中</div>
-                                    </div>
-                                    <div class="text-sm text-gray-700">
-                                        <strong>安裝項目:</strong> 網路服務、有線電視
-                                    </div>
-                                </div>
-                                <div class="ml-4 text-right">
-                                    <div class="text-sm text-gray-500 mb-2">預計完成時間</div>
-                                    <div class="text-sm font-medium text-orange-600">2024-01-16 15:00</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 追蹤中內容 -->
-                <div id="tracking-content" class="tab-content hidden">
-                    <div class="space-y-4">
-                        <div class="border border-red-200 rounded-lg p-4 bg-red-50">
-                            <div class="flex justify-between items-start">
-                                <div class="flex-1">
-                                    <div class="flex items-center space-x-4 mb-2">
-                                        <span class="text-lg font-semibold text-gray-900">客訴單號: CS-2024-004</span>
-                                        <span class="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-medium">出現問題</span>
-                                    </div>
-                                    <div class="grid grid-cols-2 gap-4 text-sm text-gray-600 mb-3">
-                                        <div><span class="font-medium">工單號碼:</span> WO-2024-002</div>
-                                        <div><span class="font-medium">客戶編號:</span> C001237</div>
-                                        <div><span class="font-medium">問題類型:</span> 設備故障</div>
-                                        <div><span class="font-medium">回報時間:</span> 2024-01-15 16:30</div>
-                                    </div>
-                                    <div class="text-sm text-gray-700 bg-white p-3 rounded">
-                                        <strong>問題描述:</strong> 安裝過程中發現線路老舊，需要更換主線路，預計延後2天完成
-                                    </div>
-                                </div>
-                                <button onclick="handleProblem('CS-2024-004')" class="ml-4 bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 text-sm font-medium">
-                                    處理問題
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="border border-blue-200 rounded-lg p-4 bg-blue-50">
-                            <div class="flex justify-between items-start">
-                                <div class="flex-1">
-                                    <div class="flex items-center space-x-4 mb-2">
-                                        <span class="text-lg font-semibold text-gray-900">客訴單號: CS-2024-005</span>
-                                        <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">工單完成</span>
-                                    </div>
-                                    <div class="grid grid-cols-2 gap-4 text-sm text-gray-600 mb-3">
-                                        <div><span class="font-medium">工單號碼:</span> WO-2024-003</div>
-                                        <div><span class="font-medium">客戶編號:</span> C001238</div>
-                                        <div><span class="font-medium">完成時間:</span> 2024-01-15 14:30</div>
-                                        <div><span class="font-medium">新地址:</span> 台北市內湖區內湖路一段123號</div>
-                                    </div>
-                                    <div class="text-sm text-gray-700 mb-3">
-                                        <strong>安裝項目:</strong> 網路服務、固網電話 - 已完成安裝
-                                    </div>
-                                    <div class="bg-white p-3 rounded border">
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">設定轉移日期（月份開始日）</label>
-                                        <div class="flex items-center space-x-3">
-                                            <input type="date" id="transfer-date-cs-005" class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" value="2024-01-20">
-                                            <button onclick="setTransferDate('CS-2024-005')" class="bg-blue-600 text-white px-3 py-2 rounded-md hover:bg-blue-700 text-sm font-medium">
-                                                設定
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 主管簽核內容 -->
-                <div id="approval-content" class="tab-content hidden">
-                    <div class="space-y-4">
-                        <div class="border border-purple-200 rounded-lg p-4 bg-purple-50">
-                            <div class="flex justify-between items-start">
-                                <div class="flex-1">
-                                    <div class="flex items-center space-x-4 mb-2">
-                                        <span class="text-lg font-semibold text-gray-900">客訴單號: CS-2024-006</span>
-                                        <span class="bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs font-medium">等待簽核</span>
-                                    </div>
-                                    <div class="grid grid-cols-2 gap-4 text-sm text-gray-600 mb-3">
-                                        <div><span class="font-medium">工單號碼:</span> WO-2024-004</div>
-                                        <div><span class="font-medium">客戶編號:</span> C001239</div>
-                                        <div><span class="font-medium">轉移日期:</span> 2024-01-18</div>
-                                        <div><span class="font-medium">送審時間:</span> 2024-01-15 17:00</div>
-                                    </div>
-                                    <div class="text-sm text-gray-700 bg-white p-3 rounded">
-                                        <strong>轉移原因:</strong> 客戶搬遷至新址，原服務地址：台北市中山區，新服務地址：台北市內湖區
-                                    </div>
-                                </div>
-                                <div class="ml-4 space-y-2">
-                                    <button onclick="approveTransfer('CS-2024-006')" class="block w-full bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 text-sm font-medium">
-                                        核准
-                                    </button>
-                                    <button onclick="rejectTransfer('CS-2024-006')" class="block w-full bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 text-sm font-medium">
-                                        駁回
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 結案內容 -->
-                <div id="closed-content" class="tab-content hidden">
-                    <div class="space-y-4">
-                        <div class="border border-green-200 rounded-lg p-4 bg-green-50">
-                            <div class="flex justify-between items-start">
-                                <div class="flex-1">
-                                    <div class="flex items-center space-x-4 mb-2">
-                                        <span class="text-lg font-semibold text-gray-900">客訴單號: CS-2024-007</span>
-                                        <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium">已結案</span>
-                                    </div>
-                                    <div class="grid grid-cols-2 gap-4 text-sm text-gray-600 mb-3">
-                                        <div><span class="font-medium">工單號碼:</span> WO-2024-005</div>
-                                        <div><span class="font-medium">客戶編號:</span> C001240</div>
-                                        <div><span class="font-medium">結案時間:</span> 2024-01-14 16:45</div>
-                                        <div><span class="font-medium">轉移完成:</span> 2024-01-14 16:45</div>
-                                    </div>
-                                    <div class="text-sm text-gray-700">
-                                        <strong>處理結果:</strong> 服務已成功轉移至新址，客戶確認服務正常
-                                    </div>
-                                </div>
-                                <div class="ml-4 text-right">
-                                    <div class="text-sm text-green-600 font-medium">轉移成功</div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="text-center py-4 text-gray-500">
-                            <p>顯示最近結案的工單，共 15 筆</p>
-                            <button class="mt-2 text-blue-600 hover:text-blue-800 text-sm">查看全部結案工單</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 工單建立視窗 -->
-    <div id="work-order-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-60">
-        <div class="flex items-center justify-center min-h-screen p-4">
-            <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full">
-                <div class="px-6 py-4 border-b border-gray-200">
-                    <div class="flex justify-between items-center">
-                        <h3 class="text-lg font-semibold text-gray-900">建立工單</h3>
-                        <button onclick="closeWorkOrderModal()" class="text-gray-400 hover:text-gray-600">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-
-                <div class="p-6">
-                    <form id="work-order-form" class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">客戶新地址</label>
-                            <input type="text" id="new-address" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
-                                   placeholder="請輸入客戶新地址" required>
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">新社區名稱</label>
-                            <input type="text" id="new-community" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
-                                   placeholder="請輸入新社區名稱" required>
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">商品品項</label>
-                            <div class="space-y-2">
-                                <label class="flex items-center">
-                                    <input type="checkbox" name="products" value="網路服務" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                                    <span class="ml-2 text-sm text-gray-700">網路服務</span>
-                                </label>
-                                <label class="flex items-center">
-                                    <input type="checkbox" name="products" value="有線電視" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                                    <span class="ml-2 text-sm text-gray-700">有線電視</span>
-                                </label>
-                                <label class="flex items-center">
-                                    <input type="checkbox" name="products" value="固網電話" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                                    <span class="ml-2 text-sm text-gray-700">固網電話</span>
-                                </label>
-                                <label class="flex items-center">
-                                    <input type="checkbox" name="products" value="MOD服務" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                                    <span class="ml-2 text-gray-700">MOD服務</span>
-                                </label>
-                            </div>
-                        </div>
-                        
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">預計安裝日期</label>
-                                <input type="date" id="install-date" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">聯絡時間</label>
-                                <select id="contact-time" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                                    <option value="上午">上午 (09:00-12:00)</option>
-                                    <option value="下午">下午 (13:00-17:00)</option>
-                                    <option value="晚上">晚上 (18:00-21:00)</option>
-                                </select>
-                            </div>
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">備註</label>
-                            <textarea id="work-order-notes" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
-                                      placeholder="請輸入特殊需求或備註事項"></textarea>
-                        </div>
-                    </form>
-                    
-                    <div class="flex justify-end space-x-3 mt-6">
-                        <button onclick="closeWorkOrderModal()" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
-                            取消
-                        </button>
-                        <button onclick="submitWorkOrder()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
-                            建立工單
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 處理頁面模態框 -->
-    <div id="processing-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
-        <div class="flex items-center justify-center min-h-screen p-4">
-            <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-screen overflow-y-auto">
-                <div class="px-6 py-4 border-b border-gray-200">
-                    <div class="flex justify-between items-center">
-                        <h3 class="text-lg font-semibold text-gray-900">工單處理</h3>
-                        <button onclick="closeProcessingModal()" class="text-gray-400 hover:text-gray-600">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-
-                <div class="p-6">
-                    <!-- 客戶資訊 -->
-                    <div class="bg-blue-50 rounded-lg p-4 mb-6">
-                        <h4 class="text-lg font-semibold text-blue-900 mb-3">客戶資訊</h4>
-                        <div class="grid grid-cols-2 gap-4 text-sm">
-                            <div><span class="font-medium text-blue-800">客訴單號:</span> <span id="modal-ticket-id">CS-2024-001</span></div>
-                            <div><span class="font-medium text-blue-800">客戶編號:</span> <span id="modal-customer-id">C001234</span></div>
-                            <div><span class="font-medium text-blue-800">客戶姓名:</span> <span id="modal-customer-name">王小明</span></div>
-                            <div><span class="font-medium text-blue-800">地區:</span> <span id="modal-area">台北市信義區</span></div>
-                            <div><span class="font-medium text-blue-800">社區名稱:</span> <span id="modal-community">信義花園</span></div>
-                            <div><span class="font-medium text-blue-800">電話:</span> <span id="modal-phone">02-2345-6789</span></div>
-                            <div><span class="font-medium text-blue-800">手機:</span> <span id="modal-mobile">0912-345-678</span></div>
-                            <div class="col-span-2"><span class="font-medium text-blue-800">地址:</span> <span id="modal-address">台北市信義區信義路五段7號</span></div>
-                        </div>
-                    </div>
-
-                    <!-- 客訴內容 -->
-                    <div class="bg-gray-50 rounded-lg p-4 mb-6">
-                        <h4 class="text-lg font-semibold text-gray-900 mb-3">客訴內容</h4>
-                        <p id="modal-complaint-content" class="text-gray-700">需要辦理移機服務，搬遷至新地址，請安排相關作業。</p>
-                    </div>
-
-
-
-                    <!-- 處理流程 -->
-                    <div class="bg-white border border-gray-200 rounded-lg p-4 mb-6">
-                        <h4 class="text-lg font-semibold text-gray-900 mb-4">處理流程</h4>
-                        
-                        <!-- 步驟1: 確認資料並建立工單 -->
-                        <div class="space-y-4">
-                            <div class="flex items-start space-x-3 p-3 bg-yellow-50 rounded-lg">
-                                <div class="flex-shrink-0">
-                                    <div class="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">1</div>
-                                </div>
-                                <div class="flex-1">
-                                    <h5 class="font-medium text-gray-900">確認資料並建立工單</h5>
-                                    <p class="text-sm text-gray-600 mt-1">確認客戶資訊無誤後，勾選建立工單並送出資料</p>
-                                    <div class="mt-3 flex items-center space-x-4">
-                                        <label class="flex items-center">
-                                            <input type="checkbox" id="confirm-data" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                                            <span class="ml-2 text-sm text-gray-700">確認資料無誤，建立工單</span>
-                                        </label>
-                                        <button onclick="createWorkOrder()" id="create-work-order-btn" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 text-sm font-medium disabled:bg-gray-300" disabled>
-                                            建立工單
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- 步驟2: 約工處理 -->
-                            <div id="step-2" class="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg opacity-50">
-                                <div class="flex-shrink-0">
-                                    <div class="w-8 h-8 bg-gray-400 rounded-full flex items-center justify-center text-white font-semibold text-sm">2</div>
-                                </div>
-                                <div class="flex-1">
-                                    <h5 class="font-medium text-gray-900">約工處理</h5>
-                                    <p class="text-sm text-gray-600 mt-1">開啟對應區域的約工能量表，安排技術人員到場處理</p>
-                                    <div class="mt-3">
-                                        <button id="schedule-work-btn" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 text-sm font-medium disabled:bg-gray-300" disabled>
-                                            開啟約工能量表
-                                        </button>
-                                        <span id="work-status" class="ml-3 text-sm text-gray-500">等待工單建立</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- 步驟3: 設定轉移日期 -->
-                            <div id="step-3" class="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg opacity-50">
-                                <div class="flex-shrink-0">
-                                    <div class="w-8 h-8 bg-gray-400 rounded-full flex items-center justify-center text-white font-semibold text-sm">3</div>
-                                </div>
-                                <div class="flex-1">
-                                    <h5 class="font-medium text-gray-900">設定轉移日期</h5>
-                                    <p class="text-sm text-gray-600 mt-1">約工完成後，設定移機轉月份的開始日期</p>
-                                    <div class="mt-3 space-y-2">
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700">轉移開始日期</label>
-                                            <input type="date" id="transfer-date" class="mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" disabled>
-                                        </div>
-                                        <button id="set-transfer-btn" class="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 text-sm font-medium disabled:bg-gray-300" disabled>
-                                            確認轉移日期
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- 步驟4: 主管審核 -->
-                            <div id="step-4" class="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg opacity-50">
-                                <div class="flex-shrink-0">
-                                    <div class="w-8 h-8 bg-gray-400 rounded-full flex items-center justify-center text-white font-semibold text-sm">4</div>
-                                </div>
-                                <div class="flex-1">
-                                    <h5 class="font-medium text-gray-900">主管審核</h5>
-                                    <p class="text-sm text-gray-600 mt-1">等待主管審核轉移申請</p>
-                                    <div class="mt-3">
-                                        <span id="approval-status" class="text-sm text-gray-500">等待前置作業完成</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- 步驟5: 系統自動轉移並結案 -->
-                            <div id="step-5" class="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg opacity-50">
-                                <div class="flex-shrink-0">
-                                    <div class="w-8 h-8 bg-gray-400 rounded-full flex items-center justify-center text-white font-semibold text-sm">5</div>
-                                </div>
-                                <div class="flex-1">
-                                    <h5 class="font-medium text-gray-900">系統自動轉移並結案</h5>
-                                    <p class="text-sm text-gray-600 mt-1">審核通過後，系統依照轉移日期自動執行轉移並結案</p>
-                                    <div class="mt-3">
-                                        <span id="final-status" class="text-sm text-gray-500">等待審核完成</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 操作按鈕 -->
-                    <div class="flex justify-end space-x-3">
-                        <button onclick="closeProcessingModal()" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
-                            取消
-                        </button>
-                        <button onclick="saveProgress()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
-                            儲存進度
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // 切換選項卡
-        function switchTab(tabName) {
-            // 隱藏所有內容
-            document.querySelectorAll('.tab-content').forEach(content => {
-                content.classList.add('hidden');
-            });
-            
-            // 移除所有按鈕的活動狀態
-            document.querySelectorAll('.tab-button').forEach(button => {
-                button.classList.remove('active', 'border-blue-500', 'text-blue-600');
-                button.classList.add('border-transparent', 'text-gray-500');
-            });
-            
-            // 顯示選中的內容
-            document.getElementById(tabName + '-content').classList.remove('hidden');
-            
-            // 設置選中按鈕的活動狀態
-            const activeButton = document.getElementById('tab-' + tabName);
-            activeButton.classList.add('active', 'border-blue-500', 'text-blue-600');
-            activeButton.classList.remove('border-transparent', 'text-gray-500');
-        }
-
-        // 開始處理工單
-        function startProcessing(ticketId) {
-            // 填入客戶資訊（這裡使用示例資料）
-            const customerData = {
-                'CS-2024-001': {
-                    customerId: 'C001234',
-                    customerName: '王小明',
-                    area: '台北市信義區',
-                    community: '信義花園',
-                    phone: '02-2345-6789',
-                    mobile: '0912-345-678',
-                    address: '台北市信義區信義路五段7號',
-                    complaint: '需要辦理移機服務，搬遷至新地址，請安排相關作業。'
-                },
-                'CS-2024-002': {
-                    customerId: 'C001235',
-                    customerName: '李小華',
-                    area: '台北市大安區',
-                    community: '大安御品',
-                    phone: '02-2876-5432',
-                    mobile: '0923-456-789',
-                    address: '台北市大安區復興南路一段390號',
-                    complaint: '需要辦理移機服務，搬遷至新地址，請安排相關作業。'
-                }
-            };
-
-            const data = customerData[ticketId];
-            if (data) {
-                document.getElementById('modal-ticket-id').textContent = ticketId;
-                document.getElementById('modal-customer-id').textContent = data.customerId;
-                document.getElementById('modal-customer-name').textContent = data.customerName;
-                document.getElementById('modal-area').textContent = data.area;
-                document.getElementById('modal-community').textContent = data.community;
-                document.getElementById('modal-phone').textContent = data.phone;
-                document.getElementById('modal-mobile').textContent = data.mobile;
-                document.getElementById('modal-address').textContent = data.address;
-                document.getElementById('modal-complaint-content').textContent = data.complaint;
-                
-
-            }
-
-            document.getElementById('processing-modal').classList.remove('hidden');
-        }
-
-        // 關閉處理模態框
-        function closeProcessingModal() {
-            document.getElementById('processing-modal').classList.add('hidden');
-            resetProcessingSteps();
-        }
-
-        // 重置處理步驟
-        function resetProcessingSteps() {
-            document.getElementById('confirm-data').checked = false;
-            document.getElementById('create-work-order-btn').disabled = true;
-            
-            // 重置所有步驟狀態
-            for (let i = 2; i <= 5; i++) {
-                const step = document.getElementById('step-' + i);
-                step.classList.add('opacity-50');
-                step.querySelector('.w-8').classList.remove('bg-green-500', 'bg-blue-500', 'bg-purple-500');
-                step.querySelector('.w-8').classList.add('bg-gray-400');
-            }
-            
-            // 重置按鈕狀態
-            document.getElementById('schedule-work-btn').disabled = true;
-            document.getElementById('set-transfer-btn').disabled = true;
-            document.getElementById('transfer-date').disabled = true;
-            
-            // 重置狀態文字
-            document.getElementById('work-status').textContent = '等待工單建立';
-            document.getElementById('approval-status').textContent = '等待前置作業完成';
-            document.getElementById('final-status').textContent = '等待審核完成';
-        }
-
-        // 監聽確認資料勾選框
-        document.getElementById('confirm-data').addEventListener('change', function() {
-            document.getElementById('create-work-order-btn').disabled = !this.checked;
-        });
-
-        // 建立工單
-        function createWorkOrder() {
-            // 開啟工單建立視窗
-            document.getElementById('work-order-modal').classList.remove('hidden');
-            
-            // 設定預設安裝日期為明天
-            const tomorrow = new Date();
-            tomorrow.setDate(tomorrow.getDate() + 1);
-            document.getElementById('install-date').value = tomorrow.toISOString().split('T')[0];
-        }
-
-        // 關閉工單建立視窗
-        function closeWorkOrderModal() {
-            document.getElementById('work-order-modal').classList.add('hidden');
-            // 清空表單
-            document.getElementById('work-order-form').reset();
-        }
-
-        // 提交工單
-        function submitWorkOrder() {
-            const newAddress = document.getElementById('new-address').value;
-            const newCommunity = document.getElementById('new-community').value;
-            const installDate = document.getElementById('install-date').value;
-            const contactTime = document.getElementById('contact-time').value;
-            const notes = document.getElementById('work-order-notes').value;
-            
-            // 獲取選中的商品品項
-            const selectedProducts = [];
-            const productCheckboxes = document.querySelectorAll('input[name="products"]:checked');
-            productCheckboxes.forEach(checkbox => {
-                selectedProducts.push(checkbox.value);
-            });
-            
-            if (!newAddress || !newCommunity || !installDate || selectedProducts.length === 0) {
-                alert('請填寫所有必填欄位並選擇至少一項商品品項');
-                return;
-            }
-            
-            // 生成工單號碼
-            const workOrderNumber = 'WO-' + new Date().getTime();
-            
-            // 關閉工單建立視窗和處理視窗
-            closeWorkOrderModal();
-            closeProcessingModal();
-            
-            // 儲存工單資訊到全域變數
-            window.currentWorkOrder = {
-                number: workOrderNumber,
-                address: newAddress,
-                community: newCommunity,
-                products: selectedProducts,
-                installDate: installDate,
-                contactTime: contactTime,
-                notes: notes,
-                status: 'processing',
-                ticketId: document.getElementById('modal-ticket-id').textContent,
-                customerName: document.getElementById('modal-customer-name').textContent,
-                customerId: document.getElementById('modal-customer-id').textContent
-            };
-            
-            // 將工單加入處理中列表
-            addToProcessingList(window.currentWorkOrder);
-            
-            // 從代處理中移除該工單
-            removeFromPendingList(window.currentWorkOrder.ticketId);
-            
-            // 模擬新增移機案件時數量增加
-            const pendingCount = document.querySelector('#tab-pending span');
-            const currentCount = parseInt(pendingCount.textContent);
-            pendingCount.textContent = currentCount + 1;
-            
-            alert(`工單建立成功！\n工單編號：${workOrderNumber}\n新地址：${newAddress}\n新社區：${newCommunity}\n安裝項目：${selectedProducts.join('、')}\n\n工單已移至「處理中」狀態，等待其他單位安裝完成。`);
-            
-            // 自動切換到處理中頁籤
-            switchTab('processing');
-            
-            // 模擬其他單位處理工單
-            simulateExternalProcessing(workOrderNumber);
-        }
-
-        // 模擬其他單位處理工單
-        function simulateExternalProcessing(workOrderNumber) {
-            // 5秒後模擬工單完成
-            setTimeout(() => {
-                // 生成結案時間
-                const completionDate = new Date();
-                
-                // 更新工單狀態
-                if (window.currentWorkOrder) {
-                    window.currentWorkOrder.status = 'completed';
-                    window.currentWorkOrder.completionDate = completionDate.toISOString();
-                }
-                
-                // 從處理中移除，加入追蹤中
-                removeFromProcessingList(window.currentWorkOrder.ticketId);
-                addToTrackingList(window.currentWorkOrder);
-                
-                alert(`工單處理完成通知：\n工單編號：${workOrderNumber}\n完成時間：${completionDate.toLocaleString('zh-TW')}\n\n工單已移至「追蹤中」狀態，請設定轉移日期。`);
-                
-                // 自動切換到追蹤中頁籤
-                switchTab('tracking');
-                
-            }, 5000);
-        }
-
-        // 將工單加入處理中列表
-        function addToProcessingList(workOrder) {
-            const processingContent = document.getElementById('processing-content');
-            const workOrderHtml = `
-                <div class="border border-orange-200 rounded-lg p-4 bg-orange-50" data-ticket-id="${workOrder.ticketId}">
-                    <div class="flex justify-between items-start">
-                        <div class="flex-1">
-                            <div class="flex items-center space-x-4 mb-2">
-                                <span class="text-lg font-semibold text-gray-900">客訴單號: ${workOrder.ticketId}</span>
-                                <span class="bg-orange-100 text-orange-800 px-2 py-1 rounded-full text-xs font-medium">正在安裝</span>
-                            </div>
-                            <div class="grid grid-cols-2 gap-4 text-sm text-gray-600 mb-3">
-                                <div><span class="font-medium">工單號碼:</span> ${workOrder.number}</div>
-                                <div><span class="font-medium">客戶編號:</span> ${workOrder.customerId}</div>
-                                <div><span class="font-medium">新社區:</span> ${workOrder.community}</div>
-                                <div><span class="font-medium">安裝進度:</span> 設備安裝中</div>
-                            </div>
-                            <div class="text-sm text-gray-700">
-                                <strong>安裝項目:</strong> ${workOrder.products.join('、')}
-                            </div>
-                        </div>
-                        <div class="ml-4 text-right">
-                            <div class="text-sm text-gray-500 mb-2">預計完成時間</div>
-                            <div class="text-sm font-medium text-orange-600">${workOrder.installDate} 15:00</div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            const spaceDiv = processingContent.querySelector('.space-y-4');
-            spaceDiv.insertAdjacentHTML('beforeend', workOrderHtml);
-            
-            // 更新處理中數量
-            updateTabCount('processing', 1);
-        }
-
-        // 從代處理中移除工單
-        function removeFromPendingList(ticketId) {
-            const pendingContent = document.getElementById('pending-content');
-            const ticketElement = pendingContent.querySelector(`[data-ticket-id="${ticketId}"]`);
-            if (!ticketElement) {
-                // 如果沒有data-ticket-id，則查找包含該ID的元素
-                const allTickets = pendingContent.querySelectorAll('.border');
-                allTickets.forEach(ticket => {
-                    if (ticket.textContent.includes(ticketId)) {
-                        ticket.remove();
-                    }
-                });
-            } else {
-                ticketElement.remove();
-            }
-            
-            // 更新代處理數量
-            updateTabCount('pending', -1);
-        }
-
-        // 從處理中移除工單
-        function removeFromProcessingList(ticketId) {
-            const processingContent = document.getElementById('processing-content');
-            const ticketElement = processingContent.querySelector(`[data-ticket-id="${ticketId}"]`);
-            if (ticketElement) {
-                ticketElement.remove();
-            }
-            
-            // 更新處理中數量
-            updateTabCount('processing', -1);
-        }
-
-        // 將工單加入追蹤中列表
-        function addToTrackingList(workOrder) {
-            const trackingContent = document.getElementById('tracking-content');
-            const workOrderHtml = `
-                <div class="border border-blue-200 rounded-lg p-4 bg-blue-50" data-ticket-id="${workOrder.ticketId}">
-                    <div class="flex justify-between items-start">
-                        <div class="flex-1">
-                            <div class="flex items-center space-x-4 mb-2">
-                                <span class="text-lg font-semibold text-gray-900">客訴單號: ${workOrder.ticketId}</span>
-                                <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">工單完成</span>
-                            </div>
-                            <div class="grid grid-cols-2 gap-4 text-sm text-gray-600 mb-3">
-                                <div><span class="font-medium">工單號碼:</span> ${workOrder.number}</div>
-                                <div><span class="font-medium">客戶編號:</span> ${workOrder.customerId}</div>
-                                <div><span class="font-medium">完成時間:</span> ${new Date(workOrder.completionDate).toLocaleString('zh-TW')}</div>
-                                <div><span class="font-medium">新地址:</span> ${workOrder.address}</div>
-                            </div>
-                            <div class="text-sm text-gray-700 mb-3">
-                                <strong>安裝項目:</strong> ${workOrder.products.join('、')} - 已完成安裝
-                            </div>
-                            <div class="bg-white p-3 rounded border">
-                                <label class="block text-sm font-medium text-gray-700 mb-2">設定轉移日期（月份開始日）</label>
-                                <div class="space-y-3">
-                                    <div class="flex items-center space-x-3">
-                                        <input type="date" id="transfer-date-${workOrder.ticketId.toLowerCase()}" class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                                        <button onclick="setTransferDate('${workOrder.ticketId}')" class="bg-blue-600 text-white px-3 py-2 rounded-md hover:bg-blue-700 text-sm font-medium">
-                                            設定
-                                        </button>
-                                    </div>
-                                    <div class="grid grid-cols-2 gap-4">
-                                        <label class="flex items-center">
-                                            <input type="checkbox" id="suspend-old-address-${workOrder.ticketId.toLowerCase()}" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                                            <span class="ml-2 text-sm text-gray-700">確認舊址暫停</span>
-                                        </label>
-                                        <label class="flex items-center">
-                                            <input type="checkbox" id="simultaneous-use-${workOrder.ticketId.toLowerCase()}" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                                            <span class="ml-2 text-sm text-gray-700">兩邊同時使用</span>
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            const spaceDiv = trackingContent.querySelector('.space-y-4');
-            spaceDiv.insertAdjacentHTML('beforeend', workOrderHtml);
-            
-            // 設定預設轉移日期為明天
-            const tomorrow = new Date();
-            tomorrow.setDate(tomorrow.getDate() + 1);
-            document.getElementById(`transfer-date-${workOrder.ticketId.toLowerCase()}`).value = tomorrow.toISOString().split('T')[0];
-            
-            // 更新追蹤中數量
-            updateTabCount('tracking', 1);
-        }
-
-        // 更新頁籤數量
-        function updateTabCount(tabName, change) {
-            const tabButton = document.getElementById(`tab-${tabName}`);
-            const countSpan = tabButton.querySelector('span');
-            const currentCount = parseInt(countSpan.textContent);
-            const newCount = Math.max(0, currentCount + change);
-            countSpan.textContent = newCount;
-        }
-
-        // 開啟約工能量表
-        document.getElementById('schedule-work-btn').addEventListener('click', function() {
-            this.textContent = '約工中...';
-            this.disabled = true;
-            document.getElementById('work-status').textContent = '約工進行中';
-            
-            // 模擬約工完成
-            setTimeout(() => {
-                this.textContent = '約工已完成';
-                this.classList.remove('bg-green-600', 'hover:bg-green-700');
-                this.classList.add('bg-blue-600');
-                document.getElementById('work-status').textContent = '約工已完成，可設定轉移日期';
-                
-                // 啟用步驟3
-                const step3 = document.getElementById('step-3');
-                step3.classList.remove('opacity-50');
-                step3.querySelector('.w-8').classList.remove('bg-gray-400');
-                step3.querySelector('.w-8').classList.add('bg-blue-500');
-                
-                document.getElementById('transfer-date').disabled = false;
-                document.getElementById('set-transfer-btn').disabled = false;
-                
-                // 設定預設日期為明天
-                const tomorrow = new Date();
-                tomorrow.setDate(tomorrow.getDate() + 1);
-                document.getElementById('transfer-date').value = tomorrow.toISOString().split('T')[0];
-                
-            }, 3000);
-        });
-
-        // 確認轉移日期
-        document.getElementById('set-transfer-btn').addEventListener('click', function() {
-            const transferDate = document.getElementById('transfer-date').value;
-            if (!transferDate) {
-                alert('請選擇轉移日期');
-                return;
-            }
-            
-            this.textContent = '已設定';
-            this.disabled = true;
-            this.classList.remove('bg-purple-600', 'hover:bg-purple-700');
-            this.classList.add('bg-green-600');
-            
-            // 啟用步驟4
-            const step4 = document.getElementById('step-4');
-            step4.classList.remove('opacity-50');
-            step4.querySelector('.w-8').classList.remove('bg-gray-400');
-            step4.querySelector('.w-8').classList.add('bg-purple-500');
-            
-            document.getElementById('approval-status').textContent = '已送交主管審核';
-            
-            // 模擬主管審核
-            setTimeout(() => {
-                document.getElementById('approval-status').textContent = '主管審核通過';
-                
-                // 啟用步驟5
-                const step5 = document.getElementById('step-5');
-                step5.classList.remove('opacity-50');
-                step5.querySelector('.w-8').classList.remove('bg-gray-400');
-                step5.querySelector('.w-8').classList.add('bg-green-500');
-                
-                document.getElementById('final-status').textContent = '系統自動轉移中...';
-                
-                setTimeout(() => {
-                    document.getElementById('final-status').textContent = '轉移完成，工單已結案';
-                    alert('工單處理完成！已自動結案。');
-                }, 2000);
-                
-            }, 3000);
-        });
-
-        // 儲存進度
-        function saveProgress() {
-            alert('進度已儲存');
-        }
-
-        // 處理問題工單
-        function handleProblem(ticketId) {
-            const action = confirm('選擇處理方式：\n確定 - 重新安排安裝\n取消 - 標記為待處理');
-            
-            if (action) {
-                alert(`${ticketId} 已重新安排安裝，預計2天後完成`);
-                // 這裡可以更新工單狀態
-            } else {
-                alert(`${ticketId} 已標記為待處理，等待進一步指示`);
-            }
-        }
-
-        // 設定轉移日期
-        function setTransferDate(ticketId) {
-            console.log('設定轉移日期被呼叫，工單ID:', ticketId);
-            
-            // 嘗試多種方式找到日期輸入欄位
-            let dateInput = document.getElementById(`transfer-date-${ticketId.toLowerCase()}`);
-            if (!dateInput) {
-                // 如果找不到，嘗試其他可能的ID格式
-                dateInput = document.getElementById(`transfer-date-cs-${ticketId.split('-')[2]}`);
-            }
-            if (!dateInput) {
-                // 最後嘗試通過查詢選擇器找到
-                const trackingContent = document.getElementById('tracking-content');
-                const allDateInputs = trackingContent.querySelectorAll('input[type="date"]');
-                console.log('找到的日期輸入欄位數量:', allDateInputs.length);
-                
-                // 找到包含該工單ID的容器中的日期輸入欄位
-                for (let input of allDateInputs) {
-                    const container = input.closest('.border');
-                    if (container && container.textContent.includes(ticketId)) {
-                        dateInput = input;
-                        break;
-                    }
-                }
-            }
-            
-            if (!dateInput) {
-                console.error('找不到日期輸入欄位，工單ID:', ticketId);
-                alert('系統錯誤：找不到日期輸入欄位');
-                return;
-            }
-            
-            const transferDate = dateInput.value;
-            console.log('選擇的轉移日期:', transferDate);
-            
-            if (!transferDate) {
-                alert('請選擇轉移日期');
-                return;
-            }
-            
-            // 獲取勾選狀態
-            let suspendOldAddress = false;
-            let simultaneousUse = false;
-            
-            const suspendCheckbox = document.getElementById(`suspend-old-address-${ticketId.toLowerCase()}`);
-            const simultaneousCheckbox = document.getElementById(`simultaneous-use-${ticketId.toLowerCase()}`);
-            
-            if (suspendCheckbox) suspendOldAddress = suspendCheckbox.checked;
-            if (simultaneousCheckbox) simultaneousUse = simultaneousCheckbox.checked;
-            
-            // 找到該工單的容器
-            let ticketElement = document.querySelector(`[data-ticket-id="${ticketId}"]`);
-            if (!ticketElement) {
-                // 如果沒有data-ticket-id，則查找包含該ID的元素
-                const trackingContent = document.getElementById('tracking-content');
-                const allTickets = trackingContent.querySelectorAll('.border');
-                for (let ticket of allTickets) {
-                    if (ticket.textContent.includes(ticketId)) {
-                        ticketElement = ticket;
-                        break;
-                    }
-                }
-            }
-            
-            if (!ticketElement) {
-                console.error('找不到工單元素:', ticketId);
-                alert('系統錯誤：找不到工單元素');
-                return;
-            }
-            
-            console.log('找到工單元素:', ticketElement);
-            
-            // 找到按鈕容器 - 使用更寬鬆的選擇器
-            let buttonContainer = ticketElement.querySelector('.flex.items-center.space-x-3');
-            if (!buttonContainer) {
-                // 嘗試其他可能的選擇器
-                buttonContainer = ticketElement.querySelector('.flex[class*="space-x"]');
-            }
-            if (!buttonContainer) {
-                // 最後嘗試找到包含按鈕的容器
-                const buttons = ticketElement.querySelectorAll('button');
-                for (let button of buttons) {
-                    if (button.textContent.includes('設定')) {
-                        buttonContainer = button.parentElement;
-                        break;
-                    }
-                }
-            }
-            
-            if (!buttonContainer) {
-                console.error('找不到按鈕容器');
-                alert('系統錯誤：找不到按鈕容器');
-                return;
-            }
-            
-            console.log('找到按鈕容器:', buttonContainer);
-            
-            // 替換按鈕為確認狀態
-            buttonContainer.innerHTML = `
-                <input type="date" id="transfer-date-${ticketId.toLowerCase()}-readonly" class="px-3 py-2 border border-gray-300 rounded-md bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" value="${transferDate}" readonly>
-                <button onclick="submitToApproval('${ticketId}', '${transferDate}', ${suspendOldAddress}, ${simultaneousUse})" class="bg-green-600 text-white px-3 py-2 rounded-md hover:bg-green-700 text-sm font-medium">
-                    送交主管審核
-                </button>
-            `;
-            
-            // 顯示勾選狀態
-            const statusText = [];
-            if (suspendOldAddress) statusText.push('舊址暫停');
-            if (simultaneousUse) statusText.push('兩邊同時使用');
-            
-            const statusDisplay = statusText.length > 0 ? `，${statusText.join('、')}` : '';
-            
-            console.log('按鈕已替換為送交主管審核');
-            alert(`轉移日期已設定為 ${transferDate}${statusDisplay}，請點擊「送交主管審核」完成送審。`);
-        }
-
-        // 送交主管審核
-        function submitToApproval(ticketId, transferDate, suspendOldAddress, simultaneousUse) {
-            const statusText = [];
-            if (suspendOldAddress) statusText.push('舊址暫停');
-            if (simultaneousUse) statusText.push('兩邊同時使用');
-            const statusDisplay = statusText.length > 0 ? `\n設定選項：${statusText.join('、')}` : '';
-            
-            const confirmed = confirm(`確認將 ${ticketId} 送交主管審核？\n轉移日期：${transferDate}${statusDisplay}`);
-            
-            if (confirmed) {
-                // 儲存工單資訊以便駁回時恢復
-                const trackingContent = document.getElementById('tracking-content');
-                const ticketElement = trackingContent.querySelector(`[data-ticket-id="${ticketId}"]`) || 
-                                    Array.from(trackingContent.querySelectorAll('.border')).find(el => el.textContent.includes(ticketId));
-                
-                if (ticketElement) {
-                    // 儲存原始工單資訊
-                    window.originalTicketData = window.originalTicketData || {};
-                    window.originalTicketData[ticketId] = {
-                        html: ticketElement.outerHTML,
-                        workOrder: window.currentWorkOrder,
-                        suspendOldAddress: suspendOldAddress,
-                        simultaneousUse: simultaneousUse
-                    };
-                    
-                    // 立即從追蹤中移除工單
-                    ticketElement.remove();
-                    updateTabCount('tracking', -1);
-                }
-                
-                // 加入主管簽核列表
-                addToApprovalList(ticketId, transferDate, suspendOldAddress, simultaneousUse);
-                
-                alert(`${ticketId} 已送交主管審核\n轉移日期：${transferDate}${statusDisplay}\n工單已移至「主管簽核」狀態`);
-                
-                // 自動切換到主管簽核頁籤
-                switchTab('approval');
-            }
-        }
-
-        // 從追蹤中移除工單
-        function removeFromTrackingList(ticketId) {
-            const trackingContent = document.getElementById('tracking-content');
-            const ticketElement = trackingContent.querySelector(`[data-ticket-id="${ticketId}"]`);
-            if (ticketElement) {
-                ticketElement.remove();
-            }
-            
-            // 更新追蹤中數量
-            updateTabCount('tracking', -1);
-        }
-
-        // 將工單加入主管簽核列表
-        function addToApprovalList(ticketId, transferDate, suspendOldAddress, simultaneousUse) {
-            const approvalContent = document.getElementById('approval-content');
-            const workOrder = window.currentWorkOrder; // 使用全域工單資訊
-            
-            // 建立設定選項顯示文字
-            const statusText = [];
-            if (suspendOldAddress) statusText.push('舊址暫停');
-            if (simultaneousUse) statusText.push('兩邊同時使用');
-            const statusDisplay = statusText.length > 0 ? `，${statusText.join('、')}` : '';
-            
-            const workOrderHtml = `
-                <div class="border border-purple-200 rounded-lg p-4 bg-purple-50" data-ticket-id="${ticketId}">
-                    <div class="flex justify-between items-start">
-                        <div class="flex-1">
-                            <div class="flex items-center space-x-4 mb-2">
-                                <span class="text-lg font-semibold text-gray-900">客訴單號: ${ticketId}</span>
-                                <span class="bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs font-medium">等待簽核</span>
-                            </div>
-                            <div class="grid grid-cols-2 gap-4 text-sm text-gray-600 mb-3">
-                                <div><span class="font-medium">工單號碼:</span> ${workOrder ? workOrder.number : 'WO-2024-XXX'}</div>
-                                <div><span class="font-medium">客戶編號:</span> ${workOrder ? workOrder.customerId : 'C001XXX'}</div>
-                                <div><span class="font-medium">轉移日期:</span> ${transferDate}</div>
-                                <div><span class="font-medium">送審時間:</span> ${new Date().toLocaleString('zh-TW')}</div>
-                            </div>
-                            <div class="text-sm text-gray-700 bg-white p-3 rounded">
-                                <strong>轉移原因:</strong> 客戶搬遷至新址，新服務地址：${workOrder ? workOrder.address : '新地址'}${statusDisplay}
-                            </div>
-                        </div>
-                        <div class="ml-4 space-y-2">
-                            <button onclick="approveTransfer('${ticketId}', '${transferDate}', ${suspendOldAddress}, ${simultaneousUse})" class="block w-full bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 text-sm font-medium">
-                                核准
-                            </button>
-                            <button onclick="rejectTransfer('${ticketId}')" class="block w-full bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 text-sm font-medium">
-                                駁回
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            const spaceDiv = approvalContent.querySelector('.space-y-4');
-            spaceDiv.insertAdjacentHTML('beforeend', workOrderHtml);
-            
-            // 更新主管簽核數量
-            updateTabCount('approval', 1);
-        }
-
-        // 確認轉移日期（保留原有功能）
-        function confirmTransferDate(ticketId) {
-            const confirmed = confirm('確認轉移日期正確，將送交主管審核？');
-            
-            if (confirmed) {
-                alert(`${ticketId} 轉移日期已確認，已送交主管審核`);
-                // 移動到主管簽核狀態
-                // 這裡可以實作實際的狀態更新邏輯
-            }
-        }
-
-        // 核准轉移
-        function approveTransfer(ticketId, transferDate, suspendOldAddress, simultaneousUse) {
-            const statusText = [];
-            if (suspendOldAddress) statusText.push('舊址暫停');
-            if (simultaneousUse) statusText.push('兩邊同時使用');
-            const statusDisplay = statusText.length > 0 ? `\n設定選項：${statusText.join('、')}` : '';
-            
-            const confirmed = confirm(`確定核准此轉移申請？\n轉移日期：${transferDate}${statusDisplay}`);
-            
-            if (confirmed) {
-                // 從主管簽核中移除工單
-                removeFromApprovalList(ticketId);
-                
-                // 加入結案列表
-                addToClosedList(ticketId, transferDate, suspendOldAddress, simultaneousUse);
-                
-                alert(`${ticketId} 轉移申請已核准，系統將自動執行轉移並結案`);
-                
-                // 模擬系統自動轉移
-                setTimeout(() => {
-                    alert(`${ticketId} 轉移已完成，工單已自動結案`);
-                    
-                    // 自動切換到結案頁籤
-                    switchTab('closed');
-                }, 2000);
-            }
-        }
-
-        // 駁回轉移
-        function rejectTransfer(ticketId) {
-            const reason = prompt('請輸入駁回原因：');
-            
-            if (reason) {
-                // 從主管簽核中移除工單
-                removeFromApprovalList(ticketId);
-                
-                // 重新加入追蹤中列表（需要重新設定轉移日期）
-                addBackToTrackingList(ticketId, reason);
-                
-                alert(`${ticketId} 轉移申請已駁回\n駁回原因：${reason}\n工單已退回追蹤中狀態`);
-                
-                // 自動切換到追蹤中頁籤
-                switchTab('tracking');
-            }
-        }
-
-        // 從主管簽核中移除工單
-        function removeFromApprovalList(ticketId) {
-            const approvalContent = document.getElementById('approval-content');
-            const ticketElement = approvalContent.querySelector(`[data-ticket-id="${ticketId}"]`);
-            if (ticketElement) {
-                ticketElement.remove();
-            }
-            
-            // 更新主管簽核數量
-            updateTabCount('approval', -1);
-        }
-
-        // 將工單加入結案列表
-        function addToClosedList(ticketId, transferDate) {
-            const closedContent = document.getElementById('closed-content');
-            const workOrder = window.currentWorkOrder;
-            
-            const workOrderHtml = `
-                <div class="border border-green-200 rounded-lg p-4 bg-green-50" data-ticket-id="${ticketId}">
-                    <div class="flex justify-between items-start">
-                        <div class="flex-1">
-                            <div class="flex items-center space-x-4 mb-2">
-                                <span class="text-lg font-semibold text-gray-900">客訴單號: ${ticketId}</span>
-                                <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium">已結案</span>
-                            </div>
-                            <div class="grid grid-cols-2 gap-4 text-sm text-gray-600 mb-3">
-                                <div><span class="font-medium">工單號碼:</span> ${workOrder ? workOrder.number : 'WO-2024-XXX'}</div>
-                                <div><span class="font-medium">客戶編號:</span> ${workOrder ? workOrder.customerId : 'C001XXX'}</div>
-                                <div><span class="font-medium">結案時間:</span> ${new Date().toLocaleString('zh-TW')}</div>
-                                <div><span class="font-medium">轉移完成:</span> ${transferDate}</div>
-                            </div>
-                            <div class="text-sm text-gray-700">
-                                <strong>處理結果:</strong> 服務已成功轉移至新址：${workOrder ? workOrder.address : '新地址'}，客戶確認服務正常
-                            </div>
-                        </div>
-                        <div class="ml-4 text-right">
-                            <div class="text-sm text-green-600 font-medium">轉移成功</div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            const spaceDiv = closedContent.querySelector('.space-y-4');
-            spaceDiv.insertAdjacentHTML('afterbegin', workOrderHtml);
-            
-            // 更新結案數量
-            updateTabCount('closed', 1);
-        }
-
-        // 將工單退回追蹤中列表
-        function addBackToTrackingList(ticketId, rejectReason) {
-            const trackingContent = document.getElementById('tracking-content');
-            
-            // 嘗試恢復原始工單資訊
-            if (window.originalTicketData && window.originalTicketData[ticketId]) {
-                const originalData = window.originalTicketData[ticketId];
-                
-                // 恢復原始工單，但修改狀態為駁回
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(originalData.html, 'text/html');
-                const ticketElement = doc.querySelector('.border');
-                
-                // 修改狀態標籤
-                const statusSpan = ticketElement.querySelector('.bg-blue-100');
-                if (statusSpan) {
-                    statusSpan.className = 'bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-medium';
-                    statusSpan.textContent = '需重新設定';
-                }
-                
-                // 修改容器樣式
-                ticketElement.className = 'border border-red-200 rounded-lg p-4 bg-red-50';
-                ticketElement.setAttribute('data-ticket-id', ticketId);
-                
-                // 在設定轉移日期區域前加入駁回原因
-                const transferSection = ticketElement.querySelector('.bg-white.p-3.rounded.border');
-                if (transferSection) {
-                    const rejectReasonHtml = `
-                        <div class="text-sm text-gray-700 mb-3 bg-red-50 p-3 rounded border border-red-200">
-                            <strong class="text-red-800">駁回原因:</strong> <span class="text-red-700">${rejectReason}</span>
-                        </div>
-                    `;
-                    transferSection.insertAdjacentHTML('beforebegin', rejectReasonHtml);
-                }
-                
-                // 插入到追蹤中列表的最前面
-                const spaceDiv = trackingContent.querySelector('.space-y-4');
-                spaceDiv.insertAdjacentHTML('afterbegin', ticketElement.outerHTML);
-                
-                // 設定預設轉移日期為明天
-                setTimeout(() => {
-                    const dateInput = document.getElementById(`transfer-date-${ticketId.toLowerCase()}`);
-                    if (dateInput) {
-                        const tomorrow = new Date();
-                        tomorrow.setDate(tomorrow.getDate() + 1);
-                        dateInput.value = tomorrow.toISOString().split('T')[0];
-                    }
-                }, 100);
-                
-                // 清除已使用的原始資料
-                delete window.originalTicketData[ticketId];
-            } else {
-                // 如果沒有原始資料，使用預設模板
-                const workOrder = window.currentWorkOrder;
-                
-                const workOrderHtml = `
-                    <div class="border border-red-200 rounded-lg p-4 bg-red-50" data-ticket-id="${ticketId}">
-                        <div class="flex justify-between items-start">
-                            <div class="flex-1">
-                                <div class="flex items-center space-x-4 mb-2">
-                                    <span class="text-lg font-semibold text-gray-900">客訴單號: ${ticketId}</span>
-                                    <span class="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-medium">需重新設定</span>
-                                </div>
-                                <div class="grid grid-cols-2 gap-4 text-sm text-gray-600 mb-3">
-                                    <div><span class="font-medium">工單號碼:</span> ${workOrder ? workOrder.number : 'WO-2024-XXX'}</div>
-                                    <div><span class="font-medium">客戶編號:</span> ${workOrder ? workOrder.customerId : 'C001XXX'}</div>
-                                    <div><span class="font-medium">駁回時間:</span> ${new Date().toLocaleString('zh-TW')}</div>
-                                    <div><span class="font-medium">新地址:</span> ${workOrder ? workOrder.address : '新地址'}</div>
-                                </div>
-                                <div class="text-sm text-gray-700 mb-3 bg-red-50 p-3 rounded border border-red-200">
-                                    <strong class="text-red-800">駁回原因:</strong> <span class="text-red-700">${rejectReason}</span>
-                                </div>
-                                <div class="bg-white p-3 rounded border">
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">重新設定轉移日期（月份開始日）</label>
-                                    <div class="flex items-center space-x-3">
-                                        <input type="date" id="transfer-date-${ticketId.toLowerCase()}" class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                                        <button onclick="setTransferDate('${ticketId}')" class="bg-blue-600 text-white px-3 py-2 rounded-md hover:bg-blue-700 text-sm font-medium">
-                                            設定
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-                
-                const spaceDiv = trackingContent.querySelector('.space-y-4');
-                spaceDiv.insertAdjacentHTML('afterbegin', workOrderHtml);
-                
-                // 設定預設轉移日期為明天
-                setTimeout(() => {
-                    const tomorrow = new Date();
-                    tomorrow.setDate(tomorrow.getDate() + 1);
-                    document.getElementById(`transfer-date-${ticketId.toLowerCase()}`).value = tomorrow.toISOString().split('T')[0];
-                }, 100);
-            }
-            
-            // 更新追蹤中數量
-            updateTabCount('tracking', 1);
-        }
-
-        // 初始化頁面
-        document.addEventListener('DOMContentLoaded', function() {
-            switchTab('pending');
-        });
-    </script>
-</body>
-</html>
 
 
 
