@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>會辦退費申請表單</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&display=swap');
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen py-8">
+    <div class="max-w-4xl mx-auto px-4">
+        <!-- 標題區域 -->
+        <div class="bg-white rounded-lg shadow-lg p-8 mb-8">
+            <h1 class="text-3xl font-bold text-gray-800 text-center mb-2">會辦退費申請表單</h1>
+            <p class="text-gray-600 text-center">請填寫完整資訊以處理您的退費申請</p>
+        </div>
+
+        <!-- 主表單 -->
+        <form class="bg-white rounded-lg shadow-lg p-8 space-y-8">
+            <!-- 基本資訊區塊 -->
+            <div class="border-l-4 border-blue-500 pl-4">
+                <h2 class="text-xl font-semibold text-gray-800 mb-6">基本資訊</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">填寫日期</label>
+                        <input type="date" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                    <div class="lg:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">會辦主旨</label>
+                        <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="請輸入會辦主旨">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">繳費方式</label>
+                        <select class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="">請選擇繳費方式</option>
+                            <option value="credit">信用卡</option>
+                            <option value="transfer">轉帳</option>
+                            <option value="cash">現金</option>
+                            <option value="check">支票</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">區域</label>
+                        <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="請輸入區域">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">社區名稱</label>
+                        <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="請輸入社區名稱">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 客戶資訊區塊 -->
+            <div class="border-l-4 border-green-500 pl-4">
+                <h2 class="text-xl font-semibold text-gray-800 mb-6">客戶資訊</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">客戶編號</label>
+                        <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent" placeholder="請輸入客戶編號">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">姓名</label>
+                        <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent" placeholder="請輸入姓名">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">電話</label>
+                        <input type="tel" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent" placeholder="請輸入電話號碼">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">手機</label>
+                        <input type="tel" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent" placeholder="請輸入手機號碼">
+                    </div>
+                    <div class="lg:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">地址</label>
+                        <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent" placeholder="請輸入完整地址">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">所屬業務</label>
+                        <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent" placeholder="請輸入業務員姓名">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 發票資訊區塊 -->
+            <div class="border-l-4 border-purple-500 pl-4">
+                <h2 class="text-xl font-semibold text-gray-800 mb-6">發票資訊</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">字軌</label>
+                        <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="請輸入字軌">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">發票號碼</label>
+                        <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="請輸入發票號碼">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">發票型態</label>
+                        <select class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                            <option value="">請選擇發票型態</option>
+                            <option value="二聯式">二聯式</option>
+                            <option value="三聯式">三聯式</option>
+                            <option value="電子發票">電子發票</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">三聯式抬頭</label>
+                        <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="請輸入抬頭">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">統編</label>
+                        <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="請輸入統一編號">
+                    </div>
+                    <div class="grid grid-cols-3 gap-2">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">年</label>
+                            <input type="number" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="2024" min="2020" max="2030">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">月</label>
+                            <input type="number" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="12" min="1" max="12">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">日</label>
+                            <input type="number" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="31" min="1" max="31">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 金額資訊區塊 -->
+            <div class="border-l-4 border-orange-500 pl-4">
+                <h2 class="text-xl font-semibold text-gray-800 mb-6">金額資訊</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">發票金額</label>
+                        <input type="number" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent" placeholder="0" min="0" step="0.01">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">退費金額</label>
+                        <input type="number" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent" placeholder="0" min="0" step="0.01">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">總金額</label>
+                        <input type="number" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-gray-50" placeholder="0" readonly>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">卡號後四碼</label>
+                        <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent" placeholder="****" maxlength="4">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">授權碼</label>
+                        <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent" placeholder="請輸入授權碼">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">退費類別</label>
+                        <select class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent">
+                            <option value="">請選擇退費類別</option>
+                            <option value="全額退費">全額退費</option>
+                            <option value="部分退費">部分退費</option>
+                            <option value="手續費扣除">手續費扣除</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 詳細資訊區塊 -->
+            <div class="border-l-4 border-red-500 pl-4">
+                <h2 class="text-xl font-semibold text-gray-800 mb-6">詳細資訊</h2>
+                <div class="space-y-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">會辦明細</label>
+                        <textarea class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent" rows="4" placeholder="請詳細說明會辦內容及退費原因"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">製單</label>
+                        <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent" placeholder="製單人員姓名">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 提交按鈕 -->
+            <div class="flex justify-center pt-8">
+                <button type="submit" class="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-3 px-8 rounded-lg shadow-lg transform transition hover:scale-105 focus:outline-none focus:ring-4 focus:ring-blue-300">
+                    提交申請表單
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        // 自動計算總金額
+        function calculateTotal() {
+            const invoiceAmount = parseFloat(document.querySelector('input[placeholder="0"]:nth-of-type(1)').value) || 0;
+            const refundAmount = parseFloat(document.querySelector('input[placeholder="0"]:nth-of-type(2)').value) || 0;
+            const totalAmount = invoiceAmount - refundAmount;
+            document.querySelector('input[readonly]').value = totalAmount.toFixed(2);
+        }
+
+        // 監聽金額變化
+        document.addEventListener('DOMContentLoaded', function() {
+            const invoiceInput = document.querySelector('input[placeholder="0"]:nth-of-type(1)');
+            const refundInput = document.querySelector('input[placeholder="0"]:nth-of-type(2)');
+            
+            invoiceInput.addEventListener('input', calculateTotal);
+            refundInput.addEventListener('input', calculateTotal);
+
+            // 表單提交處理
+            document.querySelector('form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                alert('表單已提交！這是一個示範頁面，實際應用中會將資料傳送到後端處理。');
+            });
+
+            // 卡號後四碼只允許數字
+            document.querySelector('input[placeholder="****"]').addEventListener('input', function(e) {
+                e.target.value = e.target.value.replace(/\D/g, '');
+            });
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'970db86eb616f1c8',t:'MTc1NTQ4MTQwOC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
