@@ -1,209 +1,622 @@
-<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>客戶資料轉移系統</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f0f5ff; margin: 0; padding: 0; }
-        .card { box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); transition: all 0.3s ease; }
-        .card:hover { box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15); }
-        .btn-primary { background-color: #3b82f6; transition: all 0.3s ease; }
-        .btn-primary:hover { background-color: #2563eb; }
-        .btn-secondary { background-color: #6b7280; transition: all 0.3s ease; }
-        .btn-secondary:hover { background-color: #4b5563; }
-        .btn-success { background-color: #10b981; transition: all 0.3s ease; }
-        .btn-success:hover { background-color: #059669; }
-        .fade-in { animation: fadeIn 0.5s ease-in-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+/**
+ * @OnlyCurrentDoc
+ */
+
+// 將所有常數定義在腳本的最頂部，確保全域可訪問
+const SHEET_ID = '1IJQpGWxGOHy3C7kdewtaKANir1JmX9xZQqyqAYuDYX8'; // 您的試算表ID
+const DOC_ID = '1WAJ9AN48LnsqiW38Bfax4qZkmKt67I6vtJ5sQgRHG9c';   // 您的文件ID
+const SHEET_NAME = '工作表1'; // 您的工作表名稱
+
+// PDF 暫存資料夾名稱
+const TEMP_FOLDER_NAME = '客戶資料轉移PDF暫存';
+
+// 定義試算表欄位與Google文件表格單元格的映射關係
+const MAPPING = {
+  '客編': { tableIndex: 0, rowIndex: 1, colIndex: 1, placeholder: '{{客編}}' },
+  '姓名': { tableIndex: 0, rowIndex: 1, colIndex: 9, placeholder: '{{姓名}}' },
+  '地址': { tableIndex: 0, rowIndex: 2, colIndex: 1, placeholder: '{{地址}}' },
+  '新客編': { tableIndex: 0, rowIndex: 4, colIndex: 1, placeholder: '{{新客編}}' },
+  '新姓名': { tableIndex: 0, rowIndex: 4, colIndex: 9, placeholder: '{{新姓名}}' },
+  '新地址': { tableIndex: 0, rowIndex: 5, colIndex: 1, placeholder: '{{新地址}}' },
+  '轉移區間': { tableIndex: 0, rowIndex: 6, colIndex: 1, placeholder: '{{轉移區間}}' },
+  '轉移時間': { tableIndex: 0, rowIndex: 6, colIndex: 9, placeholder: '{{轉移時間}}' },
+  '轉移後到期日': { tableIndex: 0, rowIndex: 7, colIndex: 1, placeholder: '{{轉移後到期日}}' }
+};
+
+/**
+ * 當試算表被編輯時自動觸發，用最新一列的資料更新文件中的指定表格單元格。
+ */
+function onEdit(e) {
+  if (!e || !e.range) {
+    console.log("此函式應由onEdit觸發器自動執行，而非手動運行。");
+    return;
+  }
+
+  const editedSheet = e.range.getSheet();
+  if (editedSheet.getName() === SHEET_NAME) {
+    try {
+      const sheet = SpreadsheetApp.openById(SHEET_ID).getSheetByName(SHEET_NAME);
+      const lastRow = sheet.getLastRow();
+
+      if (lastRow >= 2) {
+        const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+        const dataRow = sheet.getRange(lastRow, 1, 1, sheet.getLastColumn()).getValues()[0];
         
-        /* 載入指示器 */
-        .loading-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-            display: none;
+        console.log('Headers: ' + headers);
+        console.log('Data Row: ' + dataRow);
+
+        updateDocumentWithData(headers, dataRow);
+      }
+    } catch (error) {
+      console.log('onEdit 執行過程中發生錯誤：' + error.toString());
+    }
+  }
+}
+
+/**
+ * Web App 的 doPost 函式，用於接收來自網頁的 POST 請求
+ */
+function doPost(e) {
+  try {
+    const response = {
+      success: false,
+      message: '',
+      data: null
+    };
+
+    // 解析請求內容
+    let requestData;
+    if (e.postData && e.postData.contents) {
+      try {
+        requestData = JSON.parse(e.postData.contents);
+      } catch (parseError) {
+        response.message = '無法解析請求資料：' + parseError.toString();
+        return ContentService.createTextOutput(JSON.stringify(response))
+          .setMimeType(ContentService.MimeType.JSON);
+      }
+    } else {
+      response.message = '未收到請求資料';
+      return ContentService.createTextOutput(JSON.stringify(response))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    console.log('收到來自網頁的資料：', JSON.stringify(requestData));
+
+    // 檢查請求類型
+    if (requestData.action === 'sendPDF') {
+      // 處理發送 PDF 的請求
+      const result = sendPDFToEmail(requestData.email, requestData.pdfFileId);
+      
+      if (result.success) {
+        response.success = true;
+        response.message = 'PDF 已成功發送到您的 Email';
+        response.data = result.data;
+      } else {
+        response.message = '發送 PDF 時發生錯誤：' + result.message;
+      }
+    } else {
+      // 處理一般的資料提交請求（包含 PDF 預覽生成）
+      const result = writeDataToSheetAndGeneratePreview(requestData);
+      
+      if (result.success) {
+        response.success = true;
+        response.message = '資料已成功寫入試算表並生成 PDF 預覽';
+        response.data = result.data;
+      } else {
+        response.message = '處理資料時發生錯誤：' + result.message;
+      }
+    }
+
+    return ContentService.createTextOutput(JSON.stringify(response))
+      .setMimeType(ContentService.MimeType.JSON);
+
+  } catch (error) {
+    console.log('doPost 執行過程中發生錯誤：' + error.toString());
+    const errorResponse = {
+      success: false,
+      message: 'Web App 執行錯誤：' + error.toString(),
+      data: null
+    };
+
+    return ContentService.createTextOutput(JSON.stringify(errorResponse))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+/**
+ * Web App 的 doGet 函式，用於處理 GET 請求
+ */
+function doGet(e) {
+  const response = {
+    success: true,
+    message: 'Web App 運行正常',
+    timestamp: new Date().toISOString(),
+    version: 'Enhanced with PDF Preview v1.0'
+  };
+
+  return ContentService.createTextOutput(JSON.stringify(response))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+/**
+ * 將來自網頁的資料寫入 Google 試算表並生成 PDF 預覽
+ */
+function writeDataToSheetAndGeneratePreview(data) {
+  try {
+    // 1. 寫入試算表
+    const sheetResult = writeDataToSheet(data);
+    if (!sheetResult.success) {
+      return sheetResult;
+    }
+
+    // 2. 更新文件
+    const headers = Object.keys(MAPPING);
+    const dataRow = headers.map(header => data[header] || '');
+    updateDocumentWithData(headers, dataRow);
+
+    // 3. 生成 PDF 預覽
+    const pdfResult = generatePDFPreview();
+    if (!pdfResult.success) {
+      return pdfResult;
+    }
+
+    return {
+      success: true,
+      message: '資料已成功寫入試算表並生成 PDF 預覽',
+      data: {
+        sheet: sheetResult.data,
+        pdf: pdfResult.data
+      }
+    };
+    
+  } catch (error) {
+    console.log('writeDataToSheetAndGeneratePreview 執行過程中發生錯誤：' + error.toString());
+    return {
+      success: false,
+      message: error.toString(),
+      data: null
+    };
+  }
+}
+
+/**
+ * 將來自網頁的資料寫入 Google 試算表
+ */
+function writeDataToSheet(data) {
+  try {
+    const sheet = SpreadsheetApp.openById(SHEET_ID).getSheetByName(SHEET_NAME);
+    
+    // 獲取標題列
+    const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+    
+    // 準備要寫入的資料列
+    const newRow = [];
+    
+    // 根據標題列的順序，從 data 中提取對應的值
+    for (const header of headers) {
+      if (data.hasOwnProperty(header)) {
+        newRow.push(data[header]);
+      } else {
+        newRow.push(''); // 如果沒有對應的資料，則填入空字串
+      }
+    }
+    
+    // 將資料寫入試算表的新列
+    const nextRow = sheet.getLastRow() + 1;
+    sheet.getRange(nextRow, 1, 1, newRow.length).setValues([newRow]);
+    
+    console.log('資料已成功寫入試算表第 ' + nextRow + ' 列：', newRow);
+    
+    return {
+      success: true,
+      message: '資料已成功寫入試算表',
+      data: {
+        row: nextRow,
+        values: newRow
+      }
+    };
+    
+  } catch (error) {
+    console.log('writeDataToSheet 執行過程中發生錯誤：' + error.toString());
+    return {
+      success: false,
+      message: error.toString(),
+      data: null
+    };
+  }
+}
+
+/**
+ * 使用新資料更新 Google 文件
+ */
+function updateDocumentWithData(headers, dataRow) {
+  try {
+    const doc = DocumentApp.openById(DOC_ID);
+    const body = doc.getBody();
+    const tables = body.getTables();
+
+    if (tables.length === 0) {
+      console.log('文件中沒有找到任何表格。');
+      return;
+    }
+
+    let updatedCount = 0;
+
+    for (const header of headers) {
+      if (MAPPING[header]) {
+        const map = MAPPING[header];
+        const replacementText = dataRow[headers.indexOf(header)] !== undefined && dataRow[headers.indexOf(header)] !== null ? String(dataRow[headers.indexOf(header)]) : '';
+
+        if (tables[map.tableIndex]) {
+          const table = tables[map.tableIndex];
+          if (table.getNumRows() > map.rowIndex && table.getRow(map.rowIndex).getNumCells() > map.colIndex) {
+            const cell = table.getCell(map.rowIndex, map.colIndex);
+            cell.setText(replacementText);
+            console.log(`成功將表格 [${map.tableIndex}][${map.rowIndex}][${map.colIndex}] 更新為: ${replacementText}`);
+            updatedCount++;
+          } else {
+            console.log(`表格 [${map.tableIndex}] 的行或列索引超出範圍: 行 ${map.rowIndex}, 列 ${map.colIndex}`);
+          }
+        } else {
+          console.log(`未找到表格索引為 ${map.tableIndex} 的表格。`);
         }
-        .loading-spinner {
-            width: 50px;
-            height: 50px;
-            border: 5px solid #f3f3f3;
-            border-top: 5px solid #3498db;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
+      }
+    }
+
+    doc.saveAndClose();
+    if (updatedCount > 0) {
+      console.log('文件更新成功！');
+    } else {
+      console.log('沒有找到對應的欄位進行更新。');
+    }
+  } catch (error) {
+    console.log('updateDocumentWithData 執行過程中發生錯誤：' + error.toString());
+  }
+}
+
+/**
+ * 生成 PDF 預覽
+ * @return {object} - 包含成功狀態、預覽連結等資訊的物件
+ */
+function generatePDFPreview() {
+  try {
+    console.log('開始生成 PDF 預覽');
+
+    // 獲取或創建暫存資料夾
+    const tempFolder = getOrCreateTempFolder();
+    
+    // 獲取 Google 文件
+    const docFile = DriveApp.getFileById(DOC_ID);
+    
+    // 將文件轉換為 PDF
+    const pdfBlob = docFile.getAs('application/pdf');
+    
+    // 設定 PDF 檔案名稱（包含時間戳記和隨機字串）
+    const timestamp = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd_HH-mm-ss');
+    const randomId = Utilities.getUuid().substring(0, 8);
+    const pdfFileName = `客戶資料轉移文件_${timestamp}_${randomId}.pdf`;
+    pdfBlob.setName(pdfFileName);
+
+    // 將 PDF 儲存到暫存資料夾
+    const pdfFile = tempFolder.createFile(pdfBlob);
+    
+    // 設定檔案權限為「知道連結的人可以檢視」
+    pdfFile.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+    
+    // 獲取預覽連結
+    const previewUrl = `https://drive.google.com/file/d/${pdfFile.getId()}/preview`;
+    const downloadUrl = `https://drive.google.com/uc?id=${pdfFile.getId()}&export=download`;
+
+    console.log('PDF 預覽已生成，檔案 ID:', pdfFile.getId());
+
+    // 設定檔案 24 小時後自動刪除（透過觸發器）
+    scheduleFileCleanup(pdfFile.getId());
+
+    return {
+      success: true,
+      message: 'PDF 預覽已生成',
+      data: {
+        fileId: pdfFile.getId(),
+        fileName: pdfFileName,
+        previewUrl: previewUrl,
+        downloadUrl: downloadUrl,
+        timestamp: timestamp,
+        expiresIn: '24 小時'
+      }
+    };
+
+  } catch (error) {
+    console.log('generatePDFPreview 執行過程中發生錯誤：' + error.toString());
+    return {
+      success: false,
+      message: error.toString(),
+      data: null
+    };
+  }
+}
+
+/**
+ * 發送 PDF 到指定 Email
+ * @param {string} email - 收件人的 Email 地址
+ * @param {string} pdfFileId - PDF 檔案的 Drive ID
+ * @return {object} - 包含成功狀態和訊息的物件
+ */
+function sendPDFToEmail(email, pdfFileId) {
+  try {
+    // 驗證 Email 格式
+    if (!email || !isValidEmail(email)) {
+      return {
+        success: false,
+        message: '請提供有效的 Email 地址',
+        data: null
+      };
+    }
+
+    // 驗證 PDF 檔案 ID
+    if (!pdfFileId) {
+      return {
+        success: false,
+        message: '未提供 PDF 檔案 ID',
+        data: null
+      };
+    }
+
+    console.log('開始發送 PDF 到：' + email + '，檔案 ID：' + pdfFileId);
+
+    // 獲取 PDF 檔案
+    let pdfFile;
+    try {
+      pdfFile = DriveApp.getFileById(pdfFileId);
+    } catch (fileError) {
+      return {
+        success: false,
+        message: 'PDF 檔案不存在或已過期',
+        data: null
+      };
+    }
+    
+    // 獲取 PDF Blob
+    const pdfBlob = pdfFile.getBlob();
+
+    // 發送 Email
+    const emailSubject = '客戶資料轉移文件';
+    const emailBody = `
+親愛的用戶，
+
+您好！
+
+請查收附件中的客戶資料轉移文件 PDF。
+
+此文件包含了您最新提交的客戶資料轉移資訊。
+
+如有任何問題，請隨時與我們聯繫。
+
+謝謝！
+
+---
+此郵件由系統自動發送，請勿直接回覆。
+生成時間：${Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy年MM月dd日 HH:mm:ss')}
+    `;
+
+    MailApp.sendEmail({
+      to: email,
+      subject: emailSubject,
+      body: emailBody,
+      attachments: [pdfBlob]
+    });
+
+    console.log('PDF 已成功發送到：' + email);
+
+    // 發送成功後，可以選擇刪除暫存檔案
+    // pdfFile.setTrashed(true);
+
+    return {
+      success: true,
+      message: 'PDF 已成功發送',
+      data: {
+        email: email,
+        fileName: pdfFile.getName(),
+        timestamp: Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm:ss')
+      }
+    };
+
+  } catch (error) {
+    console.log('sendPDFToEmail 執行過程中發生錯誤：' + error.toString());
+    return {
+      success: false,
+      message: error.toString(),
+      data: null
+    };
+  }
+}
+
+/**
+ * 獲取或創建暫存資料夾
+ * @return {Folder} - Google Drive 資料夾物件
+ */
+function getOrCreateTempFolder() {
+  try {
+    // 先嘗試找到現有的暫存資料夾
+    const folders = DriveApp.getFoldersByName(TEMP_FOLDER_NAME);
+    
+    if (folders.hasNext()) {
+      return folders.next();
+    } else {
+      // 如果不存在，則創建新的暫存資料夾
+      const tempFolder = DriveApp.createFolder(TEMP_FOLDER_NAME);
+      console.log('已創建暫存資料夾：' + TEMP_FOLDER_NAME);
+      return tempFolder;
+    }
+  } catch (error) {
+    console.log('getOrCreateTempFolder 執行過程中發生錯誤：' + error.toString());
+    throw error;
+  }
+}
+
+/**
+ * 排程檔案清理（24 小時後刪除）
+ * @param {string} fileId - 要刪除的檔案 ID
+ */
+function scheduleFileCleanup(fileId) {
+  try {
+    // 創建一個 24 小時後執行的觸發器
+    const trigger = ScriptApp.newTrigger('cleanupTempFile')
+      .timeBased()
+      .after(24 * 60 * 60 * 1000) // 24 小時（毫秒）
+      .create();
+    
+    // 將檔案 ID 儲存到 PropertiesService 中，以便觸發器執行時使用
+    const properties = PropertiesService.getScriptProperties();
+    properties.setProperty(`cleanup_${trigger.getUniqueId()}`, fileId);
+    
+    console.log('已排程檔案清理，觸發器 ID：' + trigger.getUniqueId());
+  } catch (error) {
+    console.log('scheduleFileCleanup 執行過程中發生錯誤：' + error.toString());
+  }
+}
+
+/**
+ * 清理暫存檔案（由觸發器調用）
+ * @param {object} e - 觸發器事件物件
+ */
+function cleanupTempFile(e) {
+  try {
+    const triggerId = e.triggerUid;
+    const properties = PropertiesService.getScriptProperties();
+    const fileId = properties.getProperty(`cleanup_${triggerId}`);
+    
+    if (fileId) {
+      try {
+        const file = DriveApp.getFileById(fileId);
+        file.setTrashed(true);
+        console.log('已刪除暫存檔案：' + fileId);
+      } catch (fileError) {
+        console.log('檔案可能已被刪除：' + fileId);
+      }
+      
+      // 清理 Properties
+      properties.deleteProperty(`cleanup_${triggerId}`);
+    }
+    
+    // 刪除觸發器
+    const triggers = ScriptApp.getProjectTriggers();
+    for (const trigger of triggers) {
+      if (trigger.getUniqueId() === triggerId) {
+        ScriptApp.deleteTrigger(trigger);
+        break;
+      }
+    }
+    
+  } catch (error) {
+    console.log('cleanupTempFile 執行過程中發生錯誤：' + error.toString());
+  }
+}
+
+/**
+ * 手動清理所有暫存檔案（管理用）
+ */
+function cleanupAllTempFiles() {
+  try {
+    const folders = DriveApp.getFoldersByName(TEMP_FOLDER_NAME);
+    
+    if (folders.hasNext()) {
+      const tempFolder = folders.next();
+      const files = tempFolder.getFiles();
+      let deletedCount = 0;
+      
+      while (files.hasNext()) {
+        const file = files.next();
+        file.setTrashed(true);
+        deletedCount++;
+      }
+      
+      console.log(`已清理 ${deletedCount} 個暫存檔案`);
+      return `已清理 ${deletedCount} 個暫存檔案`;
+    } else {
+      console.log('未找到暫存資料夾');
+      return '未找到暫存資料夾';
+    }
+  } catch (error) {
+    console.log('cleanupAllTempFiles 執行過程中發生錯誤：' + error.toString());
+    return '清理失敗：' + error.toString();
+  }
+}
+
+/**
+ * 驗證 Email 格式
+ * @param {string} email - 要驗證的 Email 地址
+ * @return {boolean} - 是否為有效的 Email 格式
+ */
+function isValidEmail(email) {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+}
+
+/**
+ * 手動執行此函式，將文件中的指定表格單元格內容恢復為佔位符。
+ */
+function restorePlaceholders() {
+  try {
+    const doc = DocumentApp.openById(DOC_ID);
+    const body = doc.getBody();
+    const tables = body.getTables();
+
+    if (tables.length === 0) {
+      console.log('文件中沒有找到任何表格。');
+      SpreadsheetApp.getUi().alert('恢復失敗：文件中沒有找到任何表格。');
+      return;
+    }
+
+    let restoredCount = 0;
+
+    for (const header in MAPPING) {
+      const map = MAPPING[header];
+      const placeholder = map.placeholder;
+
+      if (tables[map.tableIndex]) {
+        const table = tables[map.tableIndex];
+        if (table.getNumRows() > map.rowIndex && table.getRow(map.rowIndex).getNumCells() > map.colIndex) {
+          const cell = table.getCell(map.rowIndex, map.colIndex);
+          cell.setText(placeholder);
+          console.log(`成功將表格 [${map.tableIndex}][${map.rowIndex}][${map.colIndex}] 恢復為佔位符: ${placeholder}`);
+          restoredCount++;
+        } else {
+          console.log(`表格 [${map.tableIndex}] 的行或列索引超出範圍: 行 ${map.rowIndex}, 列 ${map.colIndex}`);
         }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    </style>
-</head>
-<body>
-    <!-- 載入指示器 -->
-    <div id="loadingOverlay" class="loading-overlay">
-        <div class="bg-white p-6 rounded-lg shadow-lg text-center">
-            <div class="loading-spinner mx-auto mb-4"></div>
-            <p id="loadingText" class="text-lg font-medium text-gray-700">正在處理，請稍候...</p>
-        </div>
-    </div>
+      }
+    }
 
-    <div class="container mx-auto px-4 py-8 max-w-6xl">
-        <header class="mb-8">
-            <h1 class="text-3xl font-bold text-center text-gray-800">客戶資料轉移系統</h1>
-            <p class="text-center text-gray-600 mt-2">將A客戶的使用權限轉移給B客戶</p>
-        </header>
+    doc.saveAndClose();
+    if (restoredCount > 0) {
+      console.log('佔位符恢復成功！');
+      SpreadsheetApp.getUi().alert('佔位符恢復成功！');
+    } else {
+      console.log('沒有找到對應的欄位進行恢復。');
+      SpreadsheetApp.getUi().alert('恢復失敗：沒有找到對應的欄位進行恢復。');
+    }
+  } catch (error) {
+    console.log('restorePlaceholders 執行過程中發生錯誤：' + error.toString());
+    SpreadsheetApp.getUi().alert('恢復失敗：' + error.toString());
+  }
+}
 
-        <div id="inputForm">
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <!-- A客戶資料卡 -->
-                <div class="card bg-white rounded-lg p-6">
-                    <div class="flex justify-between items-center mb-6">
-                        <h2 class="text-xl font-bold text-gray-800">A客戶資料 (轉出方)</h2>
-                        <div class="flex items-center">
-                            <span id="customerAStatus" class="mr-2 hidden text-green-600">✓ 已載入</span>
-                            <button id="searchA" class="btn-primary text-white px-4 py-2 rounded-md">查詢客戶</button>
-                        </div>
-                    </div>
-                    
-                    <div class="mb-4">
-                        <label class="block text-gray-700 mb-2">客戶編號</label>
-                        <input type="text" id="customerA_id" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="請輸入客戶編號">
-                    </div>
-                    
-                    <div class="mb-4">
-                        <label class="block text-gray-700 mb-2">姓名</label>
-                        <input type="text" id="customerA_name" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="請輸入姓名">
-                    </div>
-                    
-                    <div class="mb-4">
-                        <label class="block text-gray-700 mb-2">地址</label>
-                        <input type="text" id="customerA_address" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="請輸入地址">
-                    </div>
-                    
-                    <div class="grid grid-cols-2 gap-4 mb-4">
-                        <div>
-                            <label class="block text-gray-700 mb-2">電話</label>
-                            <input type="text" id="customerA_phone" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="請輸入電話">
-                        </div>
-                        <div>
-                            <label class="block text-gray-700 mb-2">使用期限</label>
-                            <input type="date" id="customerA_expiry" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        </div>
-                    </div>
-                    
-                    <div class="mb-4">
-                        <label class="block text-gray-700 mb-2">剩餘天數</label>
-                        <input type="text" id="customerA_daysLeft" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="自動計算或手動輸入" readonly>
-                    </div>
-                </div>
+/**
+ * 測試 PDF 預覽功能（手動執行用）
+ */
+function testPDFPreview() {
+  const result = generatePDFPreview();
+  
+  if (result.success) {
+    console.log('測試成功：' + result.message);
+    console.log('預覽連結：' + result.data.previewUrl);
+  } else {
+    console.log('測試失敗：' + result.message);
+  }
+  
+  return result;
+}
 
-                <!-- B客戶資料卡 -->
-                <div class="card bg-white rounded-lg p-6">
-                    <div class="flex justify-between items-center mb-6">
-                        <h2 class="text-xl font-bold text-gray-800">B客戶資料 (接收方)</h2>
-                        <div class="flex items-center">
-                            <span id="customerBStatus" class="mr-2 hidden text-green-600">✓ 已載入</span>
-                            <button id="searchB" class="btn-primary text-white px-4 py-2 rounded-md">查詢客戶</button>
-                        </div>
-                    </div>
-                    
-                    <div class="mb-4">
-                        <label class="block text-gray-700 mb-2">客戶編號</label>
-                        <input type="text" id="customerB_id" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="請輸入客戶編號">
-                    </div>
-                    
-                    <div class="mb-4">
-                        <label class="block text-gray-700 mb-2">姓名</label>
-                        <input type="text" id="customerB_name" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="請輸入姓名">
-                    </div>
-                    
-                    <div class="mb-4">
-                        <label class="block text-gray-700 mb-2">地址</label>
-                        <input type="text" id="customerB_address" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="請輸入地址">
-                    </div>
-                    
-                    <div class="grid grid-cols-2 gap-4 mb-4">
-                        <div>
-                            <label class="block text-gray-700 mb-2">電話</label>
-                            <input type="text" id="customerB_phone" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="請輸入電話">
-                        </div>
-                        <div>
-                            <label class="block text-gray-700 mb-2">目前使用期限</label>
-                            <input type="date" id="customerB_currentExpiry" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        </div>
-                    </div>
-                    
-                    <div class="mb-4">
-                        <label class="block text-gray-700 mb-2">轉移後到期日</label>
-                        <input type="date" id="customerB_newExpiry" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" readonly>
-                    </div>
-                </div>
-            </div>
 
-            <!-- 轉移設定區域 -->
-            <div class="card bg-white rounded-lg p-6 mt-8">
-                <h2 class="text-xl font-bold text-gray-800 mb-6">轉移設定</h2>
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label class="block text-gray-700 mb-2">轉移日期</label>
-                        <input type="date" id="transferDate" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-gray-700 mb-2">轉移區間</label>
-                        <input type="text" id="transferPeriod" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="年/月/日~年/月/日" readonly>
-                    </div>
-                </div>
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-                    <div>
-                        <label class="block text-gray-700 mb-2">轉移時間</label>
-                        <input type="text" id="transferDuration" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="幾個月幾日" readonly>
-                    </div>
-                    
-                    <div>
-                        <label class="block text-gray-700 mb-2">轉移天數</label>
-                        <input type="text" id="transferDays" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="總天數" readonly>
-                    </div>
-                </div>
-                
-                <div class="mt-6">
-                    <label class="block text-gray-700 mb-2">轉移備註</label>
-                    <textarea id="transferNotes" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" rows="3" placeholder="請輸入轉移原因或其他備註"></textarea>
-                </div>
-            </div>
-
-            <!-- 操作按鈕 -->
-            <div class="flex justify-center mt-8 space-x-4">
-                <button id="calculateBtn" class="btn-primary text-white px-6 py-3 rounded-md font-medium">計算轉移資訊</button>
-                <button id="transferBtn" class="btn-success text-white px-6 py-3 rounded-md font-medium">確認轉移</button>
-                <button id="resetBtn" class="btn-secondary text-white px-6 py-3 rounded-md font-medium">重置表單</button>
-                <button id="submitToGoogleBtn" class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-md font-medium">提交至Google試算表</button>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // Google Apps Script Web App URL
-        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxw1v7mf7dpEud4V9aK7xmiPd0Xed5KTBiwSH8MUBSVznH2zYxQFGH_qzkrVxQ_j6RPdw/exec';
-        
-        // 在這裡更新你的試算表ID與文件ID
-        const SHEET_ID = '1IJQpGWxGOHy3C7kdewtaKANir1JmX9xZQqyqAYuDYX8';
-        const DOC_ID = '1WAJ9AN48LnsqiW38Bfax4qZkmKt67I6vtJ5sQgRHG9c';
-
-        // 這部分是你的表單資料處理邏輯，與之前相同，這樣應該就能夠運作了。
-
-        // 提交資料給Google試算表的程式碼部分...
-    </script>
-</body>
-</html>
 
 
 
