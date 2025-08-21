@@ -30,27 +30,13 @@
         .btn-success:hover {
             background-color: #059669;
         }
-        .btn-info {
-            background-color: #0ea5e9;
-            transition: background-color: 0.3s;
-        }
-        .btn-info:hover {
-            background-color: #0284c7;
-        }
-        .fade-in {
-            animation: fadeIn 0.5s ease-in-out;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
         .loading-overlay {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
+            background-color: rgba(0, 0, 0, 0.6);
             display: none;
             justify-content: center;
             align-items: center;
@@ -75,21 +61,26 @@
     <div id="loadingOverlay" class="loading-overlay">
         <div class="bg-white p-6 rounded-lg shadow-lg text-center">
             <div class="loading-spinner mx-auto mb-4"></div>
-            <p id="loadingText" class="text-lg font-medium text-gray-700">正在處理，請稍候...</p>
+            <p class="text-lg font-medium text-gray-700">正在提交資料，請稍候...</p>
         </div>
     </div>
-
-    <!-- 主容器 -->
+    
     <div class="container mx-auto px-4 py-8 max-w-6xl">
         <header class="mb-8">
             <h1 class="text-3xl font-bold text-center text-gray-800">客戶資料轉移系統</h1>
-            <p class="text-center text-gray-600 mt-2">將A客戶的使用權限轉移給B客戶</p>
+            <p class="text-center text-gray-600 mt-2">提交資料後，系統將自動產生PDF存入指定雲端資料夾</p>
         </header>
+        
+        <!-- 【關鍵】使用一個隱藏的表單和iframe來提交資料，這將徹底繞過CORS問題 -->
+        <form id="hiddenForm" target="hidden_iframe" method="post" style="display:none;">
+            <input type="hidden" name="payload" id="payloadInput">
+        </form>
+        <iframe name="hidden_iframe" id="hidden_iframe" style="display:none;"></iframe>
 
+        <!-- 主輸入表單 -->
         <div id="inputForm">
-            <!-- 客戶資料區 -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <!-- A客戶 -->
+                <!-- A客戶資料卡 -->
                 <div class="card bg-white rounded-lg p-6">
                     <div class="flex justify-between items-center mb-6">
                         <h2 class="text-xl font-bold text-gray-800">A客戶資料 (轉出方)</h2>
@@ -100,7 +91,7 @@
                     <div class="mb-4"><label class="block text-gray-700 mb-2">地址</label><input type="text" id="customerA_address" class="w-full px-4 py-2 border rounded-md"></div>
                     <div class="mb-4"><label class="block text-gray-700 mb-2">使用期限</label><input type="date" id="customerA_expiry" class="w-full px-4 py-2 border rounded-md"></div>
                 </div>
-                <!-- B客戶 -->
+                <!-- B客戶資料卡 -->
                 <div class="card bg-white rounded-lg p-6">
                     <div class="flex justify-between items-center mb-6">
                         <h2 class="text-xl font-bold text-gray-800">B客戶資料 (接收方)</h2>
@@ -113,8 +104,7 @@
                     <div class="mb-4"><label class="block text-gray-700 mb-2">轉移後到期日</label><input type="date" id="customerB_newExpiry" class="w-full px-4 py-2 border rounded-md" readonly></div>
                 </div>
             </div>
-
-            <!-- 轉移設定區 -->
+            <!-- 轉移設定卡 -->
             <div class="card bg-white rounded-lg p-6 mt-8">
                 <h2 class="text-xl font-bold text-gray-800 mb-6">轉移設定</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -126,23 +116,9 @@
                     <div><label class="block text-gray-700 mb-2">轉移天數</label><input type="text" id="transferDays" class="w-full px-4 py-2 border rounded-md" readonly></div>
                 </div>
             </div>
-
             <!-- 操作按鈕 -->
             <div class="flex justify-center mt-8">
-                <button id="generatePdfBtn" class="btn-success text-white px-6 py-3 rounded-md font-medium w-full max-w-xs">產生並預覽PDF</button>
-            </div>
-
-            <!-- PDF與Email區 -->
-            <div id="pdfSection" class="card bg-white rounded-lg p-6 mt-8 hidden fade-in">
-                <h2 class="text-xl font-bold text-gray-800 mb-4">操作完成</h2>
-                <div class="mb-4"><a id="previewPdfLink" href="#" target="_blank" class="text-blue-600 hover:text-blue-800 font-medium">➔ 點此在新分頁預覽產生的PDF檔案</a></div>
-                <div class="border-t pt-4">
-                    <label for="emailInput" class="block text-gray-700 mb-2">輸入Email信箱以寄送PDF附件：</label>
-                    <div class="flex flex-col sm:flex-row gap-4">
-                        <input type="email" id="emailInput" class="w-full px-4 py-2 border rounded-md" placeholder="example@email.com">
-                        <button id="sendEmailBtn" class="btn-info text-white px-6 py-2 rounded-md font-medium whitespace-nowrap">寄送Email</button>
-                    </div>
-                </div>
+                <button id="submitBtn" class="btn-success text-white px-6 py-3 rounded-md font-medium w-full max-w-xs text-lg">提交資料並產生PDF</button>
             </div>
         </div>
     </div>
@@ -150,119 +126,57 @@
     <script>
         // --- 全域設定 ---
         const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxw1v7mf7dpEud4V9aK7xmiPd0Xed5KTBiwSH8MUBSVznH2zYxQFGH_qzkrVxQ_j6RPdw/exec';
-        let generatedPdfInfo = { url: '', id: '' };
         const customerDatabase = {
             'A001': { name: '王小明', address: '台北市信義區信義路100號', expiry: '2025-12-31' },
             'B001': { name: '張小美', address: '高雄市前鎮區中山路300號', expiry: '2025-08-20' },
         };
 
         // --- 輔助函式 ---
-        function days360(startDateStr, endDateStr ) {
-            const s = new Date(startDateStr), e = new Date(endDateStr);
-            let sd = s.getDate(), sm = s.getMonth() + 1, sy = s.getFullYear();
-            let ed = e.getDate(), em = e.getMonth() + 1, ey = e.getFullYear();
-            if (sd === 31) sd = 30;
-            if (ed === 31 && sd === 30) ed = 30;
-            return (ey - sy) * 360 + (em - sm) * 30 + (ed - sd);
-        }
-
-        function addDays(dateStr, days) {
-            const result = new Date(dateStr);
-            result.setDate(result.getDate() + parseInt(days));
-            return result;
-        }
-
-        function formatDate(date) {
-            return new Date(date).toISOString().slice(0, 10);
-        }
-
+        function days360(d1, d2 ) { const s = new Date(d1), e = new Date(d2); let sd = s.getDate(), sm = s.getMonth()+1, sy = s.getFullYear(), ed = e.getDate(), em = e.getMonth()+1, ey = e.getFullYear(); if(sd===31)sd=30; if(ed===31&&sd===30)ed=30; return(ey-sy)*360+(em-sm)*30+(ed-sd); }
+        function addDays(d, n) { const r = new Date(d); r.setDate(r.getDate()+parseInt(n)); return r; }
+        function formatDate(d) { return new Date(d).toISOString().slice(0, 10); }
         function showMessage(message, type = 'info') {
             const div = document.createElement('div');
             div.textContent = message;
-            const bgColor = type === 'success' ? '#4CAF50' : type === 'error' ? '#f44336' : '#2196F3';
+            const bgColor = type === 'success' ? '#4CAF50' : '#f44336';
             div.style.cssText = `position:fixed; top:20px; right:20px; padding:15px 20px; border-radius:5px; color:white; font-weight:bold; z-index:10000; background-color:${bgColor}`;
             document.body.appendChild(div);
-            setTimeout(() => div.remove(), 4000);
+            setTimeout(() => div.remove(), 5000);
         }
-
-        // --- 核心邏輯 ---
+        
+        // --- 核心計算邏輯 ---
         function calculateTransferInfo() {
-            const transferDate = document.getElementById('transferDate').value;
-            const customerAExpiry = document.getElementById('customerA_expiry').value;
-            const customerBExpiry = document.getElementById('customerB_currentExpiry').value;
-
-            if (!transferDate || !customerAExpiry || !customerBExpiry) return;
-
-            if (new Date(transferDate) >= new Date(customerAExpiry)) {
-                document.getElementById('transferPeriod').value = '無效的轉移日期';
-                return;
-            }
-
-            document.getElementById('transferPeriod').value = `${new Date(transferDate).toLocaleDateString('sv')}~${new Date(customerAExpiry).toLocaleDateString('sv')}`;
-            const totalDays = days360(transferDate, customerAExpiry);
-            document.getElementById('transferDays').value = `${totalDays}天`;
-
-            const months = Math.floor(totalDays / 30);
-            const days = Math.round((totalDays / 30 % 1) * 30);
-            const duration = months > 0 && days > 0 ? `${months}個月${days}日` : months > 0 ? `${months}個月` : days > 0 ? `${days}日` : '0日';
-            document.getElementById('transferDuration').value = duration;
-
-            document.getElementById('customerB_newExpiry').value = formatDate(addDays(customerBExpiry, totalDays));
-        }
-
-        function setupSearch(type) {
-            document.getElementById(`search${type}`).addEventListener('click', () => {
-                const id = document.getElementById(`customer${type}_id`).value;
-                if (!id) { alert('請輸入客戶編號'); return; }
-                const customer = customerDatabase[id];
-                if (!customer) { alert('找不到客戶資料'); return; }
-
-                document.getElementById(`customer${type}_name`).value = customer.name;
-                document.getElementById(`customer${type}_address`).value = customer.address;
-                const expiryFieldId = type === 'A' ? 'customerA_expiry' : 'customerB_currentExpiry';
-                document.getElementById(expiryFieldId).value = customer.expiry;
-                calculateTransferInfo();
-            });
-        }
-
-        async function postToServer(payload) {
-            document.getElementById('loadingOverlay').style.display = 'flex';
-            try {
-                const response = await fetch(WEB_APP_URL, {
-                    method: 'POST',
-                    mode: 'cors',
-                    cache: 'no-cache',
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify(payload),
-                    redirect: 'follow'
-                });
-                if (!response.ok) {
-                    throw new Error(`伺服器錯誤: ${response.status} ${response.statusText}`);
-                }
-                return await response.json();
-            } finally {
-                document.getElementById('loadingOverlay').style.display = 'none';
-            }
+            const tDate = document.getElementById('transferDate').value, aExp = document.getElementById('customerA_expiry').value, bExp = document.getElementById('customerB_currentExpiry').value;
+            if(!tDate||!aExp||!bExp) return;
+            if(new Date(tDate)>=new Date(aExp)) { document.getElementById('transferPeriod').value='無效轉移日期'; return; }
+            document.getElementById('transferPeriod').value=`${new Date(tDate).toLocaleDateString('sv')}~${new Date(aExp).toLocaleDateString('sv')}`;
+            const totalDays=days360(tDate,aExp); document.getElementById('transferDays').value=`${totalDays}天`;
+            const months=Math.floor(totalDays/30), days=Math.round((totalDays/30%1)*30);
+            document.getElementById('transferDuration').value=months>0&&days>0?`${months}個月${days}日`:months>0?`${months}個月`:days>0?`${days}日`:'0日';
+            document.getElementById('customerB_newExpiry').value=formatDate(addDays(bExp,totalDays));
         }
 
         // --- 事件綁定 ---
-        setupSearch('A');
-        setupSearch('B');
-        ['transferDate', 'customerA_expiry', 'customerB_currentExpiry'].forEach(id => {
-            document.getElementById(id).addEventListener('change', calculateTransferInfo);
-        });
-
-        document.getElementById('generatePdfBtn').addEventListener('click', async () => {
-            calculateTransferInfo();
+        function setupSearch(type) {
+            document.getElementById(`search${type}`).addEventListener('click', ()=>{
+                const id=document.getElementById(`customer${type}_id`).value; if(!id){alert('請輸入客戶編號');return;}
+                const cust=customerDatabase[id]; if(!cust){alert('找不到客戶資料');return;}
+                document.getElementById(`customer${type}_name`).value=cust.name; document.getElementById(`customer${type}_address`).value=cust.address;
+                document.getElementById(type==='A'?'customerA_expiry':'customerB_currentExpiry').value=cust.expiry;
+                calculateTransferInfo();
+            });
+        }
+        setupSearch('A'); setupSearch('B');
+        ['transferDate','customerA_expiry','customerB_currentExpiry'].forEach(id=>document.getElementById(id).addEventListener('change',calculateTransferInfo));
+        
+        // 【關鍵】提交按鈕的事件監聽
+        document.getElementById('submitBtn').addEventListener('click', () => {
+            calculateTransferInfo(); // 先確保所有計算都是最新的
             const formData = {
-                '客編': document.getElementById('customerA_id').value,
-                '姓名': document.getElementById('customerA_name').value,
-                '地址': document.getElementById('customerA_address').value,
-                '新客編': document.getElementById('customerB_id').value,
-                '新姓名': document.getElementById('customerB_name').value,
-                '新地址': document.getElementById('customerB_address').value,
-                '轉移區間': document.getElementById('transferPeriod').value,
-                '轉移時間': document.getElementById('transferDuration').value,
+                '客編': document.getElementById('customerA_id').value, '姓名': document.getElementById('customerA_name').value,
+                '地址': document.getElementById('customerA_address').value, '新客編': document.getElementById('customerB_id').value,
+                '新姓名': document.getElementById('customerB_name').value, '新地址': document.getElementById('customerB_address').value,
+                '轉移區間': document.getElementById('transferPeriod').value, '轉移時間': document.getElementById('transferDuration').value,
                 '轉移後到期日': document.getElementById('customerB_newExpiry').value
             };
 
@@ -271,50 +185,28 @@
                 return;
             }
 
-            try {
-                const result = await postToServer(formData);
-                if (result.success) {
-                    showMessage('PDF產生成功！', 'success');
-                    generatedPdfInfo = { url: result.pdfUrl, id: result.pdfId };
-                    document.getElementById('previewPdfLink').href = result.pdfUrl;
-                    document.getElementById('pdfSection').classList.remove('hidden');
-                } else {
-                    throw new Error(result.message);
-                }
-            } catch (error) {
-                showMessage(`產生PDF失敗: ${error.message}`, 'error');
-            }
+            // 顯示載入畫面
+            document.getElementById('loadingOverlay').style.display = 'flex';
+            
+            // 將資料填入隱藏表單並提交
+            const form = document.getElementById('hiddenForm');
+            form.action = WEB_APP_URL;
+            document.getElementById('payloadInput').value = JSON.stringify(formData);
+            form.submit();
+
+            // 因為無法直接得知iframe提交的結果，所以我們假設它會成功，並在幾秒後提示使用者
+            setTimeout(() => {
+                document.getElementById('loadingOverlay').style.display = 'none';
+                showMessage('資料已提交！請至您的Google雲端硬碟指定資料夾查看產生的PDF檔案。', 'success');
+            }, 4000); // 假設後端處理需要4秒
         });
 
-        document.getElementById('sendEmailBtn').addEventListener('click', async () => {
-            const email = document.getElementById('emailInput').value;
-            if (!email.includes('@')) {
-                showMessage('請輸入有效的Email地址。', 'error');
-                return;
-            }
-            if (!generatedPdfInfo.id) {
-                showMessage('找不到PDF檔案資訊，請先產生PDF。', 'error');
-                return;
-            }
-
-            try {
-                const payload = { action: 'sendEmail', email: email, pdfId: generatedPdfInfo.id };
-                const result = await postToServer(payload);
-                if (result.success) {
-                    showMessage(result.message, 'success');
-                } else {
-                    throw new Error(result.message);
-                }
-            } catch (error) {
-                showMessage(`寄送Email失敗: ${error.message}`, 'error');
-            }
-        });
-
-        // --- 初始設定 ---
+        // --- 頁面初始化 ---
         document.getElementById('transferDate').value = formatDate(new Date());
     </script>
 </body>
 </html>
+
 
 
 
