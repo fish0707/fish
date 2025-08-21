@@ -7,96 +7,41 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: 'Noto Sans TC', sans-serif;
-            background-color: #f0f5ff;
-            margin: 0;
-            padding: 0;
-        }
-        .card {
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1 );
-        }
-        .btn-primary {
-            background-color: #3b82f6;
-            transition: background-color 0.3s;
-        }
-        .btn-primary:hover {
-            background-color: #2563eb;
-        }
-        .btn-success {
-            background-color: #10b981;
-            transition: background-color: 0.3s;
-        }
-        .btn-success:hover {
-            background-color: #059669;
-        }
-        .loading-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.6);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-        }
-        .loading-spinner {
-            width: 50px;
-            height: 50px;
-            border: 5px solid #f3f3f3;
-            border-top: 5px solid #3498db;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f0f5ff; }
+        .card { box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1 ); }
+        .btn-primary { background-color: #3b82f6; transition: background-color 0.3s; }
+        .btn-primary:hover { background-color: #2563eb; }
+        .btn-success { background-color: #10b981; transition: background-color 0.3s; }
+        .btn-success:hover { background-color: #059669; }
+        .btn-info { background-color: #0ea5e9; transition: background-color: 0.3s; }
+        .btn-info:hover { background-color: #0284c7; }
+        .fade-in { animation: fadeIn 0.5s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); display: none; justify-content: center; align-items: center; z-index: 9999; }
+        .loading-spinner { width: 50px; height: 50px; border: 5px solid #f3f3f3; border-top: 5px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
-    <!-- 載入指示器 -->
-    <div id="loadingOverlay" class="loading-overlay">
-        <div class="bg-white p-6 rounded-lg shadow-lg text-center">
-            <div class="loading-spinner mx-auto mb-4"></div>
-            <p class="text-lg font-medium text-gray-700">正在提交資料，請稍候...</p>
-        </div>
-    </div>
+    <div id="loadingOverlay" class="loading-overlay"><div class="bg-white p-6 rounded-lg shadow-lg text-center"><div class="loading-spinner mx-auto mb-4"></div><p id="loadingText" class="text-lg font-medium text-gray-700">正在處理...</p></div></div>
     
     <div class="container mx-auto px-4 py-8 max-w-6xl">
-        <header class="mb-8">
-            <h1 class="text-3xl font-bold text-center text-gray-800">客戶資料轉移系統</h1>
-            <p class="text-center text-gray-600 mt-2">提交資料後，系統將自動產生PDF存入指定雲端資料夾</p>
-        </header>
+        <header class="mb-8"><h1 class="text-3xl font-bold text-center text-gray-800">客戶資料轉移系統</h1></header>
         
-        <!-- 【關鍵】使用一個隱藏的表單和iframe來提交資料，這將徹底繞過CORS問題 -->
-        <form id="hiddenForm" target="hidden_iframe" method="post" style="display:none;">
-            <input type="hidden" name="payload" id="payloadInput">
-        </form>
+        <form id="hiddenForm" target="hidden_iframe" method="post" style="display:none;"><input type="hidden" name="payload" id="payloadInput"></form>
         <iframe name="hidden_iframe" id="hidden_iframe" style="display:none;"></iframe>
 
-        <!-- 主輸入表單 -->
         <div id="inputForm">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <!-- A客戶資料卡 -->
                 <div class="card bg-white rounded-lg p-6">
-                    <div class="flex justify-between items-center mb-6">
-                        <h2 class="text-xl font-bold text-gray-800">A客戶資料 (轉出方)</h2>
-                        <button id="searchA" class="btn-primary text-white px-4 py-2 rounded-md">查詢客戶</button>
-                    </div>
+                    <div class="flex justify-between items-center mb-6"><h2 class="text-xl font-bold text-gray-800">A客戶資料</h2><button id="searchA" class="btn-primary text-white px-4 py-2 rounded-md">查詢客戶</button></div>
                     <div class="mb-4"><label class="block text-gray-700 mb-2">客戶編號</label><input type="text" id="customerA_id" class="w-full px-4 py-2 border rounded-md"></div>
                     <div class="mb-4"><label class="block text-gray-700 mb-2">姓名</label><input type="text" id="customerA_name" class="w-full px-4 py-2 border rounded-md"></div>
                     <div class="mb-4"><label class="block text-gray-700 mb-2">地址</label><input type="text" id="customerA_address" class="w-full px-4 py-2 border rounded-md"></div>
                     <div class="mb-4"><label class="block text-gray-700 mb-2">使用期限</label><input type="date" id="customerA_expiry" class="w-full px-4 py-2 border rounded-md"></div>
                 </div>
-                <!-- B客戶資料卡 -->
                 <div class="card bg-white rounded-lg p-6">
-                    <div class="flex justify-between items-center mb-6">
-                        <h2 class="text-xl font-bold text-gray-800">B客戶資料 (接收方)</h2>
-                        <button id="searchB" class="btn-primary text-white px-4 py-2 rounded-md">查詢客戶</button>
-                    </div>
+                    <div class="flex justify-between items-center mb-6"><h2 class="text-xl font-bold text-gray-800">B客戶資料</h2><button id="searchB" class="btn-primary text-white px-4 py-2 rounded-md">查詢客戶</button></div>
                     <div class="mb-4"><label class="block text-gray-700 mb-2">客戶編號</label><input type="text" id="customerB_id" class="w-full px-4 py-2 border rounded-md"></div>
                     <div class="mb-4"><label class="block text-gray-700 mb-2">姓名</label><input type="text" id="customerB_name" class="w-full px-4 py-2 border rounded-md"></div>
                     <div class="mb-4"><label class="block text-gray-700 mb-2">地址</label><input type="text" id="customerB_address" class="w-full px-4 py-2 border rounded-md"></div>
@@ -104,7 +49,6 @@
                     <div class="mb-4"><label class="block text-gray-700 mb-2">轉移後到期日</label><input type="date" id="customerB_newExpiry" class="w-full px-4 py-2 border rounded-md" readonly></div>
                 </div>
             </div>
-            <!-- 轉移設定卡 -->
             <div class="card bg-white rounded-lg p-6 mt-8">
                 <h2 class="text-xl font-bold text-gray-800 mb-6">轉移設定</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -116,35 +60,34 @@
                     <div><label class="block text-gray-700 mb-2">轉移天數</label><input type="text" id="transferDays" class="w-full px-4 py-2 border rounded-md" readonly></div>
                 </div>
             </div>
-            <!-- 操作按鈕 -->
             <div class="flex justify-center mt-8">
-                <button id="submitBtn" class="btn-success text-white px-6 py-3 rounded-md font-medium w-full max-w-xs text-lg">提交資料並產生PDF</button>
+                <button id="generatePdfBtn" class="btn-success text-white px-6 py-3 rounded-md font-medium w-full max-w-xs text-lg">產生PDF</button>
+            </div>
+            
+            <div id="emailSection" class="card bg-white rounded-lg p-6 mt-8 hidden fade-in">
+                <h2 class="text-xl font-bold text-gray-800 mb-4">PDF產生成功！</h2>
+                <div class="mb-4"><a id="previewPdfLink" href="#" target="_blank" class="text-blue-600 hover:text-blue-800 font-medium">➔ 點此在新分頁預覽產生的PDF檔案</a></div>
+                <div class="border-t pt-4">
+                    <label for="emailInput" class="block text-gray-700 mb-2">輸入Email信箱以寄送PDF附件：</label>
+                    <div class="flex flex-col sm:flex-row gap-4">
+                        <input type="email" id="emailInput" class="w-full px-4 py-2 border rounded-md" placeholder="example@email.com">
+                        <button id="sendEmailBtn" class="btn-info text-white px-6 py-2 rounded-md font-medium whitespace-nowrap">寄送Email</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
-        // --- 全域設定 ---
         const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxw1v7mf7dpEud4V9aK7xmiPd0Xed5KTBiwSH8MUBSVznH2zYxQFGH_qzkrVxQ_j6RPdw/exec';
-        const customerDatabase = {
-            'A001': { name: '王小明', address: '台北市信義區信義路100號', expiry: '2025-12-31' },
-            'B001': { name: '張小美', address: '高雄市前鎮區中山路300號', expiry: '2025-08-20' },
-        };
+        let generatedPdfInfo = { url: '', id: '' };
+        const customerDatabase = { 'A001': { name: '王小明', address: '台北市信義區信義路100號', expiry: '2025-12-31' }, 'B001': { name: '張小美', address: '高雄市前鎮區中山路300號', expiry: '2025-08-20' } };
 
-        // --- 輔助函式 ---
         function days360(d1, d2 ) { const s = new Date(d1), e = new Date(d2); let sd = s.getDate(), sm = s.getMonth()+1, sy = s.getFullYear(), ed = e.getDate(), em = e.getMonth()+1, ey = e.getFullYear(); if(sd===31)sd=30; if(ed===31&&sd===30)ed=30; return(ey-sy)*360+(em-sm)*30+(ed-sd); }
         function addDays(d, n) { const r = new Date(d); r.setDate(r.getDate()+parseInt(n)); return r; }
         function formatDate(d) { return new Date(d).toISOString().slice(0, 10); }
-        function showMessage(message, type = 'info') {
-            const div = document.createElement('div');
-            div.textContent = message;
-            const bgColor = type === 'success' ? '#4CAF50' : '#f44336';
-            div.style.cssText = `position:fixed; top:20px; right:20px; padding:15px 20px; border-radius:5px; color:white; font-weight:bold; z-index:10000; background-color:${bgColor}`;
-            document.body.appendChild(div);
-            setTimeout(() => div.remove(), 5000);
-        }
+        function showMessage(message, type = 'info') { const div = document.createElement('div'); div.textContent = message; const bgColor = type === 'success' ? '#4CAF50' : '#f44336'; div.style.cssText = `position:fixed; top:20px; right:20px; padding:15px 20px; border-radius:5px; color:white; font-weight:bold; z-index:10000; background-color:${bgColor}`; document.body.appendChild(div); setTimeout(() => div.remove(), 5000); }
         
-        // --- 核心計算邏輯 ---
         function calculateTransferInfo() {
             const tDate = document.getElementById('transferDate').value, aExp = document.getElementById('customerA_expiry').value, bExp = document.getElementById('customerB_currentExpiry').value;
             if(!tDate||!aExp||!bExp) return;
@@ -156,7 +99,6 @@
             document.getElementById('customerB_newExpiry').value=formatDate(addDays(bExp,totalDays));
         }
 
-        // --- 事件綁定 ---
         function setupSearch(type) {
             document.getElementById(`search${type}`).addEventListener('click', ()=>{
                 const id=document.getElementById(`customer${type}_id`).value; if(!id){alert('請輸入客戶編號');return;}
@@ -169,73 +111,65 @@
         setupSearch('A'); setupSearch('B');
         ['transferDate','customerA_expiry','customerB_currentExpiry'].forEach(id=>document.getElementById(id).addEventListener('change',calculateTransferInfo));
         
-        // 【關鍵】提交按鈕的事件監聽
-        document.getElementById('submitBtn').addEventListener('click', () => {
-            calculateTransferInfo(); // 先確保所有計算都是最新的
-            const formData = {
-                '客編': document.getElementById('customerA_id').value, '姓名': document.getElementById('customerA_name').value,
-                '地址': document.getElementById('customerA_address').value, '新客編': document.getElementById('customerB_id').value,
-                '新姓名': document.getElementById('customerB_name').value, '新地址': document.getElementById('customerB_address').value,
-                '轉移區間': document.getElementById('transferPeriod').value, '轉移時間': document.getElementById('transferDuration').value,
-                '轉移後到期日': document.getElementById('customerB_newExpiry').value
-            };
-
-            if (!formData.姓名 || !formData.新姓名 || !formData.轉移後到期日) {
-                showMessage('資料不完整，請檢查客戶資料與轉移日期。', 'error');
-                return;
-            }
-
-            // 顯示載入畫面
+        // 【關鍵修正】修正了這個函式，確保 payload 被正確賦值
+        function submitViaIframe(payload, loadingMessage) {
+            document.getElementById('loadingText').textContent = loadingMessage;
             document.getElementById('loadingOverlay').style.display = 'flex';
             
-            // 將資料填入隱藏表單並提交
             const form = document.getElementById('hiddenForm');
+            const payloadInput = document.getElementById('payloadInput');
+            
+            // 確保 action 和 payload 都被正確設定
             form.action = WEB_APP_URL;
-            document.getElementById('payloadInput').value = JSON.stringify(formData);
+            payloadInput.value = JSON.stringify(payload);
+            
             form.submit();
+        }
 
-            // 因為無法直接得知iframe提交的結果，所以我們假設它會成功，並在幾秒後提示使用者
-            setTimeout(() => {
-                document.getElementById('loadingOverlay').style.display = 'none';
-                showMessage('資料已提交！請至您的Google雲端硬碟指定資料夾查看產生的PDF檔案。', 'success');
-            }, 4000); // 假設後端處理需要4秒
+        document.getElementById('generatePdfBtn').addEventListener('click', () => {
+            calculateTransferInfo();
+            const formData = { '客編': document.getElementById('customerA_id').value, '姓名': document.getElementById('customerA_name').value, '地址': document.getElementById('customerA_address').value, '新客編': document.getElementById('customerB_id').value, '新姓名': document.getElementById('customerB_name').value, '新地址': document.getElementById('customerB_address').value, '轉移區間': document.getElementById('transferPeriod').value, '轉移時間': document.getElementById('transferDuration').value, '轉移後到期日': document.getElementById('customerB_newExpiry').value };
+            if (!formData.姓名 || !formData.新姓名 || !formData.轉移後到期日) { showMessage('資料不完整，請檢查客戶資料與轉移日期。', 'error'); return; }
+            
+            // 【關鍵修正】將 action: 'generatePdf' 加入 payload
+            const payload = { ...formData, action: 'generatePdf' };
+            submitViaIframe(payload, '正在產生PDF...');
         });
 
-        // --- 頁面初始化 ---
+        document.getElementById('sendEmailBtn').addEventListener('click', () => {
+            const email = document.getElementById('emailInput').value;
+            if (!email.includes('@')) { showMessage('請輸入有效的Email地址。', 'error'); return; }
+            if (!generatedPdfInfo.id) { showMessage('找不到PDF檔案資訊，請先產生PDF。', 'error'); return; }
+            const payload = { action: 'sendEmail', email: email, pdfId: generatedPdfInfo.id };
+            submitViaIframe(payload, '正在寄送Email...');
+        });
+
+        document.getElementById('hidden_iframe').addEventListener('load', function() {
+            document.getElementById('loadingOverlay').style.display = 'none';
+            try {
+                const iframeContent = this.contentWindow.document.body.innerHTML;
+                if (iframeContent.includes('操作失敗')) {
+                    const errorMessage = this.contentWindow.document.querySelector('p:last-child').textContent;
+                    showMessage(`後端處理失敗: ${errorMessage}`, 'error');
+                    return;
+                }
+                const pdfInfoDiv = this.contentWindow.document.getElementById('pdf-info');
+                if (pdfInfoDiv) {
+                    const pdfInfo = JSON.parse(pdfInfoDiv.textContent);
+                    generatedPdfInfo = { url: pdfInfo.pdfUrl, id: pdfInfo.pdfId };
+                    document.getElementById('previewPdfLink').href = generatedPdfInfo.url;
+                    document.getElementById('emailSection').classList.remove('hidden');
+                    showMessage('PDF產生成功！現在可以寄送Email。', 'success');
+                } else if (iframeContent.includes('郵件已成功寄送')) {
+                    showMessage('Email 寄送成功！', 'success');
+                }
+            } catch (e) {
+                console.warn("無法讀取iframe內容，但請求已送出。這可能是因為網路延遲或後端錯誤。");
+                showMessage('請求已送出，但無法確認結果。請檢查後端日誌。', 'info');
+            }
+        });
+
         document.getElementById('transferDate').value = formatDate(new Date());
     </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
