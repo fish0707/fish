@@ -266,32 +266,42 @@
             return `${d.getFullYear()}/${month}/${day}`;
         }
 
-        // 計算兩個日期之間的月份和天數差異 (基於日曆)
+        // 【已修改】計算兩個日期之間的月份和天數差異
         function calculateMonthsAndDays(startDate, endDate) {
-            const start = new Date(startDate);
-            const end = new Date(endDate);
-            
+            let start = new Date(startDate);
+            let end = new Date(endDate);
+
             let years = end.getFullYear() - start.getFullYear();
             let months = end.getMonth() - start.getMonth();
             let days = end.getDate() - start.getDate();
-            
+
             if (days < 0) {
                 months--;
-                const lastDayOfPrevMonth = new Date(end.getFullYear(), end.getMonth(), 0).getDate();
-                days += lastDayOfPrevMonth;
+                // 從結束日期的上一個月借天數
+                let lastMonth = new Date(end.getFullYear(), end.getMonth(), 0);
+                days += lastMonth.getDate();
             }
-            
+
             if (months < 0) {
                 years--;
                 months += 12;
             }
             
+            // 將年份轉換為月份
             months += years * 12;
+
+            // 如果起始日大於結束日，月份再減一，天數用30去補
+            if (start.getDate() > end.getDate()) {
+                 if(days > 29) { //修正因借位導致天數超過30的問題
+                    months++;
+                    days = days - 30;
+                 }
+            }
             
             return { months, days };
         }
 
-        // 【新增】將月份和天數轉換為總天數 (1個月=30天)
+        // 將月份和天數轉換為總天數 (1個月=30天)
         function calculateTotalDays(months, days) {
             return (months * 30) + days;
         }
@@ -355,7 +365,7 @@
             }
         });
 
-        // 【已修改】計算轉移資訊
+        // 計算轉移資訊
         function calculateTransferInfo() {
             const transferDateStr = document.getElementById('transferDate').value;
             const customerAExpiryStr = document.getElementById('customerA_expiry').value;
@@ -377,20 +387,16 @@
                 return;
             }
             
-            // 1. 顯示轉移區間 (UI顯示用，維持不變)
             const transferPeriod = `${formatDateSlash(transferDate)}~${formatDateSlash(customerAExpiry)}`;
             document.getElementById('transferPeriod').value = transferPeriod;
             
-            // 2. 計算轉移時間 (幾個月幾日) (UI顯示用，維持不變)
             const { months, days } = calculateMonthsAndDays(transferDateStr, customerAExpiryStr);
             const transferDuration = formatMonthsAndDays(months, days);
             document.getElementById('transferDuration').value = transferDuration;
             
-            // 3. 【核心修改】計算總轉移天數 (1個月=30天)
             const totalTransferDays = calculateTotalDays(months, days);
             document.getElementById('transferDays').value = totalTransferDays + '天';
             
-            // 4. 【核心修改】用總天數計算B客戶的新到期日
             const newExpiryDate = addDays(customerBExpiry, totalTransferDays);
             document.getElementById('customerB_newExpiry').value = formatDate(newExpiryDate);
         }
@@ -412,12 +418,12 @@
             calculateTransferInfo();
         });
 
-        // 事件監聽器 (維持不變)
+        // 事件監聽器
         document.getElementById('transferDate').addEventListener('change', calculateTransferInfo);
         document.getElementById('customerA_expiry').addEventListener('change', calculateTransferInfo);
         document.getElementById('customerB_currentExpiry').addEventListener('change', calculateTransferInfo);
 
-        // 重置表單 (維持不變)
+        // 重置表單
         document.getElementById('resetBtn').addEventListener('click', function() {
             document.getElementById('customerA_id').value = '';
             document.getElementById('customerA_name').value = '';
@@ -440,7 +446,7 @@
             document.getElementById('transferNotes').value = '';
         });
 
-        // Google Script 相關函式 (維持不變)
+        // Google Script 相關函式
         function collectFormData() {
             return {
                 '客編': document.getElementById('customerA_id').value || '',
@@ -513,6 +519,7 @@
     </script>
 </body>
 </html>
+
 
 
 
