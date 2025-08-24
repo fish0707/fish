@@ -80,16 +80,16 @@
   </div>
 
   <script>
-    // ===== 你的 Web App URL（已替你放入） =====
+    // ===== 你的 Web App URL（已放入） =====
     const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzjJl_VY0uLpC8qxxwSlVooFoVTiM78i0pPB6P75b-PfFB-5Yo8sqJ9N5AUKDssp_CxIw/exec';
 
-    // ===== 假資料庫（示範查詢用；之後可改成打後端查） =====
+    // ===== 假資料庫（示範用；之後可改從後端查詢） =====
     const customerDatabase = {
       'A001': { name: '王小明', address: '台北市信義區信義路100號', expiry: '2025-12-31' },
       'B001': { name: '張小美', address: '高雄市前鎮區中山路300號', expiry: '2025-08-20' }
     };
 
-    // ===== 小工具 =====
+    // ===== UI 小工具 =====
     function showMessage(msg, type='info') {
       const div = document.createElement('div');
       div.textContent = msg;
@@ -104,6 +104,7 @@
       return (ey-sy)*360 + (em-sm)*30 + (ed-sd);
     }
 
+    // 查詢按鈕：把假資料帶入欄位
     function setupSearch(type){
       document.getElementById(`search${type}`).addEventListener('click', () => {
         const id = document.getElementById(`customer${type}_id`).value.trim();
@@ -117,6 +118,7 @@
       });
     }
 
+    // 計算轉移資訊
     function calculateTransferInfo(){
       const tDate = document.getElementById('transferDate').value;
       const aExp  = document.getElementById('customerA_expiry').value;
@@ -148,21 +150,21 @@
     });
     setupSearch('A'); setupSearch('B');
 
+    // 呼叫後端：用 FormData（避免 CORS Preflight）
     async function callBackend(payload, loadingMessage){
       document.getElementById('loadingText').textContent = loadingMessage || '處理中...';
       document.getElementById('loadingOverlay').style.display = 'grid';
       try{
-        const res = await fetch(WEB_APP_URL, {
-          method:'POST',
-          headers:{ 'Content-Type':'application/json' },
-          body: JSON.stringify(payload)
-        });
+        const fd = new FormData();
+        fd.append('payload', JSON.stringify(payload));
+        const res = await fetch(WEB_APP_URL, { method:'POST', body: fd }); // 不要自設 Content-Type
         const data = await res.json().catch(()=> ({}));
         if(!res.ok || !data.ok) throw new Error(data.message || `HTTP ${res.status}`);
         return data;
       } finally { document.getElementById('loadingOverlay').style.display = 'none'; }
     }
 
+    // 產生 PDF
     document.getElementById('generatePdfBtn').addEventListener('click', async ()=>{
       calculateTransferInfo();
       const formData = {
@@ -194,3 +196,4 @@
   </script>
 </body>
 </html>
+
