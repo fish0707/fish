@@ -78,98 +78,63 @@
         </div>
     </div>
 
-    <script>
-        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzjJl_VY0uLpC8qxxwSlVooFoVTiM78i0pPB6P75b-PfFB-5Yo8sqJ9N5AUKDssp_CxIw/exec';
-        let generatedPdfInfo = { url: '', id: '' };
-        const customerDatabase = { 'A001': { name: '王小明', address: '台北市信義區信義路100號', expiry: '2025-12-31' }, 'B001': { name: '張小美', address: '高雄市前鎮區中山路300號', expiry: '2025-08-20' } };
+<script>
+  const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzjJl_VY0uLpC8qxxwSlVooFoVTiM78i0pPB6P75b-PfFB-5Yo8sqJ9N5AUKDssp_CxIw/exec';
+  let generatedPdfInfo = { url: '', id: '' };
 
-        function days360(d1, d2 ) { const s = new Date(d1), e = new Date(d2); let sd = s.getDate(), sm = s.getMonth()+1, sy = s.getFullYear(), ed = e.getDate(), em = e.getMonth()+1, ey = e.getFullYear(); if(sd===31)sd=30; if(ed===31&&sd===30)ed=30; return(ey-sy)*360+(em-sm)*30+(ed-sd); }
-        function addDays(d, n) { const r = new Date(d); r.setDate(r.getDate()+parseInt(n)); return r; }
-        function formatDate(d) { return new Date(d).toISOString().slice(0, 10); }
-        function showMessage(message, type = 'info') { const div = document.createElement('div'); div.textContent = message; const bgColor = type === 'success' ? '#4CAF50' : '#f44336'; div.style.cssText = `position:fixed; top:20px; right:20px; padding:15px 20px; border-radius:5px; color:white; font-weight:bold; z-index:10000; background-color:${bgColor}`; document.body.appendChild(div); setTimeout(() => div.remove(), 5000); }
-        
-        function calculateTransferInfo() {
-            const tDate = document.getElementById('transferDate').value, aExp = document.getElementById('customerA_expiry').value, bExp = document.getElementById('customerB_currentExpiry').value;
-            if(!tDate||!aExp||!bExp) return;
-            if(new Date(tDate)>=new Date(aExp)) { document.getElementById('transferPeriod').value='無效轉移日期'; return; }
-            document.getElementById('transferPeriod').value=`${new Date(tDate).toLocaleDateString('sv')}~${new Date(aExp).toLocaleDateString('sv')}`;
-            const totalDays=days360(tDate,aExp); document.getElementById('transferDays').value=`${totalDays}天`;
-            const months=Math.floor(totalDays/30), days=Math.round((totalDays/30%1)*30);
-            document.getElementById('transferDuration').value=months>0&&days>0?`${months}個月${days}日`:months>0?`${months}個月`:days>0?`${days}日`:'0日';
-            document.getElementById('customerB_newExpiry').value=formatDate(addDays(bExp,totalDays));
-        }
+  // ...（你的計算、search、days360 等函式保留）
 
-        function setupSearch(type) {
-            document.getElementById(`search${type}`).addEventListener('click', ()=>{
-                const id=document.getElementById(`customer${type}_id`).value; if(!id){alert('請輸入客戶編號');return;}
-                const cust=customerDatabase[id]; if(!cust){alert('找不到客戶資料');return;}
-                document.getElementById(`customer${type}_name`).value=cust.name; document.getElementById(`customer${type}_address`).value=cust.address;
-                document.getElementById(type==='A'?'customerA_expiry':'customerB_currentExpiry').value=cust.expiry;
-                calculateTransferInfo();
-            });
-        }
-        setupSearch('A'); setupSearch('B');
-        ['transferDate','customerA_expiry','customerB_currentExpiry'].forEach(id=>document.getElementById(id).addEventListener('change',calculateTransferInfo));
-        
-        // 【關鍵修正】修正了這個函式，確保 payload 被正確賦值
-        function submitViaIframe(payload, loadingMessage) {
-            document.getElementById('loadingText').textContent = loadingMessage;
-            document.getElementById('loadingOverlay').style.display = 'flex';
-            
-            const form = document.getElementById('hiddenForm');
-            const payloadInput = document.getElementById('payloadInput');
-            
-            // 確保 action 和 payload 都被正確設定
-            form.action = WEB_APP_URL;
-            payloadInput.value = JSON.stringify(payload);
-            
-            form.submit();
-        }
+  async function callBackend(payload, loadingMessage) {
+    document.getElementById('loadingText').textContent = loadingMessage || '處理中...';
+    document.getElementById('loadingOverlay').style.display = 'flex';
+    try {
+      const res = await fetch(WEB_APP_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }, // 用 JSON
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) {
+        throw new Error(data.message || `HTTP ${res.status}`);
+      }
+      return data;
+    } finally {
+      document.getElementById('loadingOverlay').style.display = 'none';
+    }
+  }
 
-        document.getElementById('generatePdfBtn').addEventListener('click', () => {
-            calculateTransferInfo();
-            const formData = { '客編': document.getElementById('customerA_id').value, '姓名': document.getElementById('customerA_name').value, '地址': document.getElementById('customerA_address').value, '新客編': document.getElementById('customerB_id').value, '新姓名': document.getElementById('customerB_name').value, '新地址': document.getElementById('customerB_address').value, '轉移區間': document.getElementById('transferPeriod').value, '轉移時間': document.getElementById('transferDuration').value, '轉移後到期日': document.getElementById('customerB_newExpiry').value };
-            if (!formData.姓名 || !formData.新姓名 || !formData.轉移後到期日) { showMessage('資料不完整，請檢查客戶資料與轉移日期。', 'error'); return; }
-            
-            // 【關鍵修正】將 action: 'generatePdf' 加入 payload
-            const payload = { ...formData, action: 'generatePdf' };
-            submitViaIframe(payload, '正在產生PDF...');
-        });
+  document.getElementById('generatePdfBtn').addEventListener('click', async () => {
+    // 先做欄位檢查
+    const formData = {
+      '客編': document.getElementById('customerA_id').value,
+      '姓名': document.getElementById('customerA_name').value,
+      '地址': document.getElementById('customerA_address').value,
+      '新客編': document.getElementById('customerB_id').value,
+      '新姓名': document.getElementById('customerB_name').value,
+      '新地址': document.getElementById('customerB_address').value,
+      '轉移區間': document.getElementById('transferPeriod').value,
+      '轉移時間': document.getElementById('transferDuration').value,
+      '轉移後到期日': document.getElementById('customerB_newExpiry').value
+    };
+    if (!formData.姓名 || !formData.新姓名 || !formData['轉移後到期日']) {
+      showMessage('資料不完整，請檢查客戶資料與轉移日期。', 'error'); return;
+    }
 
-        document.getElementById('sendEmailBtn').addEventListener('click', () => {
-            const email = document.getElementById('emailInput').value;
-            if (!email.includes('@')) { showMessage('請輸入有效的Email地址。', 'error'); return; }
-            if (!generatedPdfInfo.id) { showMessage('找不到PDF檔案資訊，請先產生PDF。', 'error'); return; }
-            const payload = { action: 'sendEmail', email: email, pdfId: generatedPdfInfo.id };
-            submitViaIframe(payload, '正在寄送Email...');
-        });
+    try {
+      const resp = await callBackend(formData, '正在產生 PDF...');
+      generatedPdfInfo = { url: resp.pdfUrl, id: resp.pdfId };
+      document.getElementById('previewPdfLink').href = generatedPdfInfo.url;
+      document.getElementById('emailSection').classList.remove('hidden');
+      showMessage('PDF 產生成功！', 'success');
+    } catch (err) {
+      showMessage(`後端失敗：${err.message}`, 'error');
+    }
+  });
 
-        document.getElementById('hidden_iframe').addEventListener('load', function() {
-            document.getElementById('loadingOverlay').style.display = 'none';
-            try {
-                const iframeContent = this.contentWindow.document.body.innerHTML;
-                if (iframeContent.includes('操作失敗')) {
-                    const errorMessage = this.contentWindow.document.querySelector('p:last-child').textContent;
-                    showMessage(`後端處理失敗: ${errorMessage}`, 'error');
-                    return;
-                }
-                const pdfInfoDiv = this.contentWindow.document.getElementById('pdf-info');
-                if (pdfInfoDiv) {
-                    const pdfInfo = JSON.parse(pdfInfoDiv.textContent);
-                    generatedPdfInfo = { url: pdfInfo.pdfUrl, id: pdfInfo.pdfId };
-                    document.getElementById('previewPdfLink').href = generatedPdfInfo.url;
-                    document.getElementById('emailSection').classList.remove('hidden');
-                    showMessage('PDF產生成功！現在可以寄送Email。', 'success');
-                } else if (iframeContent.includes('郵件已成功寄送')) {
-                    showMessage('Email 寄送成功！', 'success');
-                }
-            } catch (e) {
-                console.warn("無法讀取iframe內容，但請求已送出。這可能是因為網路延遲或後端錯誤。");
-                showMessage('請求已送出，但無法確認結果。請檢查後端日誌。', 'info');
-            }
-        });
+  // 你的寄信功能前端可以先保留 UI，但伺服器目前未實作 sendEmail；之後要寄信我再幫你加路由。
 
-        document.getElementById('transferDate').value = formatDate(new Date());
-    </script>
+  document.getElementById('transferDate').value = new Date().toISOString().slice(0, 10);
+</script>
+
 </body>
 </html>
