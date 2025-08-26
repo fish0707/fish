@@ -517,29 +517,33 @@
             return formData;
         }
 
-        // 發送資料到Google Apps Script
-        async function sendDataToGoogleAppsScript(formData) {
-            try {
-                const response = await fetch(WEB_APP_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'text/plain;charset=utf-8',
-                    },
-                    body: JSON.stringify(formData),
-                    mode: 'cors'
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                
-                const result = await response.json();
-                return result;
-                
-            } catch (error) {
-                console.error('發送資料錯誤:', error);
-                throw error;
-            }
+       // 修正後的 sendDataToGoogleAppsScript 函數
+async function sendDataToGoogleAppsScript(formData) {
+    try {
+        // 建立一個 FormData 物件來傳遞資料
+        const data = new FormData();
+        data.append('formData', JSON.stringify(formData));
+
+        const response = await fetch(WEB_APP_URL, {
+            method: 'POST',
+            body: data,
+            // 注意：這裡不需要設定 headers 和 mode，讓瀏覽器自動處理
+        });
+        
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`HTTP 錯誤! 狀態碼: ${response.status}, 訊息: ${errorText}`);
+        }
+        
+        const result = await response.json();
+        return result;
+        
+    } catch (error) {
+        console.error('發送資料錯誤:', error);
+        throw error;
+    }
+}
+
         }
 
         // 顯示訊息
