@@ -517,34 +517,50 @@
             return formData;
         }
 
-       // 修正後的 sendDataToGoogleAppsScript 函數
-async function sendDataToGoogleAppsScript(formData) {
-    try {
-        // 建立一個 FormData 物件來傳遞資料
-        const data = new FormData();
-        data.append('formData', JSON.stringify(formData));
+      // Google Apps Script 的 doPost 函數
+function doPost(e) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(30000);
 
-        const response = await fetch(WEB_APP_URL, {
-            method: 'POST',
-            body: data,
-            // 注意：這裡不需要設定 headers 和 mode，讓瀏覽器自動處理
-        });
-        
-        if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`HTTP 錯誤! 狀態碼: ${response.status}, 訊息: ${errorText}`);
-        }
-        
-        const result = await response.json();
-        return result;
-        
-    } catch (error) {
-        console.error('發送資料錯誤:', error);
-        throw error;
+  try {
+    // 因為前端是發送 application/json，所以要從 e.postData.contents 解析
+    if (!e || !e.postData || !e.postData.contents) {
+      throw new Error('無效的請求：缺少 POST 資料。');
     }
-}
 
-        
+    const data = JSON.parse(e.postData.contents);
+
+    const ss = SpreadsheetApp.openById(SHEET_ID);
+    const sheet = ss.getSheetByName(SHEET_NAME);
+    if (!sheet) {
+      throw new Error('找不到指定的工作表: ' + SHEET_NAME);
+    }
+
+    const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+    const newRow = headers.map(header => data[header] || '');
+
+    sheet.appendRow(newRow);
+    updateGoogleDoc();
+
+    return ContentService.createTextOutput(JSON.stringify({ 
+        success: true, 
+        message: '資料已成功寫入試算表並更新文件' 
+      }))
+      .setMimeType(ContentService.MimeType.JSON);
+
+  } catch (error) {
+    // 為了除錯，我們可以在回傳的錯誤訊息中包含更詳細的資訊
+    const errorMessage = '處理請求時發生錯誤: ' + error.message;
+    console.error(errorMessage);
+    return ContentService.createTextOutput(JSON.stringify({ 
+        success: false, 
+        message: errorMessage
+      }))
+      .setMimeType(ContentService.MimeType.JSON);
+  } finally {
+    lock.releaseLock();
+  }
+}
 
         // 顯示訊息
         function showMessage(message, type = 'info') {
