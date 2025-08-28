@@ -7,74 +7,14 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: 'Noto Sans TC', sans-serif;
-            background-color: #f0f5ff;
-            margin: 0;
-            padding: 0;
-        }
-        .card {
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1 );
-            transition: all 0.3s ease;
-        }
-        .card:hover {
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-        }
-        .btn-primary {
-            background-color: #3b82f6;
-            transition: all 0.3s ease;
-        }
-        .btn-primary:hover {
-            background-color: #2563eb;
-        }
-        .btn-secondary {
-            background-color: #6b7280;
-            transition: all 0.3s ease;
-        }
-        .btn-secondary:hover {
-            background-color: #4b5563;
-        }
-        .btn-success {
-            background-color: #10b981;
-            transition: all 0.3s ease;
-        }
-        .btn-success:hover {
-            background-color: #059669;
-        }
-        .fade-in {
-            animation: fadeIn 0.5s ease-in-out;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        /* 載入指示器 */
-        .loading-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-            display: none;
-        }
-        .loading-spinner {
-            width: 50px;
-            height: 50px;
-            border: 5px solid #f3f3f3;
-            border-top: 5px solid #3498db;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f0f5ff; margin: 0; padding: 0; }
+        .card { box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1 ); transition: all 0.3s ease; }
+        .card:hover { box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15); }
+        .btn-primary { background-color: #3b82f6; transition: all 0.3s ease; }
+        .btn-primary:hover { background-color: #2563eb; }
+        .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); display: flex; justify-content: center; align-items: center; z-index: 9999; display: none; }
+        .loading-spinner { width: 50px; height: 50px; border: 5px solid #f3f3f3; border-top: 5px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
@@ -103,30 +43,25 @@
                             <button id="searchA" class="btn-primary text-white px-4 py-2 rounded-md">查詢客戶</button>
                         </div>
                     </div>
-                    
                     <div class="mb-4">
                         <label class="block text-gray-700 mb-2">客戶編號</label>
                         <input type="text" id="customerA_id" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="請輸入客戶編號">
                     </div>
-                    
                     <div class="mb-4">
                         <label class="block text-gray-700 mb-2">姓名</label>
                         <input type="text" id="customerA_name" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="請輸入姓名">
                     </div>
-                    
                     <div class="mb-4">
                         <label class="block text-gray-700 mb-2">地址</label>
                         <input type="text" id="customerA_address" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="請輸入地址">
                     </div>
-                    
                     <div class="mb-4">
                         <label class="block text-gray-700 mb-2">使用期限</label>
                         <input type="date" id="customerA_expiry" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
-                    
                     <div class="mb-4">
                         <label class="block text-gray-700 mb-2">剩餘天數</label>
-                        <input type="text" id="customerA_daysLeft" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="自動計算或手動輸入" readonly>
+                        <input type="text" id="customerA_daysLeft" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="自動計算" readonly>
                     </div>
                 </div>
 
@@ -139,27 +74,22 @@
                             <button id="searchB" class="btn-primary text-white px-4 py-2 rounded-md">查詢客戶</button>
                         </div>
                     </div>
-                    
                     <div class="mb-4">
                         <label class="block text-gray-700 mb-2">客戶編號</label>
                         <input type="text" id="customerB_id" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="請輸入客戶編號">
                     </div>
-                    
                     <div class="mb-4">
                         <label class="block text-gray-700 mb-2">姓名</label>
                         <input type="text" id="customerB_name" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="請輸入姓名">
                     </div>
-                    
                     <div class="mb-4">
                         <label class="block text-gray-700 mb-2">地址</label>
                         <input type="text" id="customerB_address" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="請輸入地址">
                     </div>
-                    
                     <div class="mb-4">
                         <label class="block text-gray-700 mb-2">目前使用期限</label>
                         <input type="date" id="customerB_currentExpiry" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
-                    
                     <div class="mb-4">
                         <label class="block text-gray-700 mb-2">轉移後到期日</label>
                         <input type="date" id="customerB_newExpiry" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" readonly>
@@ -170,32 +100,26 @@
             <!-- 轉移設定區域 -->
             <div class="card bg-white rounded-lg p-6 mt-8">
                 <h2 class="text-xl font-bold text-gray-800 mb-6">轉移設定</h2>
-                
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                         <label class="block text-gray-700 mb-2">轉移日期</label>
                         <input type="date" id="transferDate" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
-                    
                     <div>
                         <label class="block text-gray-700 mb-2">轉移區間</label>
                         <input type="text" id="transferPeriod" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="年/月/日~年/月/日" readonly>
                     </div>
                 </div>
-                
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
                     <div>
                         <label class="block text-gray-700 mb-2">轉移時間</label>
                         <input type="text" id="transferDuration" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="幾個月幾日" readonly>
                     </div>
-                    
                     <div>
                         <label class="block text-gray-700 mb-2">轉移天數</label>
                         <input type="text" id="transferDays" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="總天數" readonly>
                     </div>
                 </div>
-                
-                <!-- 新增的欄位 -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
                     <div>
                         <label class="block text-gray-700 mb-2">經辦人</label>
@@ -209,11 +133,8 @@
             </div>
 
             <!-- 操作按鈕 -->
-            <div class="flex justify-center mt-8 space-x-4">
-                <button id="calculateBtn" class="btn-primary text-white px-6 py-3 rounded-md font-medium">計算轉移資訊</button>
-                <button id="transferBtn" class="btn-success text-white px-6 py-3 rounded-md font-medium">確認轉移</button>
-                <button id="resetBtn" class="btn-secondary text-white px-6 py-3 rounded-md font-medium">重置表單</button>
-                <button id="submitToGoogleBtn" class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-md font-medium">提交至Google試算表</button>
+            <div class="flex justify-center mt-8">
+                <button id="submitToGoogleBtn" class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-md font-medium w-full max-w-xs">提交至Google試算表</button>
             </div>
         </div>
     </div>
@@ -221,231 +142,112 @@
     <script>
         // 客戶資料庫（模擬）
         const customerDatabase = {
-            'A001': {
-                name: '王小明',
-                address: '台北市信義區信義路100號',
-                expiry: '2025-12-31'
-            },
-            'A002': {
-                name: '李小華',
-                address: '台中市西屯區台灣大道200號',
-                expiry: '2025-10-15'
-            },
-            'B001': {
-                name: '張小美',
-                address: '高雄市前鎮區中山路300號',
-                expiry: '2025-08-20'
-            },
-            'B002': {
-                name: '陳小強',
-                address: '新北市板橋區文化路400號',
-                expiry: '2025-09-10'
-            }
+            'A001': { name: '王小明', address: '台北市信義區信義路100號', expiry: '2025-12-31' },
+            'A002': { name: '李小華', address: '台中市西屯區台灣大道200號', expiry: '2025-10-15' },
+            'B001': { name: '張小美', address: '高雄市前鎮區中山路300號', expiry: '2025-08-20' },
+            'B002': { name: '陳小強', address: '新北市板橋區文化路400號', expiry: '2025-09-10' }
         };
 
         // Google Apps Script Web App URL
         const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxlt2EHIr4rGPa9IKIOkuWjs-B-IhIMxfSxFLjuVisXcjqUYShu9d3a-QBGnKK18BGi/exec';
 
-        // 計算兩個日期之間的天數差
-        function daysBetween(date1, date2 ) {
-            const oneDay = 24 * 60 * 60 * 1000; // 一天的毫秒數
-            const firstDate = new Date(date1);
-            const secondDate = new Date(date2);
-            
-            return Math.round((secondDate - firstDate) / oneDay);
+        // --- Helper Functions (No changes needed here ) ---
+        function daysBetween(date1, date2) {
+            const oneDay = 24 * 60 * 60 * 1000;
+            return Math.round((new Date(date2) - new Date(date1)) / oneDay);
         }
-
-        // 增加天數到日期
-        function addDays(date, days) {
-            const result = new Date(date);
-            result.setDate(result.getDate() + parseInt(days));
-            return result;
-        }
-
-        // 增加月份和天數到日期
         function addMonthsAndDays(date, months, days) {
             const result = new Date(date);
             result.setMonth(result.getMonth() + months);
             result.setDate(result.getDate() + days);
             return result;
         }
-
-        // 格式化日期為 YYYY-MM-DD
         function formatDate(date) {
             const d = new Date(date);
             const month = String(d.getMonth() + 1).padStart(2, '0');
             const day = String(d.getDate()).padStart(2, '0');
             return `${d.getFullYear()}-${month}-${day}`;
         }
-
-        // 格式化日期為 YYYY/MM/DD
         function formatDateSlash(date) {
             const d = new Date(date);
             const month = String(d.getMonth() + 1).padStart(2, '0');
             const day = String(d.getDate()).padStart(2, '0');
             return `${d.getFullYear()}/${month}/${day}`;
         }
-
-        // 計算兩個日期之間的月份和天數差異
         function calculateMonthsAndDays(startDate, endDate) {
             const start = new Date(startDate);
             const end = new Date(endDate);
-            
             let years = end.getFullYear() - start.getFullYear();
             let months = end.getMonth() - start.getMonth();
             let days = end.getDate() - start.getDate();
-            
             if (days < 0) {
                 months--;
-                const lastDayOfPrevMonth = new Date(end.getFullYear(), end.getMonth(), 0).getDate();
-                days += lastDayOfPrevMonth;
+                days += new Date(end.getFullYear(), end.getMonth(), 0).getDate();
             }
-            
             if (months < 0) {
                 years--;
                 months += 12;
             }
-            
             months += years * 12;
-            
             return { months, days };
         }
-
-        // 將月份和天數轉換為顯示格式
         function formatMonthsAndDays(months, days) {
-            if (months > 0 && days > 0) {
-                return `${months}個月${days}日`;
-            } else if (months > 0) {
-                return `${months}個月`;
-            } else if (days > 0) {
-                return `${days}日`;
-            } else {
-                return '0日';
-            }
+            if (months > 0 && days > 0) return `${months}個月${days}日`;
+            if (months > 0) return `${months}個月`;
+            if (days > 0) return `${days}日`;
+            return '0日';
         }
 
-        // 查詢A客戶資料
-        document.getElementById('searchA').addEventListener('click', function() {
-            const customerId = document.getElementById('customerA_id').value;
-            if (!customerId) {
-                alert('請輸入客戶編號');
-                return;
-            }
-            
-            const customer = customerDatabase[customerId];
-            
-            if (customer) {
-                document.getElementById('customerA_name').value = customer.name;
-                document.getElementById('customerA_address').value = customer.address;
-                document.getElementById('customerA_expiry').value = customer.expiry;
-                
-                const today = new Date();
-                const expiryDate = new Date(customer.expiry);
-                const daysLeft = daysBetween(today, expiryDate);
-                document.getElementById('customerA_daysLeft').value = daysLeft + '天';
-                
-                document.getElementById('customerAStatus').classList.remove('hidden');
-                calculateTransferInfo();
-            } else {
-                alert('找不到此客戶資料');
-                document.getElementById('customerAStatus').classList.add('hidden');
-            }
-        });
-
-        // 查詢B客戶資料
-        document.getElementById('searchB').addEventListener('click', function() {
-            const customerId = document.getElementById('customerB_id').value;
-            if (!customerId) {
-                alert('請輸入客戶編號');
-                return;
-            }
-            
-            const customer = customerDatabase[customerId];
-            
-            if (customer) {
-                document.getElementById('customerB_name').value = customer.name;
-                document.getElementById('customerB_address').value = customer.address;
-                document.getElementById('customerB_currentExpiry').value = customer.expiry;
-                
-                document.getElementById('customerBStatus').classList.remove('hidden');
-                calculateTransferInfo();
-            } else {
-                alert('找不到此客戶資料');
-                document.getElementById('customerBStatus').classList.add('hidden');
-            }
-        });
-
-        // 計算轉移資訊
+        // --- Main Logic ---
         function calculateTransferInfo() {
             const transferDate = document.getElementById('transferDate').value;
             const customerAExpiry = document.getElementById('customerA_expiry').value;
             const customerBExpiry = document.getElementById('customerB_currentExpiry').value;
-            
-            if (!transferDate || !customerAExpiry || !customerBExpiry) {
-                return;
-            }
-            
+            if (!transferDate || !customerAExpiry || !customerBExpiry) return;
+
             if (new Date(transferDate) >= new Date(customerAExpiry)) {
                 document.getElementById('transferPeriod').value = '無效的轉移日期';
-                document.getElementById('transferDuration').value = '';
-                document.getElementById('transferDays').value = '';
-                document.getElementById('customerB_newExpiry').value = '';
+                ['transferDuration', 'transferDays', 'customerB_newExpiry'].forEach(id => document.getElementById(id).value = '');
                 return;
             }
             
-            const transferPeriod = `${formatDateSlash(transferDate)}~${formatDateSlash(customerAExpiry)}`;
-            document.getElementById('transferPeriod').value = transferPeriod;
-            
+            document.getElementById('transferPeriod').value = `${formatDateSlash(transferDate)}~${formatDateSlash(customerAExpiry)}`;
             const { months, days } = calculateMonthsAndDays(transferDate, customerAExpiry);
-            const transferDuration = formatMonthsAndDays(months, days);
-            document.getElementById('transferDuration').value = transferDuration;
-            
-            const totalDays = daysBetween(transferDate, customerAExpiry);
-            document.getElementById('transferDays').value = totalDays + '天';
-            
-            const newExpiryDate = addMonthsAndDays(new Date(customerBExpiry), months, days);
-            document.getElementById('customerB_newExpiry').value = formatDate(newExpiryDate);
+            document.getElementById('transferDuration').value = formatMonthsAndDays(months, days);
+            document.getElementById('transferDays').value = daysBetween(transferDate, customerAExpiry) + '天';
+            document.getElementById('customerB_newExpiry').value = formatDate(addMonthsAndDays(new Date(customerBExpiry), months, days));
         }
 
-        document.getElementById('calculateBtn').addEventListener('click', function() {
-            const transferDate = document.getElementById('transferDate').value;
-            const customerAExpiry = document.getElementById('customerA_expiry').value;
-            const customerBExpiry = document.getElementById('customerB_currentExpiry').value;
-            
-            if (!transferDate) {
-                alert('請選擇轉移日期');
+        function searchCustomer(type) {
+            const id = document.getElementById(`customer${type}_id`).value;
+            if (!id) {
+                alert('請輸入客戶編號');
                 return;
             }
-            if (!customerAExpiry) {
-                alert('請設定A客戶的使用期限');
-                return;
+            const customer = customerDatabase[id];
+            const statusEl = document.getElementById(`customer${type}Status`);
+            if (customer) {
+                document.getElementById(`customer${type}_name`).value = customer.name;
+                document.getElementById(`customer${type}_address`).value = customer.address;
+                const expiryId = type === 'A' ? 'customerA_expiry' : 'customerB_currentExpiry';
+                document.getElementById(expiryId).value = customer.expiry;
+                if (type === 'A') {
+                    document.getElementById('customerA_daysLeft').value = daysBetween(new Date(), customer.expiry) + '天';
+                }
+                statusEl.classList.remove('hidden');
+                calculateTransferInfo();
+            } else {
+                alert('找不到此客戶資料');
+                statusEl.classList.add('hidden');
             }
-            if (!customerBExpiry) {
-                alert('請設定B客戶的目前使用期限');
-                return;
-            }
-            calculateTransferInfo();
+        }
+
+        document.getElementById('searchA').addEventListener('click', () => searchCustomer('A'));
+        document.getElementById('searchB').addEventListener('click', () => searchCustomer('B'));
+        ['transferDate', 'customerA_expiry', 'customerB_currentExpiry'].forEach(id => {
+            document.getElementById(id).addEventListener('change', calculateTransferInfo);
         });
 
-        document.getElementById('transferDate').addEventListener('change', calculateTransferInfo);
-        document.getElementById('customerA_expiry').addEventListener('change', calculateTransferInfo);
-        document.getElementById('customerB_currentExpiry').addEventListener('change', calculateTransferInfo);
-
-        // 重置表單
-        document.getElementById('resetBtn').addEventListener('click', function() {
-            document.getElementById('inputForm').reset(); // 使用 form 的 reset 方法更簡單
-            // 重置狀態顯示和唯讀欄位
-            document.getElementById('customerAStatus').classList.add('hidden');
-            document.getElementById('customerBStatus').classList.add('hidden');
-            document.getElementById('customerA_daysLeft').value = '';
-            document.getElementById('customerB_newExpiry').value = '';
-            document.getElementById('transferPeriod').value = '';
-            document.getElementById('transferDuration').value = '';
-            document.getElementById('transferDays').value = '';
-            document.getElementById('transferDate').value = formatDate(new Date());
-        });
-
-        // 從網頁表單收集所有資料
         function collectFormData() {
             return {
                 '客編': document.getElementById('customerA_id').value || '',
@@ -462,62 +264,32 @@
             };
         }
 
-        // 顯示訊息
         function showMessage(message, type = 'info') {
             const messageDiv = document.createElement('div');
             messageDiv.textContent = message;
-            messageDiv.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                padding: 15px 20px;
-                border-radius: 5px;
-                color: white;
-                font-weight: bold;
-                z-index: 10000;
-                max-width: 300px;
-                word-wrap: break-word;
-                ${type === 'success' ? 'background-color: #4CAF50;' : 
-                  type === 'error' ? 'background-color: #f44336;' : 
-                  'background-color: #2196F3;'}
-            `;
-            
+            messageDiv.style.cssText = `position: fixed; top: 20px; right: 20px; padding: 15px 20px; border-radius: 5px; color: white; font-weight: bold; z-index: 10000; max-width: 300px; word-wrap: break-word; background-color: ${type === 'success' ? '#4CAF50' : type === 'error' ? '#f44336' : '#2196F3'};`;
             document.body.appendChild(messageDiv);
-            
-            setTimeout(() => {
-                if (messageDiv.parentNode) {
-                    messageDiv.parentNode.removeChild(messageDiv);
-                }
-            }, 3000);
+            setTimeout(() => messageDiv.parentNode && messageDiv.parentNode.removeChild(messageDiv), 3000);
         }
 
-        // 【新增】實際發送資料到 Google Apps Script 的函式
         async function sendDataToGoogleAppsScript(data) {
             const response = await fetch(WEB_APP_URL, {
                 method: 'POST',
                 mode: 'cors',
                 cache: 'no-cache',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(data)
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data),
+                redirect: 'follow' // 處理重新導向
             });
-            
-            if (!response.ok) {
-                throw new Error(`網路錯誤: ${response.statusText}`);
-            }
-            
+            if (!response.ok) throw new Error(`網路錯誤: ${response.statusText}`);
             return await response.json();
         }
 
-        // 提交表單資料到Google Apps Script
         async function submitFormDataToGoogleAppsScript() {
             const loadingOverlay = document.getElementById('loadingOverlay');
             try {
                 loadingOverlay.style.display = 'flex';
-                
                 const formData = collectFormData();
-                
                 if (!formData['客編'] && !formData['姓名']) {
                     showMessage('請至少填入A客戶的客編或姓名', 'error');
                     return;
@@ -526,15 +298,12 @@
                     showMessage('請填寫經辦人', 'error');
                     return;
                 }
-                
                 const result = await sendDataToGoogleAppsScript(formData);
-                
                 if (result.success) {
                     showMessage('資料已成功提交到 Google 試算表！', 'success');
                 } else {
                     showMessage('提交失敗：' + (result.message || '未知錯誤'), 'error');
                 }
-                
             } catch (error) {
                 showMessage('提交失敗：' + error.message, 'error');
             } finally {
@@ -542,16 +311,12 @@
             }
         }
 
-        // 提交至Google試算表按鈕事件
         document.getElementById('submitToGoogleBtn').addEventListener('click', submitFormDataToGoogleAppsScript);
-
-        // 設置今天日期為轉移日期的預設值
         document.getElementById('transferDate').value = formatDate(new Date());
-
-        // 移除您提供的 Google Apps Script 程式碼，因為它屬於後端，不應存在於前端 HTML 中。
     </script>
 </body>
 </html>
+
 
 
 
