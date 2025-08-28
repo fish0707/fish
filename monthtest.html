@@ -162,7 +162,7 @@
     const customerDatabase = {
       'A001': { name: '王小明', address: '台北市信義區信義路100號', expiry: '2025-12-31' },
       'A002': { name: '李小華', address: '台中市西屯區台灣大道200號', expiry: '2025-10-15' },
-      'B001': { name: '張小美', address: '高雄市前鎮區中山路300號', expiry: '2025-08-20' },
+      'B001': { name: '張小美', address: '高雄市前鎮區中山路300號', expiry: '2025-11-06' },
       'B002': { name: '陳小強', address: '新北市板橋區文化路400號', expiry: '2025-09-10' }
     };
 
@@ -171,15 +171,40 @@
     function addMonthsAndDays(date, months, days){const r=new Date(date);r.setMonth(r.getMonth()+months);r.setDate(r.getDate()+days);return r;}
     function formatDate(date){const d=new Date(date);const m=String(d.getMonth()+1).padStart(2,'0');const day=String(d.getDate()).padStart(2,'0');return `${d.getFullYear()}-${m}-${day}`;}
     function formatDateSlash(date){const d=new Date(date);const m=String(d.getMonth()+1).padStart(2,'0');const day=String(d.getDate()).padStart(2,'0');return `${d.getFullYear()}/${m}/${day}`;}
-    function calculateMonthsAndDays(startDate,endDate){
-      const s=new Date(startDate), e=new Date(endDate);
-      let years=e.getFullYear()-s.getFullYear(), months=e.getMonth()-s.getMonth(), days=e.getDate()-s.getDate();
-      if(days<0){months--;days+=new Date(e.getFullYear(),e.getMonth(),0).getDate();}
-      if(months<0){years--;months+=12;}
-      months+=years*12;
-      return {months,days};
-    }
     function formatMonthsAndDays(m,d){if(m>0&&d>0)return `${m}個月${d}日`; if(m>0)return `${m}個月`; if(d>0)return `${d}日`; return '0日';}
+
+    // === 30/360（銀行/會計）月份分解：每月固定 30 天 ===
+    // 規則（近似美式 NASD）：
+    // - 若起日為該月最後一天（含 31 號 / 2 月最後一天），視為 30 號
+    // - 若迄日為 31 號且起日為 30（或視為 30），則迄日也視為 30
+    function isEndOfFeb(d){return d.getMonth()===1 && d.getDate()===new Date(d.getFullYear(),2,0).getDate();}
+    function adjustDay30(d, isStart){
+      let day=d.getDate();
+      // 起日若為 31 或 2 月底 → 30
+      if(isStart && (day===31 || isEndOfFeb(d))) return 30;
+      // 迄日若為 31，後面在主流程依起日再判斷
+      return Math.min(day,31);
+    }
+    function calculateMonthsAndDays360(startDate, endDate){
+      const s=new Date(startDate), e=new Date(endDate);
+      if (isNaN(s) || isNaN(e) || e < s) return {months:0, days:0, totalDays360:0};
+
+      let d1 = adjustDay30(s, true);
+      let d2 = adjustDay30(e, false);
+
+      // 若迄日為 31 且（起日為 30 或 31/2月視為30），則把迄日視為 30
+      if (d2===31 && (d1===30)) d2 = 30;
+      // 同時也將迄日>30 壓為 30
+      if (d2>30) d2 = 30;
+
+      const monthsBase = (e.getFullYear()-s.getFullYear())*12 + (e.getMonth()-s.getMonth());
+      let total = monthsBase*30 + (d2 - d1);   // 30/360 總「30天制」日數
+      if (total < 0){ return {months:0, days:0, totalDays360:0}; }
+
+      const months = Math.floor(total/30);
+      const days   = total % 30;
+      return { months, days, totalDays360: total };
+    }
 
     // ====== 主要邏輯 ======
     function calculateTransferInfo(){
@@ -194,11 +219,18 @@
         return;
       }
 
+      // 區間顯示
       document.getElementById('transferPeriod').value = `${formatDateSlash(transferDate)}~${formatDateSlash(aExp)}`;
-      const {months,days}=calculateMonthsAndDays(transferDate,aExp);
-      document.getElementById('transferDuration').value = formatMonthsAndDays(months,days);
-      document.getElementById('transferDays').value = daysBetween(transferDate,aExp)+'天';
-      document.getElementById('customerB_newExpiry').value = formatDate(addMonthsAndDays(new Date(bExp),months,days));
+
+      // 用 30/360 計算「幾個月幾日」
+      const {months, days, totalDays360} = calculateMonthsAndDays360(transferDate, aExp);
+      document.getElementById('transferDuration').value = formatMonthsAndDays(months, days);
+
+      // 轉移天數（維持「實際日數」顯示，若你想也用 30/360，可改成 totalDays360+'天'）
+      document.getElementById('transferDays').value = daysBetween(transferDate, aExp) + '天';
+
+      // B 客戶新到期日：沿用原本「曆法加法」的方式（加 X 個月 Y 天）
+      document.getElementById('customerB_newExpiry').value = formatDate(addMonthsAndDays(new Date(bExp), months, days));
     }
 
     function searchCustomer(type){
@@ -254,7 +286,6 @@
     }
 
     async function sendData(data){
-      // 先嘗試 CORS，失敗再 fallback 為 no-cors（無法讀回應，但可送達）
       try{
         const resp = await fetch(WEB_APP_URL,{
           method:'POST',
@@ -266,14 +297,12 @@
         if(!resp.ok) throw new Error(`HTTP ${resp.status}`);
         return await resp.json();
       }catch(err){
-        // fallback：no-cors（opaque）
         await fetch(WEB_APP_URL,{
           method:'POST',
           mode:'no-cors',
           headers:{'Content-Type':'application/json'},
           body:JSON.stringify(data)
         });
-        // 回不來回應，只提示已送出
         return {success:true,message:'已送出（no-cors）'};
       }
     }
@@ -305,6 +334,7 @@
   </script>
 </body>
 </html>
+
 
 
 
