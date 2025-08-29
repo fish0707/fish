@@ -6,9 +6,14 @@
     <title>會辦退費申請表單</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&display=swap' );
         body {
             font-family: 'Noto Sans TC', sans-serif;
+        }
+        /* 讓按鈕在禁用時有不同樣式 */
+        button:disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
         }
     </style>
 </head>
@@ -21,22 +26,22 @@
         </div>
 
         <!-- 主表單 -->
-        <form class="bg-white rounded-lg shadow-lg p-8 space-y-8">
+        <form id="refundForm" class="bg-white rounded-lg shadow-lg p-8 space-y-8">
             <!-- 基本資訊區塊 -->
             <div class="border-l-4 border-blue-500 pl-4">
                 <h2 class="text-xl font-semibold text-gray-800 mb-6">基本資訊</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">填寫日期</label>
-                        <input type="date" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <label for="fillDate" class="block text-sm font-medium text-gray-700 mb-2">填寫日期</label>
+                        <input type="date" id="fillDate" name="fillDate" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" required>
                     </div>
                     <div class="lg:col-span-2">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">會辦主旨</label>
-                        <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="請輸入會辦主旨">
+                        <label for="subject" class="block text-sm font-medium text-gray-700 mb-2">會辦主旨</label>
+                        <input type="text" id="subject" name="subject" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="請輸入會辦主旨">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">繳費方式</label>
-                        <select class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <label for="paymentMethod" class="block text-sm font-medium text-gray-700 mb-2">繳費方式</label>
+                        <select id="paymentMethod" name="paymentMethod" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                             <option value="">請選擇繳費方式</option>
                             <option value="credit">信用卡</option>
                             <option value="transfer">轉帳</option>
@@ -45,12 +50,12 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">區域</label>
-                        <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="請輸入區域">
+                        <label for="region" class="block text-sm font-medium text-gray-700 mb-2">區域</label>
+                        <input type="text" id="region" name="region" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="請輸入區域">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">社區名稱</label>
-                        <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="請輸入社區名稱">
+                        <label for="communityName" class="block text-sm font-medium text-gray-700 mb-2">社區名稱</label>
+                        <input type="text" id="communityName" name="communityName" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="請輸入社區名稱">
                     </div>
                 </div>
             </div>
@@ -60,28 +65,28 @@
                 <h2 class="text-xl font-semibold text-gray-800 mb-6">客戶資訊</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">客戶編號</label>
-                        <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent" placeholder="請輸入客戶編號">
+                        <label for="customerNumber" class="block text-sm font-medium text-gray-700 mb-2">客戶編號</label>
+                        <input type="text" id="customerNumber" name="customerNumber" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent" placeholder="請輸入客戶編號">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">姓名</label>
-                        <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent" placeholder="請輸入姓名">
+                        <label for="customerName" class="block text-sm font-medium text-gray-700 mb-2">姓名</label>
+                        <input type="text" id="customerName" name="customerName" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent" placeholder="請輸入姓名">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">電話</label>
-                        <input type="tel" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent" placeholder="請輸入電話號碼">
+                        <label for="customerPhone" class="block text-sm font-medium text-gray-700 mb-2">電話</label>
+                        <input type="tel" id="customerPhone" name="customerPhone" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent" placeholder="請輸入電話號碼">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">手機</label>
-                        <input type="tel" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent" placeholder="請輸入手機號碼">
+                        <label for="customerMobile" class="block text-sm font-medium text-gray-700 mb-2">手機</label>
+                        <input type="tel" id="customerMobile" name="customerMobile" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent" placeholder="請輸入手機號碼">
                     </div>
                     <div class="lg:col-span-2">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">地址</label>
-                        <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent" placeholder="請輸入完整地址">
+                        <label for="customerAddress" class="block text-sm font-medium text-gray-700 mb-2">地址</label>
+                        <input type="text" id="customerAddress" name="customerAddress" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent" placeholder="請輸入完整地址">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">所屬業務</label>
-                        <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent" placeholder="請輸入業務員姓名">
+                        <label for="salesperson" class="block text-sm font-medium text-gray-700 mb-2">所屬業務</label>
+                        <input type="text" id="salesperson" name="salesperson" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent" placeholder="請輸入業務員姓名">
                     </div>
                 </div>
             </div>
@@ -91,16 +96,16 @@
                 <h2 class="text-xl font-semibold text-gray-800 mb-6">發票資訊</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">字軌</label>
-                        <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="請輸入字軌">
+                        <label for="invoicePrefix" class="block text-sm font-medium text-gray-700 mb-2">字軌</label>
+                        <input type="text" id="invoicePrefix" name="invoicePrefix" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="請輸入字軌">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">發票號碼</label>
-                        <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="請輸入發票號碼">
+                        <label for="invoiceNumber" class="block text-sm font-medium text-gray-700 mb-2">發票號碼</label>
+                        <input type="text" id="invoiceNumber" name="invoiceNumber" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="請輸入發票號碼">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">發票型態</label>
-                        <select class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                        <label for="invoiceType" class="block text-sm font-medium text-gray-700 mb-2">發票型態</label>
+                        <select id="invoiceType" name="invoiceType" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent">
                             <option value="">請選擇發票型態</option>
                             <option value="二聯式">二聯式</option>
                             <option value="三聯式">三聯式</option>
@@ -108,25 +113,25 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">三聯式抬頭</label>
-                        <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="請輸入抬頭">
+                        <label for="invoiceTitle" class="block text-sm font-medium text-gray-700 mb-2">三聯式抬頭</label>
+                        <input type="text" id="invoiceTitle" name="invoiceTitle" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="請輸入抬頭">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">統編</label>
-                        <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="請輸入統一編號">
+                        <label for="taxId" class="block text-sm font-medium text-gray-700 mb-2">統編</label>
+                        <input type="text" id="taxId" name="taxId" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="請輸入統一編號">
                     </div>
                     <div class="grid grid-cols-3 gap-2">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">年</label>
-                            <input type="number" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="2024" min="2020" max="2030">
+                            <label for="invoiceYear" class="block text-sm font-medium text-gray-700 mb-2">年</label>
+                            <input type="number" id="invoiceYear" name="invoiceYear" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="2024" min="2020" max="2030">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">月</label>
-                            <input type="number" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="12" min="1" max="12">
+                            <label for="invoiceMonth" class="block text-sm font-medium text-gray-700 mb-2">月</label>
+                            <input type="number" id="invoiceMonth" name="invoiceMonth" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="12" min="1" max="12">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">日</label>
-                            <input type="number" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="31" min="1" max="31">
+                            <label for="invoiceDay" class="block text-sm font-medium text-gray-700 mb-2">日</label>
+                            <input type="number" id="invoiceDay" name="invoiceDay" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="31" min="1" max="31">
                         </div>
                     </div>
                 </div>
@@ -137,28 +142,28 @@
                 <h2 class="text-xl font-semibold text-gray-800 mb-6">金額資訊</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">發票金額</label>
-                        <input type="number" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent" placeholder="0" min="0" step="0.01">
+                        <label for="invoiceAmount" class="block text-sm font-medium text-gray-700 mb-2">發票金額</label>
+                        <input type="number" id="invoiceAmount" name="invoiceAmount" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent" placeholder="0" min="0" step="0.01">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">退費金額</label>
-                        <input type="number" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent" placeholder="0" min="0" step="0.01">
+                        <label for="refundAmount" class="block text-sm font-medium text-gray-700 mb-2">退費金額</label>
+                        <input type="number" id="refundAmount" name="refundAmount" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent" placeholder="0" min="0" step="0.01">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">總金額</label>
-                        <input type="number" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-gray-50" placeholder="0" readonly>
+                        <label for="totalAmount" class="block text-sm font-medium text-gray-700 mb-2">總金額</label>
+                        <input type="number" id="totalAmount" name="totalAmount" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-gray-50" placeholder="0" readonly>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">卡號後四碼</label>
-                        <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent" placeholder="****" maxlength="4">
+                        <label for="cardLastFour" class="block text-sm font-medium text-gray-700 mb-2">卡號後四碼</label>
+                        <input type="text" id="cardLastFour" name="cardLastFour" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent" placeholder="****" maxlength="4">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">授權碼</label>
-                        <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent" placeholder="請輸入授權碼">
+                        <label for="authCode" class="block text-sm font-medium text-gray-700 mb-2">授權碼</label>
+                        <input type="text" id="authCode" name="authCode" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent" placeholder="請輸入授權碼">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">退費類別</label>
-                        <select class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent">
+                        <label for="refundType" class="block text-sm font-medium text-gray-700 mb-2">退費類別</label>
+                        <select id="refundType" name="refundType" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent">
                             <option value="">請選擇退費類別</option>
                             <option value="全額退費">全額退費</option>
                             <option value="部分退費">部分退費</option>
@@ -173,12 +178,12 @@
                 <h2 class="text-xl font-semibold text-gray-800 mb-6">詳細資訊</h2>
                 <div class="space-y-6">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">會辦明細</label>
-                        <textarea class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent" rows="4" placeholder="請詳細說明會辦內容及退費原因"></textarea>
+                        <label for="details" class="block text-sm font-medium text-gray-700 mb-2">會辦明細</label>
+                        <textarea id="details" name="details" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent" rows="4" placeholder="請詳細說明會辦內容及退費原因"></textarea>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">製單</label>
-                        <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent" placeholder="製單人員姓名">
+                        <label for="clerk" class="block text-sm font-medium text-gray-700 mb-2">製單</label>
+                        <input type="text" id="clerk" name="clerk" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent" placeholder="製單人員姓名">
                     </div>
                 </div>
             </div>
@@ -195,31 +200,77 @@
     <script>
         // 自動計算總金額
         function calculateTotal() {
-            const invoiceAmount = parseFloat(document.querySelector('input[placeholder="0"]:nth-of-type(1)').value) || 0;
-            const refundAmount = parseFloat(document.querySelector('input[placeholder="0"]:nth-of-type(2)').value) || 0;
+            const invoiceAmount = parseFloat(document.getElementById('invoiceAmount').value) || 0;
+            const refundAmount = parseFloat(document.getElementById('refundAmount').value) || 0;
             const totalAmount = invoiceAmount - refundAmount;
-            document.querySelector('input[readonly]').value = totalAmount.toFixed(2);
+            document.getElementById('totalAmount').value = totalAmount.toFixed(2);
         }
 
-        // 監聽金額變化
         document.addEventListener('DOMContentLoaded', function() {
-            const invoiceInput = document.querySelector('input[placeholder="0"]:nth-of-type(1)');
-            const refundInput = document.querySelector('input[placeholder="0"]:nth-of-type(2)');
+            const invoiceInput = document.getElementById('invoiceAmount');
+            const refundInput = document.getElementById('refundAmount');
             
             invoiceInput.addEventListener('input', calculateTotal);
             refundInput.addEventListener('input', calculateTotal);
 
-            // 表單提交處理
-            document.querySelector('form').addEventListener('submit', function(e) {
-                e.preventDefault();
-                alert('表單已提交！這是一個示範頁面，實際應用中會將資料傳送到後端處理。');
+            // 卡號後四碼只允許數字
+            document.getElementById('cardLastFour').addEventListener('input', function(e) {
+                e.target.value = e.target.value.replace(/\D/g, '');
             });
 
-            // 卡號後四碼只允許數字
-            document.querySelector('input[placeholder="****"]').addEventListener('input', function(e) {
-                e.target.value = e.target.value.replace(/\D/g, '');
+            // 表單提交處理
+            const form = document.getElementById('refundForm');
+            form.addEventListener('submit', function(e) {
+                e.preventDefault(); // 防止頁面重新整理
+
+                const submitButton = form.querySelector('button[type="submit"]');
+                const originalButtonText = submitButton.innerHTML;
+
+                // 禁用按鈕並顯示處理中
+                submitButton.disabled = true;
+                submitButton.innerHTML = '處理中...';
+
+                // 1. 收集表單資料
+                const formData = new FormData(form);
+                const data = Object.fromEntries(formData.entries());
+
+                // 2. 您的 Web App 網址
+                const webAppUrl = '在這裡貼上您從 Google Apps Script 複製的網址';
+
+                // 3. 使用 fetch 將資料發送到後端
+                fetch(webAppUrl, {
+                    method: 'POST',
+                    // Google Apps Script 的 doPost 函數需要特殊的處理方式
+                    // 我們不能直接發送 application/json
+                    // 而是發送 text/plain，並在後端手動解析
+                    body: JSON.stringify(data),
+                    headers: {
+                        'Content-Type': 'text/plain;charset=utf-8',
+                    },
+                })
+                .then(response => response.json()) // 解析後端回傳的 JSON
+                .then(result => {
+                    if (result.success) {
+                        alert('申請已成功提交！');
+                        form.reset(); // 清空表單
+                        calculateTotal(); // 重置總金額
+                    } else {
+                        console.error('後端處理失敗:', result.error);
+                        alert('提交失敗，後端發生錯誤，請聯絡管理員。\n錯誤訊息: ' + result.error);
+                    }
+                })
+                .catch(error => {
+                    console.error('提交請求失敗:', error);
+                    alert('提交失敗，請檢查網路連線或 Web App 網址是否正確。');
+                })
+                .finally(() => {
+                    // 無論成功或失敗，都恢復按鈕狀態
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = originalButtonText;
+                });
             });
         });
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'970db86eb616f1c8',t:'MTc1NTQ4MTQwOC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</body>
 </html>
+
