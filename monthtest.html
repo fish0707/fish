@@ -197,26 +197,7 @@
     function formatDateSlash(date){const d=new Date(date);const m=String(d.getMonth()+1).padStart(2,'0');const day=String(d.getDate()).padStart(2,'0');return `${d.getFullYear()}/${m}/${day}`;}
     function formatMonthsAndDays(m,d){if(m>0&&d>0)return `${m}個月${d}日`; if(m>0)return `${m}個月`; if(d>0)return `${d}日`; return '0日';}
 
-    // === 30/360 月份分解 ===
-    function isEndOfFeb(d){return d.getMonth()===1 && d.getDate()===new Date(d.getFullYear(),2,0).getDate();}
-    function adjustDay30(d, isStart){
-      let day=d.getDate();
-      if(isStart && (day===31 || isEndOfFeb(d))) return 30;
-      return Math.min(day,31);
-    }
-    function calculateMonthsAndDays360(startDate, endDate){
-      const s=new Date(startDate), e=new Date(endDate);
-      if (isNaN(s) || isNaN(e) || e < s) return {months:0, days:0, totalDays360:0};
-      let d1 = adjustDay30(s, true);
-      let d2 = adjustDay30(e, false);
-      if (d2===31 && (d1===30)) d2 = 30;
-      if (d2>30) d2 = 30;
-      const monthsBase = (e.getFullYear()-s.getFullYear())*12 + (e.getMonth()-s.getMonth());
-      const total = monthsBase*30 + (d2 - d1);
-      const months = Math.floor(total/30);
-      const days   = total % 30;
-      return { months, days, totalDays360: total };
-    }
+  
 
     // ====== A 客編尾碼處理 ======
     let baseAId = ''; // 不含 * 或 ^ 的原始客編
