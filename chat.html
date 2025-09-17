@@ -1,127 +1,162 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>客服訓練聊天室</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      background-color: #f4f4f4;
-    }
-    .chat-container {
-      width: 90%;
-      max-width: 600px;
-      background-color: #fff;
-      border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
-    .chat-box {
-      flex-grow: 1;
-      padding: 20px;
-      overflow-y: auto;
-      border-bottom: 1px solid #eee;
-    }
-    .message { margin-bottom: 10px; }
-    .user-message { text-align: right; }
-    .ai-message { text-align: left; }
-    .user-message p, .ai-message p {
-      display: inline-block;
-      padding: 10px 15px;
-      border-radius: 20px;
-      max-width: 80%;
-      word-wrap: break-word;
-    }
-    .user-message p { background-color: #007bff; color: #fff; }
-    .ai-message p { background-color: #e9e9eb; color: #333; }
-    .input-box {
-      display: flex;
-      padding: 10px;
-      border-top: 1px solid #eee;
-    }
-    .input-box input {
-      flex-grow: 1;
-      padding: 10px;
-      border: 1px solid #ddd;
-      border-radius: 20px;
-      outline: none;
-    }
-    .input-box button {
-      background-color: #007bff;
-      color: #fff;
-      border: none;
-      padding: 10px 15px;
-      border-radius: 20px;
-      margin-left: 10px;
-      cursor: pointer;
-    }
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>客服訓練聊天室（AI 扮演客戶）</title>
+<style>
+  body{font-family:Arial, sans-serif;background:#f4f4f4;display:flex;justify-content:center;padding:20px}
+  .card{width:720px;background:#fff;border-radius:8px;box-shadow:0 6px 20px rgba(0,0,0,.08);overflow:hidden}
+  .header{padding:16px;border-bottom:1px solid #eee;display:flex;justify-content:space-between;align-items:center}
+  .chat-box{height:480px;overflow:auto;padding:20px}
+  .message{margin-bottom:12px}
+  .trainer{ text-align:right }
+  .customer{ text-align:left }
+  .trainer p{display:inline-block;background:#0b84ff;color:#fff;padding:10px 14px;border-radius:18px;max-width:70%}
+  .customer p{display:inline-block;background:#eee;color:#222;padding:10px 14px;border-radius:18px;max-width:70%}
+  .input-row{display:flex;padding:12px;border-top:1px solid #eee}
+  input[type="text"]{flex:1;padding:10px;border-radius:20px;border:1px solid #ddd;margin-right:10px}
+  button{background:#0b84ff;color:#fff;padding:8px 14px;border:none;border-radius:18px;cursor:pointer}
+  .scenario{font-size:14px;color:#333}
+</style>
 </head>
 <body>
-  <div class="chat-container">
-    <div class="chat-box" id="chat-box"></div>
-    <div class="input-box">
-      <input type="text" id="user-input" placeholder="輸入你的訊息...">
-      <button onclick="sendMessage()">發送</button>
+
+<div class="card">
+  <div class="header">
+    <div>
+      <strong>客服訓練（AI = 客戶）</strong><br>
+      <span class="scenario" id="scenarioLabel">尚未開始</span>
+    </div>
+    <div>
+      <button id="startBtn">開始考試</button>
     </div>
   </div>
 
-  <script>
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbz2ijZszQ8fVKNzCTAJU5TMGU3Urv0iMfa3yTrBJauNhdvx_GhQZa66aNy7cmLwbEtC-A/exec"; // 換成你的 GAS exec URL
+  <div class="chat-box" id="chatBox"></div>
 
-    function addMessage(text, sender) {
-      const chatBox = document.getElementById("chat-box");
-      const messageDiv = document.createElement("div");
-      messageDiv.classList.add("message", sender + "-message");
-      messageDiv.innerHTML = `<p>${text}</p>`;
-      chatBox.appendChild(messageDiv);
-      chatBox.scrollTop = chatBox.scrollHeight;
-    }
+  <div class="input-row">
+    <input type="text" id="userInput" placeholder="輸入你的回覆（你扮演客服）..." />
+    <button id="sendBtn">發送</button>
+  </div>
+</div>
 
- async function sendMessage() {
-  const input = document.getElementById("user-input");
-  const text = input.value.trim();
-  if (!text) return;
+<script>
+const GAS_URL = "https://script.google.com/macros/s/AKfycbz2ijZszQ8fVKNzCTAJU5TMGU3Urv0iMfa3yTrBJauNhdvx_GhQZa66aNy7cmLwbEtC-A/exec"; // <- 換成你的 GAS /exec URL
+let scenarioIndex = null;
+let scenarioText = "";
+// conversation 以陣列保存，元素格式：{ sender: "trainer"|"customer", text: "..." }
+let conversation = [];
 
-  addMessage(text, "user");
-  input.value = "";
+const chatBox = document.getElementById("chatBox");
+const scenarioLabel = document.getElementById("scenarioLabel");
 
-  addMessage("正在思考中...", "ai");
+function addBubble(sender, text) {
+  const div = document.createElement("div");
+  div.className = "message " + (sender === "trainer" ? "trainer": "customer");
+  const p = document.createElement("p");
+  p.textContent = text;
+  div.appendChild(p);
+  chatBox.appendChild(div);
+  chatBox.scrollTop = chatBox.scrollHeight;
+}
 
+async function startTest() {
+  // 清除舊對話
+  conversation = [];
+  chatBox.innerHTML = "";
+  scenarioLabel.textContent = "抽題中...";
   try {
-    const formData = new FormData();
-    formData.append("message", text);
-
-    const res = await fetch(GAS_URL, {
-      method: "POST",
-      body: formData
-    });
-
+    const res = await fetch(GAS_URL + "?action=start");
     const data = await res.json();
+    if (!data || !data.ok) {
+      scenarioLabel.textContent = "抽題失敗";
+      return;
+    }
+    scenarioIndex = data.scenarioIndex;
+    scenarioText = data.scenario;
+    scenarioLabel.textContent = `情境 ${scenarioIndex}：` + (scenarioText.length > 80 ? scenarioText.slice(0,80) + "..." : scenarioText);
 
-    const chatBox = document.getElementById("chat-box");
-    chatBox.lastChild.remove();
+    // 顯示情境（可視化）
+    addBubble("customer", "【系統情境】 " + scenarioText);
 
-    addMessage(data.reply, "ai");
+    // 顯示初始客戶開場
+    const initial = data.initialCustomer || "您好，我想請問關於網路的事...";
+    conversation.push({ sender: "customer", text: initial });
+    addBubble("customer", initial);
+
   } catch (err) {
-    const chatBox = document.getElementById("chat-box");
-    chatBox.lastChild.remove();
-    addMessage("❌ 出錯了：" + err.message, "ai");
+    scenarioLabel.textContent = "抽題錯誤";
+    console.error(err);
   }
 }
 
-  </script>
+document.getElementById("startBtn").addEventListener("click", startTest);
+
+document.getElementById("sendBtn").addEventListener("click", sendMessage);
+document.getElementById("userInput").addEventListener("keydown", (e) => { if (e.key === "Enter") sendMessage(); });
+
+async function sendMessage() {
+  const input = document.getElementById("userInput");
+  const text = input.value.trim();
+  if (!text) return;
+  // 你（學員/客服）的發言
+  conversation.push({ sender: "trainer", text: text });
+  addBubble("trainer", text);
+  input.value = "";
+
+  // 顯示等待訊息（客戶正在回覆）
+  addBubble("customer", "正在思考中...");
+
+  // 將 conversation 與 scenarioIndex 傳給後端，後端會回傳 AI（客戶）下一句
+  try {
+    const payload = { conversation: conversation, scenarioIndex: scenarioIndex };
+    const res = await fetch(GAS_URL, {
+      method: "POST",
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+
+    // 移除剛剛的「正在思考中...」
+    // 找最後一個為 customer + "正在思考中..."，移除
+    for (let i = chatBox.children.length - 1; i >= 0; i--) {
+      const el = chatBox.children[i];
+      if (el.classList.contains("customer") && el.textContent === "正在思考中...") {
+        el.remove();
+        break;
+      }
+    }
+
+    const reply = data.reply || "（無回覆）";
+    // 把 AI（客戶）的回覆加入 conversation（以 customer 身分）
+    conversation.push({ sender: "customer", text: reply });
+    addBubble("customer", reply);
+
+    // optional: 更新情境 label（若後端回傳 scenario）
+    if (data.scenario) {
+      scenarioText = data.scenario;
+      scenarioLabel.textContent = `情境 ${data.scenarioIndex}：` + (scenarioText.length > 80 ? scenarioText.slice(0,80) + "..." : scenarioText);
+    }
+
+  } catch (err) {
+    // 移除「正在思考中...」
+    for (let i = chatBox.children.length - 1; i >= 0; i--) {
+      const el = chatBox.children[i];
+      if (el.classList.contains("customer") && el.textContent === "正在思考中...") {
+        el.remove();
+        break;
+      }
+    }
+    addBubble("customer", "❌ 出錯了：" + err.message);
+    console.error(err);
+  }
+}
+</script>
+
 </body>
 </html>
+
 
 
 
