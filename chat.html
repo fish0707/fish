@@ -80,13 +80,61 @@
 </head>
 <body>
     <div class="chat-container">
-        <div class="chat-box" id="chat-box">
-            </div>
+        <div class="chat-box" id="chat-box"></div>
         <div class="input-box">
             <input type="text" id="user-input" placeholder="輸入你的訊息...">
             <button onclick="sendMessage()">發送</button>
         </div>
     </div>
-    <script src="script.js"></script>
+
+    <script>
+        // 🔹 你的 Google Apps Script Web App URL
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz2ijZszQ8fVKNzCTAJU5TMGU3Urv0iMfa3yTrBJauNhdvx_GhQZa66aNy7cmLwbEtC-A/exec";
+
+        // 發送訊息
+        async function sendMessage() {
+            const input = document.getElementById("user-input");
+            const message = input.value.trim();
+            if (!message) return;
+
+            // 顯示使用者訊息
+            appendMessage("user", message);
+            input.value = "";
+
+            // 顯示 AI 正在思考中...
+            appendMessage("ai", "正在思考中...");
+
+            try {
+                const response = await fetch(WEB_APP_URL, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ message })
+                });
+
+                const data = await response.json();
+
+                // 移除最後一條 "正在思考中..."
+                const chatBox = document.getElementById("chat-box");
+                chatBox.lastChild.remove();
+
+                // 顯示 AI 回覆
+                appendMessage("ai", data.reply || "（AI 沒有回應）");
+            } catch (err) {
+                console.error(err);
+                appendMessage("ai", "❌ 出錯了，請稍後再試。");
+            }
+        }
+
+        // 在聊天框中加入訊息
+        function appendMessage(sender, text) {
+            const chatBox = document.getElementById("chat-box");
+            const messageDiv = document.createElement("div");
+            messageDiv.classList.add("message", sender === "user" ? "user-message" : "ai-message");
+            messageDiv.innerHTML = `<p>${text}</p>`;
+            chatBox.appendChild(messageDiv);
+            chatBox.scrollTop = chatBox.scrollHeight; // 自動捲到底
+        }
+    </script>
 </body>
 </html>
+
