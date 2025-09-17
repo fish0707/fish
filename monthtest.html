@@ -263,27 +263,57 @@
     chkBSpecial.addEventListener('change', applyBIdDecoration);
 
     // ====== 主要邏輯 ======
-    function calculateTransferInfo(){
-      const transferDate=document.getElementById('transferDate').value;
-      const aExp=document.getElementById('customerA_expiry').value;
-      const bExp=document.getElementById('customerB_currentExpiry').value;
-      if(!transferDate||!aExp||!bExp) return;
+// === 30/360 (EU) 計算函式 ===
+function calculateMonthsAndDays360(startDate, endDate) {
+  const s = new Date(startDate);
+  const e = new Date(endDate);
 
-      if(new Date(transferDate)>=new Date(aExp)){
-        document.getElementById('transferPeriod').value='無效的轉移日期';
-        ['transferDuration','transferDays','customerB_newExpiry'].forEach(id=>document.getElementById(id).value='');
-        return;
-      }
+  if (isNaN(s) || isNaN(e) || e < s) {
+    return { months: 0, days: 0, totalDays360: 0 };
+  }
 
-      document.getElementById('transferPeriod').value = `${formatDateSlash(transferDate)}~${formatDateSlash(aExp)}`;
+  let sY = s.getFullYear(), sM = s.getMonth() + 1, sD = s.getDate();
+  let eY = e.getFullYear(), eM = e.getMonth() + 1, eD = e.getDate();
 
-  const {months, days, totalDays360} = calculateMonthsAndDays360(transferDate, aExp);
+  // 歐式 EU 規則：只要是 31 號，就改成 30
+  if (sD === 31) sD = 30;
+  if (eD === 31) eD = 30;
 
-document.getElementById('transferDuration').value = formatMonthsAndDays(months, days);
-document.getElementById('transferDays').value = totalDays360 + '天';
-document.getElementById('customerB_newExpiry').value = formatDate(addMonthsAndDays(new Date(bExp), months, days));
+  // 算總天數（360制）
+  const totalDays360 = (eY - sY) * 360 + (eM - sM) * 30 + (eD - sD);
 
-    }
+  // 拆成幾個月 + 幾天
+  const months = Math.floor(totalDays360 / 30);
+  const days = totalDays360 % 30;
+
+  return { months, days, totalDays360 };
+}
+
+// === 主要邏輯 ===
+function calculateTransferInfo() {
+  const transferDate = document.getElementById('transferDate').value;
+  const aExp = document.getElementById('customerA_expiry').value;
+  const bExp = document.getElementById('customerB_currentExpiry').value;
+  if (!transferDate || !aExp || !bExp) return;
+
+  if (new Date(transferDate) >= new Date(aExp)) {
+    document.getElementById('transferPeriod').value = '無效的轉移日期';
+    ['transferDuration', 'transferDays', 'customerB_newExpiry']
+      .forEach(id => document.getElementById(id).value = '');
+    return;
+  }
+
+  document.getElementById('transferPeriod').value =
+    `${formatDateSlash(transferDate)}~${formatDateSlash(aExp)}`;
+
+  const { months, days, totalDays360 } = calculateMonthsAndDays360(transferDate, aExp);
+
+  document.getElementById('transferDuration').value = formatMonthsAndDays(months, days);
+  document.getElementById('transferDays').value = totalDays360 + '天';
+  document.getElementById('customerB_newExpiry').value =
+    formatDate(addMonthsAndDays(new Date(bExp), months, days));
+}
+
 
     function searchCustomer(type){
       const id=document.getElementById(`customer${type}_id`).value;
