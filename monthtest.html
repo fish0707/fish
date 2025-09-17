@@ -244,7 +244,6 @@
     chkBSpecial.addEventListener('change', applyBIdDecoration);
 
     // ====== 主要邏輯 ======
-// === 30/360 (EU) 計算函式 ===
 function calculateMonthsAndDays360(startDate, endDate) {
   const s = new Date(startDate);
   const e = new Date(endDate);
@@ -256,19 +255,25 @@ function calculateMonthsAndDays360(startDate, endDate) {
   let sY = s.getFullYear(), sM = s.getMonth() + 1, sD = s.getDate();
   let eY = e.getFullYear(), eM = e.getMonth() + 1, eD = e.getDate();
 
-  // 歐式 EU 規則：只要是 31 號，就改成 30
+  // === Excel DAYS360 (method = FALSE) 規則 ===
   if (sD === 31) sD = 30;
-  if (eD === 31) eD = 30;
+  if (eD === 31) {
+    if (sD === 30 || sD === 31) {
+      eD = 30;   // 如果起日是 30 或 31 → 結束日 = 30
+    } else {
+      eD = 1;    // 如果起日不是 30/31 → 結束日 = 下一個月的 1
+      eM++;
+      if (eM > 12) { eM = 1; eY++; }
+    }
+  }
 
-  // 算總天數（360制）
   const totalDays360 = (eY - sY) * 360 + (eM - sM) * 30 + (eD - sD);
-
-  // 拆成幾個月 + 幾天
   const months = Math.floor(totalDays360 / 30);
   const days = totalDays360 % 30;
 
   return { months, days, totalDays360 };
 }
+
 
 // === 主要邏輯 ===
 function calculateTransferInfo() {
