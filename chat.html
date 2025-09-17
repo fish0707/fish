@@ -1,140 +1,136 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>客服訓練聊天室</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            background-color: #f4f4f4;
-        }
-        .chat-container {
-            width: 90%;
-            max-width: 600px;
-            background-color: #fff;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-        .chat-box {
-            flex-grow: 1;
-            padding: 20px;
-            overflow-y: auto;
-            border-bottom: 1px solid #eee;
-        }
-        .message {
-            margin-bottom: 10px;
-        }
-        .user-message {
-            text-align: right;
-        }
-        .ai-message {
-            text-align: left;
-        }
-        .user-message p, .ai-message p {
-            display: inline-block;
-            padding: 10px 15px;
-            border-radius: 20px;
-            max-width: 80%;
-            word-wrap: break-word;
-        }
-        .user-message p {
-            background-color: #007bff;
-            color: #fff;
-        }
-        .ai-message p {
-            background-color: #e9e9eb;
-            color: #333;
-        }
-        .input-box {
-            display: flex;
-            padding: 10px;
-            border-top: 1px solid #eee;
-        }
-        .input-box input {
-            flex-grow: 1;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 20px;
-            outline: none;
-        }
-        .input-box button {
-            background-color: #007bff;
-            color: #fff;
-            border: none;
-            padding: 10px 15px;
-            border-radius: 20px;
-            margin-left: 10px;
-            cursor: pointer;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>客服訓練聊天室</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background-color: #f4f4f4;
+    }
+    .chat-container {
+      width: 90%;
+      max-width: 600px;
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .chat-box {
+      flex-grow: 1;
+      padding: 20px;
+      overflow-y: auto;
+      border-bottom: 1px solid #eee;
+    }
+    .message {
+      margin-bottom: 10px;
+    }
+    .user-message {
+      text-align: right;
+    }
+    .ai-message {
+      text-align: left;
+    }
+    .user-message p, .ai-message p {
+      display: inline-block;
+      padding: 10px 15px;
+      border-radius: 20px;
+      max-width: 80%;
+      word-wrap: break-word;
+    }
+    .user-message p {
+      background-color: #007bff;
+      color: #fff;
+    }
+    .ai-message p {
+      background-color: #e9e9eb;
+      color: #333;
+    }
+    .input-box {
+      display: flex;
+      padding: 10px;
+      border-top: 1px solid #eee;
+    }
+    .input-box input {
+      flex-grow: 1;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 20px;
+      outline: none;
+    }
+    .input-box button {
+      background-color: #007bff;
+      color: #fff;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 20px;
+      margin-left: 10px;
+      cursor: pointer;
+    }
+  </style>
 </head>
 <body>
-    <div class="chat-container">
-        <div class="chat-box" id="chat-box"></div>
-        <div class="input-box">
-            <input type="text" id="user-input" placeholder="輸入你的訊息...">
-            <button onclick="sendMessage()">發送</button>
-        </div>
+  <div class="chat-container">
+    <div class="chat-box" id="chat-box"></div>
+    <div class="input-box">
+      <input type="text" id="user-input" placeholder="輸入你的訊息...">
+      <button onclick="sendMessage()">發送</button>
     </div>
+  </div>
 
-    <script>
-        // 🔹 你的 Google Apps Script Web App URL
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz2ijZszQ8fVKNzCTAJU5TMGU3Urv0iMfa3yTrBJauNhdvx_GhQZa66aNy7cmLwbEtC-A/exec";
+  <script>
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbz2ijZszQ8fVKNzCTAJU5TMGU3Urv0iMfa3yTrBJauNhdvx_GhQZa66aNy7cmLwbEtC-A/exec"; // 換成你的 GAS exec URL
 
-        // 發送訊息
-        async function sendMessage() {
-            const input = document.getElementById("user-input");
-            const message = input.value.trim();
-            if (!message) return;
+    function addMessage(text, sender) {
+      const chatBox = document.getElementById("chat-box");
+      const messageDiv = document.createElement("div");
+      messageDiv.classList.add("message", sender + "-message");
+      messageDiv.innerHTML = `<p>${text}</p>`;
+      chatBox.appendChild(messageDiv);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
 
-            // 顯示使用者訊息
-            appendMessage("user", message);
-            input.value = "";
+    async function sendMessage() {
+      const input = document.getElementById("user-input");
+      const text = input.value.trim();
+      if (!text) return;
 
-            // 顯示 AI 正在思考中...
-            appendMessage("ai", "正在思考中...");
+      addMessage(text, "user");
+      input.value = "";
 
-            try {
-                const response = await fetch(WEB_APP_URL, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ message })
-                });
+      // 加入「正在思考中...」
+      addMessage("正在思考中...", "ai");
 
-                const data = await response.json();
+      try {
+        const res = await fetch(GAS_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: text })
+        });
+        const data = await res.json();
 
-                // 移除最後一條 "正在思考中..."
-                const chatBox = document.getElementById("chat-box");
-                chatBox.lastChild.remove();
+        // 移除「正在思考中...」
+        const chatBox = document.getElementById("chat-box");
+        chatBox.lastChild.remove();
 
-                // 顯示 AI 回覆
-                appendMessage("ai", data.reply || "（AI 沒有回應）");
-            } catch (err) {
-                console.error(err);
-                appendMessage("ai", "❌ 出錯了，請稍後再試。");
-            }
-        }
-
-        // 在聊天框中加入訊息
-        function appendMessage(sender, text) {
-            const chatBox = document.getElementById("chat-box");
-            const messageDiv = document.createElement("div");
-            messageDiv.classList.add("message", sender === "user" ? "user-message" : "ai-message");
-            messageDiv.innerHTML = `<p>${text}</p>`;
-            chatBox.appendChild(messageDiv);
-            chatBox.scrollTop = chatBox.scrollHeight; // 自動捲到底
-        }
-    </script>
+        addMessage(data.reply, "ai");
+      } catch (err) {
+        const chatBox = document.getElementById("chat-box");
+        chatBox.lastChild.remove();
+        addMessage("❌ 出錯了：" + err.message, "ai");
+      }
+    }
+  </script>
 </body>
 </html>
+
 
