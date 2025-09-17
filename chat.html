@@ -100,58 +100,37 @@ async function sendMessage() {
   const input = document.getElementById("userInput");
   const text = input.value.trim();
   if (!text) return;
-  // 你（學員/客服）的發言
-  conversation.push({ sender: "trainer", text: text });
+
+  conversation.push({ sender: "trainer", text });
   addBubble("trainer", text);
   input.value = "";
 
-  // 顯示等待訊息（客戶正在回覆）
   addBubble("customer", "正在思考中...");
 
-  // 將 conversation 與 scenarioIndex 傳給後端，後端會回傳 AI（客戶）下一句
   try {
-    const payload = { conversation: conversation, scenarioIndex: scenarioIndex };
+    const formData = new FormData();
+    formData.append("conversation", JSON.stringify(conversation));
+    formData.append("scenarioIndex", scenarioIndex);
+
     const res = await fetch(GAS_URL, {
       method: "POST",
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
+      body: formData
     });
     const data = await res.json();
 
-    // 移除剛剛的「正在思考中...」
-    // 找最後一個為 customer + "正在思考中..."，移除
-    for (let i = chatBox.children.length - 1; i >= 0; i--) {
-      const el = chatBox.children[i];
-      if (el.classList.contains("customer") && el.textContent === "正在思考中...") {
-        el.remove();
-        break;
-      }
-    }
+    // 移除「正在思考中...」
+    chatBox.lastChild.remove();
 
     const reply = data.reply || "（無回覆）";
-    // 把 AI（客戶）的回覆加入 conversation（以 customer 身分）
     conversation.push({ sender: "customer", text: reply });
     addBubble("customer", reply);
 
-    // optional: 更新情境 label（若後端回傳 scenario）
-    if (data.scenario) {
-      scenarioText = data.scenario;
-      scenarioLabel.textContent = `情境 ${data.scenarioIndex}：` + (scenarioText.length > 80 ? scenarioText.slice(0,80) + "..." : scenarioText);
-    }
-
   } catch (err) {
-    // 移除「正在思考中...」
-    for (let i = chatBox.children.length - 1; i >= 0; i--) {
-      const el = chatBox.children[i];
-      if (el.classList.contains("customer") && el.textContent === "正在思考中...") {
-        el.remove();
-        break;
-      }
-    }
+    chatBox.lastChild.remove();
     addBubble("customer", "❌ 出錯了：" + err.message);
-    console.error(err);
   }
 }
+
 </script>
 
 </body>
