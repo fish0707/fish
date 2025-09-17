@@ -98,8 +98,10 @@
 
   try {
     // 🚨 改成 GET，避免 OPTIONS
-    const res = await fetch(GAS_URL + "?message=" + encodeURIComponent(text));
-    const data = await res.json();
+const res = await fetch(GAS_URL + "?message=" + encodeURIComponent(text));
+const data = await res.json();
+console.log("GAS 回傳：", data);  // ← 看實際拿到什麼
+addMessage(data.reply || JSON.stringify(data), "ai");
 
     const chatBox = document.getElementById("chat-box");
     chatBox.lastChild.remove();
