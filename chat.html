@@ -87,39 +87,30 @@
       chatBox.scrollTop = chatBox.scrollHeight;
     }
 
-    async function sendMessage() {
-      const input = document.getElementById("user-input");
-      const text = input.value.trim();
-      if (!text) return;
+ async function sendMessage() {
+  const input = document.getElementById("user-input");
+  const text = input.value.trim();
+  if (!text) return;
 
-      addMessage(text, "user");
-      input.value = "";
+  addMessage(text, "user");
+  input.value = "";
+  addMessage("正在思考中...", "ai");
 
-      // 加入「正在思考中...」
-      addMessage("正在思考中...", "ai");
+  try {
+    // 🚨 改成 GET，避免 OPTIONS
+    const res = await fetch(GAS_URL + "?message=" + encodeURIComponent(text));
+    const data = await res.json();
 
-      try {
-        const formData = new FormData();
-        formData.append("message", text);
+    const chatBox = document.getElementById("chat-box");
+    chatBox.lastChild.remove();
+    addMessage(data.reply, "ai");
+  } catch (err) {
+    const chatBox = document.getElementById("chat-box");
+    chatBox.lastChild.remove();
+    addMessage("❌ 出錯了：" + err.message, "ai");
+  }
+}
 
-        const res = await fetch(GAS_URL, {
-          method: "POST",
-          body: formData
-        });
-
-        const data = await res.json();
-
-        // 移除「正在思考中...」
-        const chatBox = document.getElementById("chat-box");
-        chatBox.lastChild.remove();
-
-        addMessage(data.reply, "ai");
-      } catch (err) {
-        const chatBox = document.getElementById("chat-box");
-        chatBox.lastChild.remove();
-        addMessage("❌ 出錯了：" + err.message, "ai");
-      }
-    }
   </script>
 </body>
 </html>
