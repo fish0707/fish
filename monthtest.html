@@ -277,10 +277,12 @@
 
       document.getElementById('transferPeriod').value = `${formatDateSlash(transferDate)}~${formatDateSlash(aExp)}`;
 
-      const {months, days} = calculateMonthsAndDays360(transferDate, aExp);
-      document.getElementById('transferDuration').value = formatMonthsAndDays(months, days);
-     document.getElementById('transferDays').value = totalDays360 + '天'
-      document.getElementById('customerB_newExpiry').value = formatDate(addMonthsAndDays(new Date(bExp), months, days));
+  const {months, days, totalDays360} = calculateMonthsAndDays360(transferDate, aExp);
+
+document.getElementById('transferDuration').value = formatMonthsAndDays(months, days);
+document.getElementById('transferDays').value = totalDays360 + '天';
+document.getElementById('customerB_newExpiry').value = formatDate(addMonthsAndDays(new Date(bExp), months, days));
+
     }
 
     function searchCustomer(type){
