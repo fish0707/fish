@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>客服訓練（AI = 客戶）</title>
+  <title>客服訓練聊天室</title>
   <style>
     body { font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #f4f4f4; margin: 0; }
     .chat-container { width: 90%; max-width: 600px; background: #fff; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); display: flex; flex-direction: column; overflow: hidden; }
@@ -11,7 +11,10 @@
     .message { margin-bottom: 10px; }
     .user-message { text-align: right; }
     .ai-message { text-align: left; }
-    .user-message p, .ai-message p { display: inline-block; padding: 10px 15px; border-radius: 20px; max-width: 80%; word-wrap: break-word; }
+    .user-message p, .ai-message p {
+      display: inline-block; padding: 10px 15px; border-radius: 20px;
+      max-width: 80%; word-wrap: break-word;
+    }
     .user-message p { background: #007bff; color: #fff; }
     .ai-message p { background: #e9e9eb; color: #333; }
     .input-box { display: flex; padding: 10px; border-top: 1px solid #eee; }
@@ -21,18 +24,15 @@
 </head>
 <body>
   <div class="chat-container">
-    <h3 style="padding: 10px;">客服訓練（AI = 客戶）</h3>
-    <button onclick="startScenario()">開始考試</button>
     <div class="chat-box" id="chat-box"></div>
     <div class="input-box">
-      <input type="text" id="user-input" placeholder="輸入你的回覆（你扮演客服）...">
+      <input type="text" id="user-input" placeholder="輸入你的回覆 (客服角色)..." />
       <button onclick="sendMessage()">發送</button>
     </div>
   </div>
 
   <script>
     const GAS_URL = "https://script.google.com/macros/s/AKfycbz2ijZszQ8fVKNzCTAJU5TMGU3Urv0iMfa3yTrBJauNhdvx_GhQZa66aNy7cmLwbEtC-A/exec";
-    let currentScenario = null;
 
     function addMessage(text, sender) {
       const chatBox = document.getElementById("chat-box");
@@ -43,14 +43,13 @@
       chatBox.scrollTop = chatBox.scrollHeight;
     }
 
-    async function startScenario() {
+    async function loadTopic() {
       try {
-        const res = await fetch(`${GAS_URL}?action=start`);
+        const res = await fetch(GAS_URL + "?mode=topic");
         const data = await res.json();
-        currentScenario = data.scenarioIndex;
-        addMessage(`【系統情境】${data.scenario}`, "ai");
+        addMessage("📞 顧客情境：" + data.topic, "ai");
       } catch (err) {
-        addMessage("❌ 抽題錯誤：" + err.message, "ai");
+        addMessage("❌ 題庫載入失敗：" + err.message, "ai");
       }
     }
 
@@ -58,23 +57,35 @@
       const input = document.getElementById("user-input");
       const text = input.value.trim();
       if (!text) return;
+
       addMessage(text, "user");
       input.value = "";
+
       addMessage("正在思考中...", "ai");
 
       try {
-        const res = await fetch(`${GAS_URL}?action=chat&message=${encodeURIComponent(text)}&scenarioIndex=${currentScenario}`);
+        const formData = new FormData();
+        formData.append("message", text);
+
+        const res = await fetch(GAS_URL, { method: "POST", body: formData });
         const data = await res.json();
+
+        // 移除思考中文字
         document.getElementById("chat-box").lastChild.remove();
+
         addMessage(data.reply, "ai");
       } catch (err) {
         document.getElementById("chat-box").lastChild.remove();
         addMessage("❌ 出錯了：" + err.message, "ai");
       }
     }
+
+    // 頁面一開始載入 → 抽題
+    window.onload = loadTopic;
   </script>
 </body>
 </html>
+
 
 
 
