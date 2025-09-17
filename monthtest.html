@@ -279,7 +279,7 @@
 
       const {months, days} = calculateMonthsAndDays360(transferDate, aExp);
       document.getElementById('transferDuration').value = formatMonthsAndDays(months, days);
-      document.getElementById('transferDays').value = daysBetween(transferDate, aExp) + '天';
+     document.getElementById('transferDays').value = totalDays360 + '天'
       document.getElementById('customerB_newExpiry').value = formatDate(addMonthsAndDays(new Date(bExp), months, days));
     }
 
