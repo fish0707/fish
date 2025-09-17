@@ -97,39 +97,33 @@ document.getElementById("sendBtn").addEventListener("click", sendMessage);
 document.getElementById("userInput").addEventListener("keydown", (e) => { if (e.key === "Enter") sendMessage(); });
 
 async function sendMessage() {
-  const input = document.getElementById("userInput");
+  const input = document.getElementById("user-input");
   const text = input.value.trim();
   if (!text) return;
 
-  conversation.push({ sender: "trainer", text });
-  addBubble("trainer", text);
+  addMessage(text, "user");
   input.value = "";
 
-  addBubble("customer", "正在思考中...");
+  addMessage("正在思考中...", "ai");
 
   try {
-    const formData = new FormData();
-    formData.append("conversation", JSON.stringify(conversation));
-    formData.append("scenarioIndex", scenarioIndex);
-
-    const res = await fetch(GAS_URL, {
-      method: "POST",
-      body: formData
+    const res = await fetch(`${GAS_URL}?action=chat&message=${encodeURIComponent(text)}&scenarioIndex=${window.currentScenario}`, {
+      method: "GET"
     });
+
     const data = await res.json();
 
-    // 移除「正在思考中...」
+    const chatBox = document.getElementById("chat-box");
     chatBox.lastChild.remove();
 
-    const reply = data.reply || "（無回覆）";
-    conversation.push({ sender: "customer", text: reply });
-    addBubble("customer", reply);
-
+    addMessage(data.reply, "ai");
   } catch (err) {
+    const chatBox = document.getElementById("chat-box");
     chatBox.lastChild.remove();
-    addBubble("customer", "❌ 出錯了：" + err.message);
+    addMessage("❌ 出錯了：" + err.message, "ai");
   }
 }
+
 
 </script>
 
