@@ -31,15 +31,9 @@
       overflow-y: auto;
       border-bottom: 1px solid #eee;
     }
-    .message {
-      margin-bottom: 10px;
-    }
-    .user-message {
-      text-align: right;
-    }
-    .ai-message {
-      text-align: left;
-    }
+    .message { margin-bottom: 10px; }
+    .user-message { text-align: right; }
+    .ai-message { text-align: left; }
     .user-message p, .ai-message p {
       display: inline-block;
       padding: 10px 15px;
@@ -47,14 +41,8 @@
       max-width: 80%;
       word-wrap: break-word;
     }
-    .user-message p {
-      background-color: #007bff;
-      color: #fff;
-    }
-    .ai-message p {
-      background-color: #e9e9eb;
-      color: #333;
-    }
+    .user-message p { background-color: #007bff; color: #fff; }
+    .ai-message p { background-color: #e9e9eb; color: #333; }
     .input-box {
       display: flex;
       padding: 10px;
@@ -111,11 +99,14 @@
       addMessage("正在思考中...", "ai");
 
       try {
+        const formData = new FormData();
+        formData.append("message", text);
+
         const res = await fetch(GAS_URL, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message: text })
+          body: formData
         });
+
         const data = await res.json();
 
         // 移除「正在思考中...」
@@ -132,5 +123,6 @@
   </script>
 </body>
 </html>
+
 
 
