@@ -94,17 +94,23 @@
 
   addMessage(text, "user");
   input.value = "";
+
   addMessage("正在思考中...", "ai");
 
   try {
-    // 🚨 改成 GET，避免 OPTIONS
-const res = await fetch(GAS_URL + "?message=" + encodeURIComponent(text));
-const data = await res.json();
-console.log("GAS 回傳：", data);  // ← 看實際拿到什麼
-addMessage(data.reply || JSON.stringify(data), "ai");
+    const formData = new FormData();
+    formData.append("message", text);
+
+    const res = await fetch(GAS_URL, {
+      method: "POST",
+      body: formData
+    });
+
+    const data = await res.json();
 
     const chatBox = document.getElementById("chat-box");
     chatBox.lastChild.remove();
+
     addMessage(data.reply, "ai");
   } catch (err) {
     const chatBox = document.getElementById("chat-box");
