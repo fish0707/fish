@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>案件審核系統</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; background-color: #f3f4f6; margin: 0; }
+    .card { background: white; padding: 2rem; border-radius: 1rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); max-width: 400px; width: 90%; text-align: center; }
+    h2 { color: #1f2937; margin-bottom: 1.5rem; }
+    p { color: #4b5563; margin-bottom: 1.5rem; font-size: 1.1rem; }
+    input { width: 100%; padding: 0.75rem; margin-bottom: 1rem; border: 1px solid #d1d5db; border-radius: 0.5rem; box-sizing: border-box; font-size: 1rem; text-align: center; }
+    button { width: 100%; padding: 0.75rem; background-color: #3B82F6; color: white; border: none; border-radius: 0.5rem; font-size: 1rem; cursor: pointer; font-weight: bold; transition: opacity 0.2s; }
+    button:hover { opacity: 0.9; }
+    button:disabled { background-color: #9ca3af; cursor: not-allowed; }
+    .hidden { display: none; }
+    .verify-theme button { background-color: #10B981; }
+    .email-theme button { background-color: #3B82F6; }
+    #status { margin-top: 1rem; font-size: 0.9rem; }
+    .loader { border: 3px solid #f3f3f3; border-top: 3px solid #3498db; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: inline-block; margin-right: 8px; vertical-align: middle; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+  <div class="card" id="app">
+    <!-- 載入中畫面 -->
+    <div id="loadingView">
+      <p>正在讀取案件資訊...</p>
+    </div>
+
+    <!-- 錯誤畫面 -->
+    <div id="errorView" class="hidden">
+      <h2 style="color: #EF4444;">⚠️ 發生錯誤</h2>
+      <p id="errorMsg">無效的連結參數</p>
+    </div>
+
+    <!-- 主要操作畫面 -->
+    <div id="mainView" class="hidden">
+      <h2 id="pageTitle">確認動作</h2>
+      <p id="instruction">請輸入您的姓名：</p>
+      
+      <input type="text" id="username" placeholder="請輸入姓名" required />
+      
+      <button id="actionBtn" onclick="submitData()">確認送出</button>
+      
+      <div id="status"></div>
+    </div>
+    
+    <!-- 完成畫面 -->
+    <div id="successView" class="hidden">
+      <h2 style="color: #10B981;">🎉 執行成功</h2>
+      <p id="successMsg"></p>
+      <button onclick="window.close()" style="background-color: #6B7280;">關閉視窗</button>
+    </div>
+  </div>
+
+  <script>
+    // [重要] 請填入您的 Google Apps Script 網址 (部署為 Web App 後的網址)
+    const GAS_API_URL = "https://script.google.com/macros/s/您的ID/exec";
+
+    // 取得 URL 參數
+    const urlParams = new URLSearchParams(window.location.search);
+    const action = urlParams.get('action'); // verify_page 或 email_page
+    const row = urlParams.get('row');
+
+    // 初始化頁面
+    window.onload = function() {
+      const loading = document.getElementById('loadingView');
+      const main = document.getElementById('mainView');
+      const error = document.getElementById('errorView');
+      
+      loading.classList.add('hidden');
+
+      if (!action || !row) {
+        error.classList.remove('hidden');
+        document.getElementById('errorMsg').innerText = "連結缺少必要參數 (Action or Row ID)";
+        return;
+      }
+
+      // 根據動作設定介面
+      const title = document.getElementById('pageTitle');
+      const btn = document.getElementById('actionBtn');
+      const card = document.querySelector('.card');
+
+      if (action === 'verify_page') {
+        title.innerText = "✅ 確認核准案件";
+        btn.innerText = "確認核准";
+        card.classList.add('verify-theme');
+        document.getElementById('instruction').innerText = "請輸入審核人姓名：";
+      } else if (action === 'email_page') {
+        title.innerText = "✉️ 確認發送 Email";
+        btn.innerText = "確認發送";
+        card.classList.add('email-theme');
+        document.getElementById('instruction').innerText = "請輸入寄件人姓名：";
+      } else {
+        error.classList.remove('hidden');
+        return;
+      }
+
+      main.classList.remove('hidden');
+    };
+
+    function submitData() {
+      const user = document.getElementById('username').value.trim();
+      if (!user) { alert("請輸入姓名！"); return; }
+
+      const btn = document.getElementById('actionBtn');
+      const status = document.getElementById('status');
+      
+      // 鎖定按鈕
+      btn.disabled = true;
+      btn.innerHTML = '<div class="loader"></div> 處理中...';
+      status.innerText = "正在連線至 Google 系統...";
+      status.style.color = "#666";
+
+      // 準備要傳送的資料
+      // action 要轉換一下: verify_page -> verify, email_page -> email
+      const apiAction = action === 'verify_page' ? 'verify' : 'email';
+      
+      const payload = {
+        action: apiAction,
+        row: row,
+        user: user
+      };
+
+      // 使用 fetch 發送 POST 請求
+      // 注意：GAS 的 Web App 必須設定為 "Execute as Me" 和 "Who has access: Anyone"
+      fetch(GAS_API_URL, {
+        method: 'POST',
+        body: JSON.stringify(payload)
+        // mode: 'no-cors' // 千萬不要開 no-cors，否則收不到回傳結果
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.status === 'success') {
+          document.getElementById('mainView').classList.add('hidden');
+          document.getElementById('successView').classList.remove('hidden');
+          document.getElementById('successMsg').innerText = data.message;
+        } else {
+          throw new Error(data.message);
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        btn.disabled = false;
+        btn.innerText = "重試";
+        status.innerText = "❌ 發生錯誤: " + err.message;
+        status.style.color = "red";
+      });
+    }
+  </script>
+</body>
+</html>
