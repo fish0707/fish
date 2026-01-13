@@ -19,6 +19,7 @@
     #status { margin-top: 1rem; font-size: 0.9rem; }
     .loader { border: 3px solid #f3f3f3; border-top: 3px solid #3498db; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: inline-block; margin-right: 8px; vertical-align: middle; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .debug-info { margin-top: 20px; font-size: 12px; color: #999; text-align: left; background: #eee; padding: 10px; border-radius: 4px; display: none; word-break: break-all;}
   </style>
 </head>
 <body>
@@ -31,8 +32,13 @@
 
     <!-- 錯誤畫面 -->
     <div id="errorView" class="hidden">
-      <h2 style="color: #EF4444;">⚠️ 發生錯誤</h2>
-      <p id="errorMsg">無效的連結參數</p>
+      <h2 style="color: #EF4444;">⚠️ 連結無效</h2>
+      <p id="errorMsg">連結缺少必要參數</p>
+      <div style="font-size: 0.9rem; color: #666; margin-top: 1rem; text-align: left; background: #fff5f5; padding: 10px; border-radius: 5px;">
+        <b>如何測試此檔案？</b><br>
+        請不要直接雙擊開啟，請在網址列後方加入測試參數：<br>
+        <code style="background: #eee; padding: 2px;">?action=verify_page&row=2</code>
+      </div>
     </div>
 
     <!-- 主要操作畫面 -->
@@ -45,6 +51,9 @@
       <button id="actionBtn" onclick="submitData()">確認送出</button>
       
       <div id="status"></div>
+      
+      <!-- Debug 訊息區 (發生錯誤時顯示) -->
+      <div id="debugInfo" class="debug-info"></div>
     </div>
     
     <!-- 完成畫面 -->
@@ -56,7 +65,9 @@
   </div>
 
   <script>
-    // [重要] 請填入您的 Google Apps Script 網址 (部署為 Web App 後的網址)
+    // ==========================================
+    // [重要] 請將下方的網址換成您 GAS 部署後的 Web App URL (以 /exec 結尾)
+    // ==========================================
     const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzJplSHq2GjqPhJBN2qsDOxTRF2W3GmQ21VCly2xqZ2_OahO4knbby2i6OrcIda6kXH/exec";
 
     // 取得 URL 參數
@@ -104,18 +115,24 @@
     function submitData() {
       const user = document.getElementById('username').value.trim();
       if (!user) { alert("請輸入姓名！"); return; }
+      
+      if (GAS_API_URL.includes("您的ID")) {
+        alert("⚠️ 錯誤：您尚未在 external_index.html 中設定正確的 GAS_API_URL！");
+        return;
+      }
 
       const btn = document.getElementById('actionBtn');
       const status = document.getElementById('status');
+      const debugInfo = document.getElementById('debugInfo');
       
       // 鎖定按鈕
       btn.disabled = true;
       btn.innerHTML = '<div class="loader"></div> 處理中...';
-      status.innerText = "正在連線至 Google 系統...";
+      status.innerText = "正在連線至系統...";
       status.style.color = "#666";
+      debugInfo.style.display = 'none';
 
       // 準備要傳送的資料
-      // action 要轉換一下: verify_page -> verify, email_page -> email
       const apiAction = action === 'verify_page' ? 'verify' : 'email';
       
       const payload = {
@@ -125,11 +142,13 @@
       };
 
       // 使用 fetch 發送 POST 請求
-      // 注意：GAS 的 Web App 必須設定為 "Execute as Me" 和 "Who has access: Anyone"
       fetch(GAS_API_URL, {
         method: 'POST',
+        // [關鍵修正] 使用 text/plain 以避免 CORS Preflight (OPTIONS) 請求被擋
+        headers: {
+          "Content-Type": "text/plain;charset=utf-8"
+        },
         body: JSON.stringify(payload)
-        // mode: 'no-cors' // 千萬不要開 no-cors，否則收不到回傳結果
       })
       .then(response => response.json())
       .then(data => {
@@ -138,15 +157,23 @@
           document.getElementById('successView').classList.remove('hidden');
           document.getElementById('successMsg').innerText = data.message;
         } else {
-          throw new Error(data.message);
+          throw new Error(data.message || "未知錯誤");
         }
       })
       .catch(err => {
         console.error(err);
         btn.disabled = false;
         btn.innerText = "重試";
-        status.innerText = "❌ 發生錯誤: " + err.message;
+        status.innerText = "❌ 發送失敗";
         status.style.color = "red";
+        
+        // 顯示除錯訊息方便您截圖
+        debugInfo.style.display = 'block';
+        debugInfo.innerHTML = `<b>Error Details:</b><br>${err.message}<br><br><b>Target:</b> ${GAS_API_URL}`;
+        
+        if (err.message.includes("Failed to fetch")) {
+           status.innerText += " (CORS 或 網址錯誤)";
+        }
       });
     }
   </script>
