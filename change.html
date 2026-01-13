@@ -1,16 +1,18 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
-  <base target="_top">
+  <!-- 確保在行動裝置上顯示正確 -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>案件審核系統</title>
   <!-- 引入 Tailwind CSS 美化介面 -->
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f3f4f6; }
     .card-header { background: linear-gradient(90deg, #1a73e8 0%, #0d47a1 100%); color: white; }
     .loading-overlay {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(255, 255, 255, 0.8); z-index: 50;
+      background: rgba(255, 255, 255, 0.9); z-index: 50;
       display: none; justify-content: center; align-items: center;
       flex-direction: column;
     }
@@ -19,202 +21,253 @@
       border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite;
     }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .hidden { display: none; }
   </style>
 </head>
-<body class="p-6">
+<body class="p-4 md:p-6 min-h-screen flex items-center justify-center">
 
-<div class="max-w-4xl mx-auto bg-white shadow-lg rounded-lg overflow-hidden">
-  <div class="card-header p-6">
-    <h2 class="text-2xl font-bold">📄 合約資料輸入系統</h2>
-    <p class="opacity-90">請填寫雙方資料以生成 PDF 並觸發審核流程</p>
+<!-- 核心卡片容器 -->
+<div class="w-full max-w-4xl bg-white shadow-xl rounded-xl overflow-hidden transition-all duration-300" id="mainCard">
+  
+  <!-- 1. 表單填寫模式 (預設顯示) -->
+  <div id="formMode" class="hidden">
+    <div class="card-header p-6">
+      <h2 class="text-2xl font-bold">📄 合約資料輸入系統</h2>
+      <p class="opacity-90 mt-1 text-sm">請填寫雙方資料以生成 PDF 並觸發審核流程</p>
+    </div>
+    
+    <form id="contractForm" class="p-6 space-y-6" onsubmit="submitCreateForm(event)">
+      <!-- 基本資料 -->
+      <div class="bg-indigo-50 p-5 rounded-lg border border-indigo-100">
+        <h3 class="text-lg font-bold text-indigo-800 mb-4 border-b border-indigo-200 pb-2">📅 基本資料</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">申請日期</label>
+            <input type="date" id="dateInput" name="request_date" required class="w-full rounded-md border-gray-300 shadow-sm border p-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">案件類型</label>
+            <select name="service_type" required class="w-full rounded-md border-gray-300 shadow-sm border p-2 bg-white focus:ring-2 focus:ring-indigo-500">
+              <option value="" disabled selected>請選擇類型</option>
+              <option value="變更登記人">1. 變更登記人</option>
+              <option value="更名">2. 更名</option>
+              <option value="繼承更名">3. 繼承更名</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">區域</label>
+            <select name="region" required class="w-full rounded-md border-gray-300 shadow-sm border p-2 bg-white focus:ring-2 focus:ring-indigo-500">
+              <option value="" disabled selected>請選擇區域</option>
+              <option value="北區">北區 (TP)</option>
+              <option value="中南區">中南區 (TC)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">客戶編號</label>
+            <input type="text" name="client_id" placeholder="例如: A152689" required class="w-full rounded-md border-gray-300 shadow-sm border p-2 focus:ring-2 focus:ring-indigo-500">
+          </div>
+          <div class="md:col-span-2">
+            <label class="block text-sm font-medium text-gray-700 mb-1">到期日期</label>
+            <input type="date" name="expiry_date" required class="w-full rounded-md border-gray-300 shadow-sm border p-2 focus:ring-2 focus:ring-indigo-500">
+          </div>
+        </div>
+      </div>
+
+      <!-- 客戶資料雙欄 -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="bg-blue-50 p-5 rounded-lg border border-blue-100">
+          <h3 class="text-lg font-bold text-blue-800 mb-4 border-b border-blue-200 pb-2">👤 原登記人 (A)</h3>
+          <div class="space-y-3">
+            <input type="text" name="clientA_name" placeholder="姓名" required class="w-full rounded border p-2">
+            <input type="tel" name="clientA_phone" placeholder="電話" required class="w-full rounded border p-2">
+            <input type="text" name="clientA_address" placeholder="地址" required class="w-full rounded border p-2">
+            <input type="email" name="clientA_email" placeholder="Email" required class="w-full rounded border p-2">
+          </div>
+        </div>
+        <div class="bg-green-50 p-5 rounded-lg border border-green-100">
+          <h3 class="text-lg font-bold text-green-800 mb-4 border-b border-green-200 pb-2">👤 新登記人 (B)</h3>
+          <div class="space-y-3">
+            <input type="text" name="clientB_name" placeholder="姓名" required class="w-full rounded border p-2">
+            <input type="tel" name="clientB_phone" placeholder="電話" required class="w-full rounded border p-2">
+            <input type="email" name="clientB_email" placeholder="Email" required class="w-full rounded border p-2">
+          </div>
+        </div>
+      </div>
+
+      <!-- 發送設定 -->
+      <div class="bg-gray-50 p-5 rounded-lg border border-gray-200">
+        <h3 class="text-lg font-bold text-gray-800 mb-4">📮 發送設定</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">經辦人姓名</label>
+            <input type="text" name="handler" required class="w-full rounded border p-2">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">接收 PDF Email</label>
+            <input type="email" name="recipient_email" required class="w-full rounded border p-2">
+          </div>
+        </div>
+      </div>
+
+      <div class="flex justify-end pt-2">
+        <button type="submit" class="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition shadow-lg flex items-center font-bold text-lg w-full md:w-auto justify-center">
+          🚀 生成並發送
+        </button>
+      </div>
+    </form>
   </div>
 
-  <form id="contractForm" class="p-6 space-y-8" onsubmit="submitForm(event)">
+  <!-- 2. 核准確認模式 (當網址帶有 action 參數時顯示) -->
+  <div id="verifyMode" class="hidden text-center">
+    <div class="bg-green-600 p-6 text-white">
+      <h2 class="text-2xl font-bold">✅ 確認核准並發送 Email</h2>
+      <p class="opacity-90 mt-2">請確認您要執行此操作</p>
+    </div>
     
-    <!-- 基本資料區塊 -->
-    <div class="bg-indigo-50 p-4 rounded-lg border border-indigo-100">
-      <h3 class="text-xl font-bold text-indigo-800 mb-4 border-b border-indigo-200 pb-2">📅 基本資料</h3>
-      
-      <!-- 第一行：申請日期與案件類型 -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-4">
-        <div>
-          <label class="block text-sm font-medium text-gray-700">申請日期</label>
-          <input type="date" id="dateInput" name="request_date" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 p-2 border">
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700">案件類型</label>
-          <select name="service_type" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 p-2 border bg-white">
-            <option value="" disabled selected>請選擇類型</option>
-            <option value="變更登記人">1. 變更登記人</option>
-            <option value="更名">2. 更名</option>
-            <option value="繼承更名">3. 繼承更名</option>
-          </select>
-        </div>
+    <div class="p-8 space-y-6">
+      <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 text-left">
+        <p class="font-bold text-yellow-800">操作說明：</p>
+        <p class="text-sm text-yellow-700 mt-1">此動作將會：<br>1. 在系統中將此案件標記為「已核准」。<br>2. 自動發送 PDF 附件郵件給客戶。</p>
       </div>
 
-      <!-- 第二行：區域與客戶編號 (新增區域) -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-4">
-        <div>
-          <label class="block text-sm font-medium text-gray-700">區域</label>
-          <select name="region" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 p-2 border bg-white">
-            <option value="" disabled selected>請選擇區域</option>
-            <option value="北區">北區 (TP)</option>
-            <option value="中南區">中南區 (TC)</option>
-          </select>
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700">客戶編號</label>
-          <!-- 提醒使用者系統會自動加前綴 -->
-          <input type="text" name="client_id" placeholder="例如: A152689 (系統自動加 TP/TC)" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 p-2 border">
-        </div>
+      <div>
+        <label class="block text-left text-sm font-bold text-gray-700 mb-2">請輸入您的姓名 (操作人員)</label>
+        <input type="text" id="verifyUser" placeholder="例如：王經理" class="w-full p-4 border border-gray-300 rounded-lg text-lg focus:ring-2 focus:ring-green-500 focus:border-green-500" required>
       </div>
 
-      <!-- 第三行：到期日期 -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div>
-          <label class="block text-sm font-medium text-gray-700">到期日期</label>
-          <input type="date" name="expiry_date" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 p-2 border">
-        </div>
-      </div>
-    </div>
-
-    <!-- 兩欄佈局 (客戶資料) -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-      
-      <!-- 客戶 A 區塊 -->
-      <div class="bg-blue-50 p-4 rounded-lg border border-blue-100">
-        <h3 class="text-xl font-bold text-blue-800 mb-4 border-b border-blue-200 pb-2">👤 客戶 A (原登記者)</h3>
-        <div class="space-y-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700">姓名</label>
-            <input type="text" name="clientA_name" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 p-2 border">
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700">電話</label>
-            <input type="tel" name="clientA_phone" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 p-2 border">
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700">地址</label>
-            <input type="text" name="clientA_address" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 p-2 border">
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700">Email</label>
-            <input type="email" name="clientA_email" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 p-2 border">
-          </div>
-        </div>
-      </div>
-
-      <!-- 客戶 B 區塊 -->
-      <div class="bg-green-50 p-4 rounded-lg border border-green-100">
-        <h3 class="text-xl font-bold text-green-800 mb-4 border-b border-green-200 pb-2">👤 客戶 B (新登記者)</h3>
-        <div class="space-y-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700">姓名</label>
-            <input type="text" name="clientB_name" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 p-2 border">
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700">電話</label>
-            <input type="tel" name="clientB_phone" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 p-2 border">
-          </div>
-        
-          <div>
-            <label class="block text-sm font-medium text-gray-700">Email</label>
-            <input type="email" name="clientB_email" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 p-2 border">
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 經辦與發送資訊 -->
-    <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 mt-6">
-      <h3 class="text-xl font-bold text-gray-800 mb-4">📮 發送設定</h3>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div>
-          <label class="block text-sm font-medium text-gray-700">經辦人姓名</label>
-          <input type="text" name="handler" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-gray-500 focus:ring focus:ring-gray-200 p-2 border">
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700">最終接收 PDF 的 Email</label>
-          <input type="email" name="recipient_email" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-gray-500 focus:ring focus:ring-gray-200 p-2 border">
-        </div>
-      </div>
-    </div>
-
-    <!-- 按鈕區 -->
-    <div class="flex justify-end pt-4">
-      <button type="submit" id="submitBtn" class="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition duration-300 shadow flex items-center font-bold text-lg">
-        🚀 生成 PDF 並發送審核
+      <button onclick="submitVerify()" class="w-full bg-green-600 text-white py-4 rounded-lg text-xl font-bold hover:bg-green-700 transition shadow-lg flex justify-center items-center">
+        確認無誤，立即發送
       </button>
     </div>
-  </form>
+  </div>
+
+  <!-- 3. 成功畫面 -->
+  <div id="successMode" class="hidden text-center p-12">
+    <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+      <svg class="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+    </div>
+    <h2 class="text-3xl font-bold text-gray-800 mb-4">執行成功！</h2>
+    <p id="successMsg" class="text-gray-600 mb-8 text-lg"></p>
+    <button onclick="window.close()" class="bg-gray-200 text-gray-800 px-6 py-2 rounded-lg hover:bg-gray-300 font-medium">關閉視窗</button>
+  </div>
+
+  <!-- 4. 錯誤畫面 -->
+  <div id="errorMode" class="hidden text-center p-12">
+    <div class="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+      <svg class="w-10 h-10 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+    </div>
+    <h2 class="text-2xl font-bold text-gray-800 mb-2">發生錯誤</h2>
+    <p id="errorMsg" class="text-red-600 mb-6"></p>
+    <a href="?" class="text-blue-600 underline">返回首頁</a>
+  </div>
+
 </div>
 
 <!-- 載入中動畫 -->
 <div id="loading" class="loading-overlay">
   <div class="spinner mb-4"></div>
   <h3 class="text-xl font-bold text-gray-700">系統處理中...</h3>
-  <p class="text-gray-500">正在寫入試算表、生成 PDF 並通知審核人員</p>
+  <p class="text-gray-500">正在與 Google 雲端通訊</p>
 </div>
 
 <script>
-  // [重要] 請將此網址替換為您的 Google Apps Script 部署網址 (結尾是 /exec)
+  // ==========================================
+  // [設定] 請填入您的 GAS Web App 網址
+  // ==========================================
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzJplSHq2GjqPhJBN2qsDOxTRF2W3GmQ21VCly2xqZ2_OahO4knbby2i6OrcIda6kXH/exec";
 
-  // 頁面載入時，自動設定日期為今天
+  // 全域變數
+  const urlParams = new URLSearchParams(window.location.search);
+  const actionParam = urlParams.get('action');
+  const rowParam = urlParams.get('row');
+
+  // 初始化
   window.onload = function() {
-    const today = new Date();
-    const yyyy = today.getFullYear();
-    const mm = String(today.getMonth() + 1).padStart(2, '0'); 
-    const dd = String(today.getDate()).padStart(2, '0');
-    const todayStr = `${yyyy}-${mm}-${dd}`;
-    
-    document.getElementById('dateInput').value = todayStr;
+    // 設定日期預設值
+    const today = new Date().toISOString().split('T')[0];
+    const dateInput = document.getElementById('dateInput');
+    if(dateInput) dateInput.value = today;
+
+    // 路由判斷：根據網址參數決定顯示哪個畫面
+    if (actionParam === 'verify_and_send_page' && rowParam) {
+      showMode('verifyMode');
+    } else if (!actionParam) {
+      showMode('formMode');
+    } else {
+      showError("無效的連結參數，請檢查網址。");
+    }
   };
 
-  function submitForm(e) {
+  // 切換畫面輔助函式
+  function showMode(modeId) {
+    ['formMode', 'verifyMode', 'successMode', 'errorMode'].forEach(id => {
+      document.getElementById(id).classList.add('hidden');
+    });
+    document.getElementById(modeId).classList.remove('hidden');
+  }
+
+  function showError(msg) {
+    showMode('errorMode');
+    document.getElementById('errorMsg').innerText = msg;
+  }
+
+  function showLoading(show) {
+    document.getElementById('loading').style.display = show ? 'flex' : 'none';
+  }
+
+  // === 動作 1: 提交新表單 ===
+  function submitCreateForm(e) {
     e.preventDefault();
     const form = document.getElementById('contractForm');
-    const submitBtn = document.getElementById('submitBtn');
-    
-    // 收集表單資料
     const formData = new FormData(form);
     const data = Object.fromEntries(formData.entries());
     
-    // 增加一個 action 欄位，告訴後端這是「提交表單」動作
+    // 設定後端需要的 action
     data.action = 'submit_form';
 
-    // 顯示 Loading
-    document.getElementById('loading').style.display = 'flex';
-    submitBtn.disabled = true;
+    sendToGAS(data, () => {
+      form.reset();
+      document.getElementById('dateInput').value = new Date().toISOString().split('T')[0];
+    });
+  }
 
-    // 使用 fetch 取代 google.script.run
+  // === 動作 2: 執行核准並發信 ===
+  function submitVerify() {
+    const user = document.getElementById('verifyUser').value.trim();
+    if (!user) { alert("請輸入您的姓名！"); return; }
+
+    const data = {
+      action: 'verify_and_send', // 對應 Code.gs 的 doPost 邏輯
+      row: rowParam,
+      user: user
+    };
+
+    sendToGAS(data);
+  }
+
+  // === 通用: 發送資料給 GAS ===
+  function sendToGAS(payload, onSuccessCallback) {
+    showLoading(true);
+
     fetch(GAS_API_URL, {
       method: 'POST',
-      headers: {
-        // 使用 text/plain 避免 CORS preflight
-        "Content-Type": "text/plain;charset=utf-8"
-      },
-      body: JSON.stringify(data)
+      headers: { "Content-Type": "text/plain;charset=utf-8" }, // 避免 CORS 預檢
+      body: JSON.stringify(payload)
     })
-    .then(response => response.json())
+    .then(res => res.json())
     .then(response => {
-      document.getElementById('loading').style.display = 'none';
-      submitBtn.disabled = false;
-      
+      showLoading(false);
       if (response.status === 'success') {
-        alert("✅ 成功！\n" + response.message);
-        form.reset();
-        // 重設日期為今天
-        window.onload();
+        showMode('successMode');
+        document.getElementById('successMsg').innerText = response.message;
+        if (onSuccessCallback) onSuccessCallback();
       } else {
-        alert("❌ 錯誤：\n" + (response.message || "未知錯誤"));
+        showError(response.message || "未知錯誤");
       }
     })
-    .catch(error => {
-      document.getElementById('loading').style.display = 'none';
-      submitBtn.disabled = false;
-      alert("❌ 系統連線錯誤：" + error);
-      console.error(error);
+    .catch(err => {
+      showLoading(false);
+      showError("連線失敗：" + err);
     });
   }
 </script>
