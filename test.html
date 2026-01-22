@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Loader2, CheckCircle2, XCircle, Award, ArrowRight, RefreshCcw, BookOpen } from 'lucide-react';
+import { Loader2, CheckCircle2, XCircle, Award, ArrowRight, RefreshCcw, BookOpen, AlertTriangle } from 'lucide-react';
 
-// --- 模擬資料 (在還沒連接 Google Sheet 前使用) ---
-// 真實串接時，請將 `useMockData` 設為 false，並填入 Google Apps Script URL
-const USE_MOCK_DATA = true; 
+// --- 設定區域 ---
+// 1. 部署時請確認此處為 false，才會抓取 Google Sheet 資料
+const USE_MOCK_DATA = false; 
+
+// 2. 請填入您部署好的 Google Apps Script 網頁應用程式網址 (Exec URL)
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwBS1cRZVuZZpbVpOfgs_Yg38liCu4u9Eyg58MTY0J0mRFqUklmmzwGkYALcEU2JTweKw/exec";
 
 const MOCK_QUESTIONS = [
@@ -50,6 +52,12 @@ export default function App() {
 
   // 抓取題目
   const fetchQuestions = async () => {
+    // 防呆檢查：確認是否已設定 URL
+    if (!USE_MOCK_DATA && GOOGLE_SCRIPT_URL.includes("YOUR_GOOGLE_APPS_SCRIPT")) {
+      alert("尚未設定後端網址！\n請在程式碼中填入您的 Google Apps Script URL。");
+      return;
+    }
+
     setAppState('loading');
     try {
       let data = [];
@@ -59,15 +67,20 @@ export default function App() {
         data = MOCK_QUESTIONS;
       } else {
         const response = await fetch(GOOGLE_SCRIPT_URL);
+        if (!response.ok) throw new Error('Network response was not ok');
         data = await response.json();
       }
       
+      if (!Array.isArray(data) || data.length === 0) {
+        throw new Error('No questions found');
+      }
+
       // 隨機排序題目
       setQuestions(shuffleArray(data));
       setAppState('quiz');
     } catch (error) {
       console.error("Failed to fetch questions", error);
-      alert("讀取題目失敗，請稍後再試。");
+      alert("讀取題目失敗，請確認網路連線或 Google Sheet 設定。\n(如果是跨域問題，請確認 Apps Script 已設為 '任何人' 可存取)");
       setAppState('welcome');
     }
   };
@@ -112,7 +125,7 @@ export default function App() {
     setAppState('submitting');
 
     // 提交成績回 Google Sheet
-    if (!USE_MOCK_DATA) {
+    if (!USE_MOCK_DATA && !GOOGLE_SCRIPT_URL.includes("YOUR_GOOGLE_APPS_SCRIPT")) {
       try {
         await fetch(GOOGLE_SCRIPT_URL, {
           method: 'POST',
@@ -123,6 +136,7 @@ export default function App() {
         });
       } catch (error) {
         console.error("Submission error", error);
+        // 即使提交失敗，也讓使用者看成績，不阻擋流程
       }
     } else {
       await new Promise(resolve => setTimeout(resolve, 800));
@@ -144,29 +158,41 @@ export default function App() {
   // 1. 歡迎畫面
   if (appState === 'welcome') {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 font-sans">
         <div className="bg-white max-w-md w-full rounded-2xl shadow-xl overflow-hidden">
-          <div className="bg-blue-600 p-8 text-center">
-            <BookOpen className="w-16 h-16 text-white mx-auto mb-4" />
-            <h1 className="text-3xl font-bold text-white mb-2">線上測驗系統</h1>
-            <p className="text-blue-100">挑戰自我，獲取 NotebookLM 的智慧指導</p>
+          <div className="bg-gradient-to-br from-blue-600 to-indigo-700 p-8 text-center">
+            <BookOpen className="w-16 h-16 text-white/90 mx-auto mb-4" />
+            <h1 className="text-3xl font-bold text-white mb-2 tracking-tight">線上測驗系統</h1>
+            <p className="text-blue-100 font-medium">挑戰自我，獲取 AI 智慧指導</p>
           </div>
           <div className="p-8 space-y-6">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
+              <label className="block text-sm font-semibold text-slate-700 mb-2">
                 請輸入您的姓名
               </label>
               <input
                 type="text"
                 value={userName}
                 onChange={(e) => setUserName(e.target.value)}
-                className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition placeholder:text-slate-400"
                 placeholder="Ex: 王小明"
               />
             </div>
+            
+            {/* 提示使用者設定 URL 的區塊 (若 URL 未設定會顯示) */}
+            {!USE_MOCK_DATA && GOOGLE_SCRIPT_URL.includes("YOUR_GOOGLE_APPS_SCRIPT") && (
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex gap-3 text-sm text-amber-800">
+                <AlertTriangle className="w-5 h-5 shrink-0" />
+                <div>
+                  <span className="font-bold">尚未設定後端：</span>
+                  請在程式碼中填入 Google Apps Script URL 才能開始測驗。
+                </div>
+              </div>
+            )}
+
             <button
               onClick={handleStart}
-              className="w-full bg-slate-900 hover:bg-slate-800 text-white font-semibold py-3 px-6 rounded-lg transition duration-200 flex items-center justify-center gap-2"
+              className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 px-6 rounded-lg transition duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform active:scale-95"
             >
               開始測驗 <ArrowRight className="w-4 h-4" />
             </button>
@@ -181,7 +207,7 @@ export default function App() {
     return (
       <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center">
         <Loader2 className="w-12 h-12 text-blue-600 animate-spin mb-4" />
-        <p className="text-slate-600 font-medium">
+        <p className="text-slate-600 font-medium animate-pulse">
           {appState === 'loading' ? '正在從雲端載入試題...' : '正在紀錄成績...'}
         </p>
       </div>
@@ -195,17 +221,17 @@ export default function App() {
     const isAnswered = userAnswers[currentQ.id] !== undefined;
 
     return (
-      <div className="min-h-screen bg-slate-50 py-8 px-4 flex justify-center">
+      <div className="min-h-screen bg-slate-50 py-8 px-4 flex justify-center font-sans">
         <div className="w-full max-w-2xl">
           {/* 進度條 */}
           <div className="mb-6">
-            <div className="flex justify-between text-sm text-slate-500 mb-2">
-              <span>Question {currentQuestionIndex + 1}/{questions.length}</span>
+            <div className="flex justify-between text-sm text-slate-500 mb-2 font-medium">
+              <span>Question {currentQuestionIndex + 1} <span className="text-slate-300">/</span> {questions.length}</span>
               <span>{Math.round(progress)}%</span>
             </div>
-            <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
+            <div className="h-2.5 bg-slate-200 rounded-full overflow-hidden">
               <div 
-                className="h-full bg-blue-600 transition-all duration-300 ease-out"
+                className="h-full bg-blue-600 transition-all duration-500 ease-out rounded-full"
                 style={{ width: `${progress}%` }}
               ></div>
             </div>
@@ -213,7 +239,7 @@ export default function App() {
 
           {/* 題目卡片 */}
           <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8 mb-6">
-            <h2 className="text-xl font-bold text-slate-800 mb-6 leading-relaxed">
+            <h2 className="text-xl md:text-2xl font-bold text-slate-800 mb-8 leading-relaxed">
               {currentQ.question}
             </h2>
 
@@ -222,16 +248,20 @@ export default function App() {
                 <button
                   key={idx}
                   onClick={() => handleAnswerSelect(option)}
-                  className={`w-full text-left p-4 rounded-xl border-2 transition-all duration-200 ${
+                  className={`w-full text-left p-4 rounded-xl border-2 transition-all duration-200 flex items-center group ${
                     userAnswers[currentQ.id] === option
-                      ? 'border-blue-500 bg-blue-50 text-blue-700'
-                      : 'border-slate-100 hover:border-slate-300 text-slate-600'
+                      ? 'border-blue-500 bg-blue-50 text-blue-800'
+                      : 'border-slate-100 hover:border-blue-200 hover:bg-slate-50 text-slate-600'
                   }`}
                 >
-                  <span className="inline-block w-6 font-semibold mr-2 opacity-50">
-                    {String.fromCharCode(65 + idx)}.
+                  <span className={`flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold mr-3 transition-colors ${
+                    userAnswers[currentQ.id] === option
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-slate-100 text-slate-400 group-hover:bg-blue-100 group-hover:text-blue-600'
+                  }`}>
+                    {String.fromCharCode(65 + idx)}
                   </span>
-                  {option}
+                  <span className="font-medium text-lg">{option}</span>
                 </button>
               ))}
             </div>
@@ -241,9 +271,9 @@ export default function App() {
             <button
               onClick={handleNext}
               disabled={!isAnswered}
-              className={`px-8 py-3 rounded-lg font-semibold transition-all ${
+              className={`px-8 py-3 rounded-lg font-bold text-lg transition-all transform ${
                 isAnswered
-                  ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg hover:shadow-xl'
+                  ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg hover:shadow-xl hover:-translate-y-0.5'
                   : 'bg-slate-200 text-slate-400 cursor-not-allowed'
               }`}
             >
@@ -258,73 +288,79 @@ export default function App() {
   // 4. 結果畫面 (重點：顯示 NotebookLM 的指導)
   if (appState === 'result') {
     return (
-      <div className="min-h-screen bg-slate-50 py-8 px-4 flex justify-center">
+      <div className="min-h-screen bg-slate-50 py-8 px-4 flex justify-center font-sans">
         <div className="w-full max-w-3xl">
           
           {/* 成績看板 */}
-          <div className="bg-white rounded-2xl shadow-lg border border-slate-100 p-8 text-center mb-8">
-            <div className="inline-flex items-center justify-center w-20 h-20 bg-yellow-100 rounded-full mb-4">
-              <Award className="w-10 h-10 text-yellow-600" />
+          <div className="bg-white rounded-2xl shadow-lg border border-slate-100 p-8 text-center mb-8 relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500"></div>
+            <div className="inline-flex items-center justify-center w-24 h-24 bg-yellow-50 rounded-full mb-4 ring-8 ring-yellow-50/50">
+              <Award className="w-12 h-12 text-yellow-500" />
             </div>
             <h2 className="text-3xl font-bold text-slate-800 mb-2">測驗完成！</h2>
-            <p className="text-slate-500 mb-6">{userName} 的最終成績</p>
-            <div className="text-6xl font-black text-blue-600 mb-6">
-              {score}<span className="text-2xl text-slate-400 font-normal">/100</span>
+            <p className="text-slate-500 mb-6 font-medium text-lg">{userName} 的最終成績</p>
+            <div className="text-7xl font-black text-slate-800 mb-8 tracking-tighter">
+              {score}<span className="text-3xl text-slate-400 font-normal ml-1">/100</span>
             </div>
             <button
               onClick={restartQuiz}
-              className="inline-flex items-center gap-2 text-slate-600 hover:text-slate-900 font-medium transition"
+              className="inline-flex items-center gap-2 text-slate-600 hover:text-blue-600 font-bold transition-colors py-2 px-4 rounded-lg hover:bg-slate-50"
             >
-              <RefreshCcw className="w-4 h-4" /> 重新測驗
+              <RefreshCcw className="w-5 h-5" /> 重新測驗
             </button>
           </div>
 
           {/* 詳細解析區域 */}
           <div className="space-y-6">
-            <h3 className="text-xl font-bold text-slate-800 ml-2">詳細解析與指導</h3>
+            <div className="flex items-center gap-3 ml-1 mb-2">
+              <div className="w-1 h-6 bg-blue-600 rounded-full"></div>
+              <h3 className="text-xl font-bold text-slate-800">詳細解析與指導</h3>
+            </div>
             
             {questions.map((q, idx) => {
               const userAnswer = userAnswers[q.id];
               const isCorrect = userAnswer === q.correctAnswer;
 
               return (
-                <div key={q.id} className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                  <div className={`p-6 border-l-4 ${isCorrect ? 'border-green-500' : 'border-red-500'}`}>
-                    <div className="flex items-start gap-4 mb-4">
-                      <div className="mt-1">
+                <div key={q.id} className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden transition hover:shadow-md">
+                  <div className={`p-6 border-l-[6px] ${isCorrect ? 'border-green-500' : 'border-red-500'}`}>
+                    <div className="flex items-start gap-4">
+                      <div className="mt-1 shrink-0">
                         {isCorrect ? (
-                          <CheckCircle2 className="w-6 h-6 text-green-500" />
+                          <CheckCircle2 className="w-7 h-7 text-green-500" />
                         ) : (
-                          <XCircle className="w-6 h-6 text-red-500" />
+                          <XCircle className="w-7 h-7 text-red-500" />
                         )}
                       </div>
-                      <div className="flex-1">
-                        <span className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1 block">
+                      <div className="flex-1 min-w-0">
+                        <span className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block">
                           Question {idx + 1}
                         </span>
-                        <h4 className="text-lg font-medium text-slate-800 mb-3">
+                        <h4 className="text-lg font-bold text-slate-800 mb-4 leading-snug">
                           {q.question}
                         </h4>
                         
-                        <div className="flex flex-col sm:flex-row gap-4 text-sm mb-4">
+                        <div className="flex flex-col sm:flex-row gap-3 text-sm mb-5 bg-slate-50 p-3 rounded-lg">
                           <div className={`flex items-center gap-2 ${isCorrect ? 'text-green-700' : 'text-red-700'}`}>
-                            <span className="font-semibold">你的答案:</span> {userAnswer}
+                            <span className="font-bold shrink-0">你的答案:</span> 
+                            <span className="font-mono">{userAnswer}</span>
                           </div>
                           {!isCorrect && (
-                            <div className="flex items-center gap-2 text-slate-600">
-                              <span className="font-semibold">正確答案:</span> {q.correctAnswer}
+                            <div className="flex items-center gap-2 text-slate-700">
+                              <span className="font-bold shrink-0">正確答案:</span> 
+                              <span className="font-mono text-green-700">{q.correctAnswer}</span>
                             </div>
                           )}
                         </div>
 
                         {/* 這裡顯示 NotebookLM 的指導內容 */}
                         {!isCorrect && q.explanation && (
-                          <div className="mt-4 bg-amber-50 rounded-lg p-4 border border-amber-100">
-                            <h5 className="text-amber-800 font-bold text-sm mb-2 flex items-center gap-2">
+                          <div className="mt-2 bg-gradient-to-br from-amber-50 to-orange-50/50 rounded-xl p-5 border border-amber-100 shadow-sm">
+                            <h5 className="text-amber-700 font-bold text-sm mb-3 flex items-center gap-2 uppercase tracking-wide">
                               <BookOpen className="w-4 h-4" />
-                              AI 學習指導 (NotebookLM)
+                              NotebookLM 智慧指導
                             </h5>
-                            <p className="text-amber-900/80 text-sm leading-relaxed">
+                            <p className="text-slate-700 text-sm leading-7 text-justify">
                               {q.explanation}
                             </p>
                           </div>
@@ -332,8 +368,8 @@ export default function App() {
                         
                         {/* 即使答對也可以顯示解析 (可選) */}
                         {isCorrect && q.explanation && (
-                           <div className="mt-4 bg-slate-50 rounded-lg p-4">
-                             <p className="text-slate-600 text-sm">{q.explanation}</p>
+                           <div className="mt-2 text-slate-500 text-sm italic pl-1">
+                             <p>💡 {q.explanation}</p>
                            </div>
                         )}
 
