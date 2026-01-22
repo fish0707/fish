@@ -1,0 +1,353 @@
+import React, { useState, useEffect } from 'react';
+import { Loader2, CheckCircle2, XCircle, Award, ArrowRight, RefreshCcw, BookOpen } from 'lucide-react';
+
+// --- 模擬資料 (在還沒連接 Google Sheet 前使用) ---
+// 真實串接時，請將 `useMockData` 設為 false，並填入 Google Apps Script URL
+const USE_MOCK_DATA = true; 
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwBS1cRZVuZZpbVpOfgs_Yg38liCu4u9Eyg58MTY0J0mRFqUklmmzwGkYALcEU2JTweKw/exec";
+
+const MOCK_QUESTIONS = [
+  {
+    id: 1,
+    question: "在 React 中，用於管理組件內部狀態的 Hook 是什麼？",
+    options: ["useEffect", "useState", "useContext", "useReducer"],
+    correctAnswer: "useState",
+    explanation: "NotebookLM 解析：useState 是 React 中最基礎的 Hook，允許函數組件擁有自己的狀態。useEffect 則是用於處理副作用。"
+  },
+  {
+    id: 2,
+    question: "CSS 中，哪一個屬性可以改變元素的背景顏色？",
+    options: ["color", "background-color", "border-color", "fill"],
+    correctAnswer: "background-color",
+    explanation: "NotebookLM 解析：color 屬性通常用於改變文字顏色，而 background-color 才是專門用於設定元素背景色的屬性。"
+  },
+  {
+    id: 3,
+    question: "下列何者不是 JavaScript 的資料型別？",
+    options: ["String", "Boolean", "Float", "Undefined"],
+    correctAnswer: "Float",
+    explanation: "NotebookLM 解析：JavaScript 只有 Number 型別，不區分 Integer 或 Float。其他選項皆為 JS 的基本型別。"
+  }
+];
+
+export default function App() {
+  const [appState, setAppState] = useState('welcome'); // welcome, loading, quiz, result, submitting
+  const [userName, setUserName] = useState('');
+  const [questions, setQuestions] = useState([]);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [userAnswers, setUserAnswers] = useState({}); // { questionId: selectedOption }
+  const [score, setScore] = useState(0);
+
+  // 洗牌演算法 (Fisher-Yates Shuffle)
+  const shuffleArray = (array) => {
+    const newArray = [...array];
+    for (let i = newArray.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+    }
+    return newArray;
+  };
+
+  // 抓取題目
+  const fetchQuestions = async () => {
+    setAppState('loading');
+    try {
+      let data = [];
+      if (USE_MOCK_DATA) {
+        // 模擬延遲
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        data = MOCK_QUESTIONS;
+      } else {
+        const response = await fetch(GOOGLE_SCRIPT_URL);
+        data = await response.json();
+      }
+      
+      // 隨機排序題目
+      setQuestions(shuffleArray(data));
+      setAppState('quiz');
+    } catch (error) {
+      console.error("Failed to fetch questions", error);
+      alert("讀取題目失敗，請稍後再試。");
+      setAppState('welcome');
+    }
+  };
+
+  // 處理開始測驗
+  const handleStart = () => {
+    if (!userName.trim()) {
+      alert("請輸入您的姓名");
+      return;
+    }
+    fetchQuestions();
+  };
+
+  // 處理選擇答案
+  const handleAnswerSelect = (option) => {
+    setUserAnswers({
+      ...userAnswers,
+      [questions[currentQuestionIndex].id]: option
+    });
+  };
+
+  // 下一題或結束
+  const handleNext = () => {
+    if (currentQuestionIndex < questions.length - 1) {
+      setCurrentQuestionIndex(currentQuestionIndex + 1);
+    } else {
+      calculateScore();
+    }
+  };
+
+  // 計算分數並提交
+  const calculateScore = async () => {
+    let currentScore = 0;
+    questions.forEach(q => {
+      if (userAnswers[q.id] === q.correctAnswer) {
+        currentScore += 1;
+      }
+    });
+    
+    const finalScore = Math.round((currentScore / questions.length) * 100);
+    setScore(finalScore);
+    setAppState('submitting');
+
+    // 提交成績回 Google Sheet
+    if (!USE_MOCK_DATA) {
+      try {
+        await fetch(GOOGLE_SCRIPT_URL, {
+          method: 'POST',
+          body: JSON.stringify({ name: userName, score: finalScore }),
+          // no-cors 模式對於 Google Apps Script 是必須的，但它不會回傳可讀的 response
+          mode: 'no-cors', 
+          headers: { 'Content-Type': 'application/json' }
+        });
+      } catch (error) {
+        console.error("Submission error", error);
+      }
+    } else {
+      await new Promise(resolve => setTimeout(resolve, 800));
+    }
+    
+    setAppState('result');
+  };
+
+  const restartQuiz = () => {
+    setAppState('welcome');
+    setUserName('');
+    setUserAnswers({});
+    setCurrentQuestionIndex(0);
+    setScore(0);
+  };
+
+  // --- 畫面組件 ---
+
+  // 1. 歡迎畫面
+  if (appState === 'welcome') {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+        <div className="bg-white max-w-md w-full rounded-2xl shadow-xl overflow-hidden">
+          <div className="bg-blue-600 p-8 text-center">
+            <BookOpen className="w-16 h-16 text-white mx-auto mb-4" />
+            <h1 className="text-3xl font-bold text-white mb-2">線上測驗系統</h1>
+            <p className="text-blue-100">挑戰自我，獲取 NotebookLM 的智慧指導</p>
+          </div>
+          <div className="p-8 space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                請輸入您的姓名
+              </label>
+              <input
+                type="text"
+                value={userName}
+                onChange={(e) => setUserName(e.target.value)}
+                className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                placeholder="Ex: 王小明"
+              />
+            </div>
+            <button
+              onClick={handleStart}
+              className="w-full bg-slate-900 hover:bg-slate-800 text-white font-semibold py-3 px-6 rounded-lg transition duration-200 flex items-center justify-center gap-2"
+            >
+              開始測驗 <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 2. 載入中
+  if (appState === 'loading' || appState === 'submitting') {
+    return (
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center">
+        <Loader2 className="w-12 h-12 text-blue-600 animate-spin mb-4" />
+        <p className="text-slate-600 font-medium">
+          {appState === 'loading' ? '正在從雲端載入試題...' : '正在紀錄成績...'}
+        </p>
+      </div>
+    );
+  }
+
+  // 3. 測驗畫面
+  if (appState === 'quiz') {
+    const currentQ = questions[currentQuestionIndex];
+    const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
+    const isAnswered = userAnswers[currentQ.id] !== undefined;
+
+    return (
+      <div className="min-h-screen bg-slate-50 py-8 px-4 flex justify-center">
+        <div className="w-full max-w-2xl">
+          {/* 進度條 */}
+          <div className="mb-6">
+            <div className="flex justify-between text-sm text-slate-500 mb-2">
+              <span>Question {currentQuestionIndex + 1}/{questions.length}</span>
+              <span>{Math.round(progress)}%</span>
+            </div>
+            <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-blue-600 transition-all duration-300 ease-out"
+                style={{ width: `${progress}%` }}
+              ></div>
+            </div>
+          </div>
+
+          {/* 題目卡片 */}
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8 mb-6">
+            <h2 className="text-xl font-bold text-slate-800 mb-6 leading-relaxed">
+              {currentQ.question}
+            </h2>
+
+            <div className="space-y-3">
+              {currentQ.options.map((option, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => handleAnswerSelect(option)}
+                  className={`w-full text-left p-4 rounded-xl border-2 transition-all duration-200 ${
+                    userAnswers[currentQ.id] === option
+                      ? 'border-blue-500 bg-blue-50 text-blue-700'
+                      : 'border-slate-100 hover:border-slate-300 text-slate-600'
+                  }`}
+                >
+                  <span className="inline-block w-6 font-semibold mr-2 opacity-50">
+                    {String.fromCharCode(65 + idx)}.
+                  </span>
+                  {option}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex justify-end">
+            <button
+              onClick={handleNext}
+              disabled={!isAnswered}
+              className={`px-8 py-3 rounded-lg font-semibold transition-all ${
+                isAnswered
+                  ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg hover:shadow-xl'
+                  : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+              }`}
+            >
+              {currentQuestionIndex === questions.length - 1 ? '提交試卷' : '下一題'}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 4. 結果畫面 (重點：顯示 NotebookLM 的指導)
+  if (appState === 'result') {
+    return (
+      <div className="min-h-screen bg-slate-50 py-8 px-4 flex justify-center">
+        <div className="w-full max-w-3xl">
+          
+          {/* 成績看板 */}
+          <div className="bg-white rounded-2xl shadow-lg border border-slate-100 p-8 text-center mb-8">
+            <div className="inline-flex items-center justify-center w-20 h-20 bg-yellow-100 rounded-full mb-4">
+              <Award className="w-10 h-10 text-yellow-600" />
+            </div>
+            <h2 className="text-3xl font-bold text-slate-800 mb-2">測驗完成！</h2>
+            <p className="text-slate-500 mb-6">{userName} 的最終成績</p>
+            <div className="text-6xl font-black text-blue-600 mb-6">
+              {score}<span className="text-2xl text-slate-400 font-normal">/100</span>
+            </div>
+            <button
+              onClick={restartQuiz}
+              className="inline-flex items-center gap-2 text-slate-600 hover:text-slate-900 font-medium transition"
+            >
+              <RefreshCcw className="w-4 h-4" /> 重新測驗
+            </button>
+          </div>
+
+          {/* 詳細解析區域 */}
+          <div className="space-y-6">
+            <h3 className="text-xl font-bold text-slate-800 ml-2">詳細解析與指導</h3>
+            
+            {questions.map((q, idx) => {
+              const userAnswer = userAnswers[q.id];
+              const isCorrect = userAnswer === q.correctAnswer;
+
+              return (
+                <div key={q.id} className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                  <div className={`p-6 border-l-4 ${isCorrect ? 'border-green-500' : 'border-red-500'}`}>
+                    <div className="flex items-start gap-4 mb-4">
+                      <div className="mt-1">
+                        {isCorrect ? (
+                          <CheckCircle2 className="w-6 h-6 text-green-500" />
+                        ) : (
+                          <XCircle className="w-6 h-6 text-red-500" />
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <span className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1 block">
+                          Question {idx + 1}
+                        </span>
+                        <h4 className="text-lg font-medium text-slate-800 mb-3">
+                          {q.question}
+                        </h4>
+                        
+                        <div className="flex flex-col sm:flex-row gap-4 text-sm mb-4">
+                          <div className={`flex items-center gap-2 ${isCorrect ? 'text-green-700' : 'text-red-700'}`}>
+                            <span className="font-semibold">你的答案:</span> {userAnswer}
+                          </div>
+                          {!isCorrect && (
+                            <div className="flex items-center gap-2 text-slate-600">
+                              <span className="font-semibold">正確答案:</span> {q.correctAnswer}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* 這裡顯示 NotebookLM 的指導內容 */}
+                        {!isCorrect && q.explanation && (
+                          <div className="mt-4 bg-amber-50 rounded-lg p-4 border border-amber-100">
+                            <h5 className="text-amber-800 font-bold text-sm mb-2 flex items-center gap-2">
+                              <BookOpen className="w-4 h-4" />
+                              AI 學習指導 (NotebookLM)
+                            </h5>
+                            <p className="text-amber-900/80 text-sm leading-relaxed">
+                              {q.explanation}
+                            </p>
+                          </div>
+                        )}
+                        
+                        {/* 即使答對也可以顯示解析 (可選) */}
+                        {isCorrect && q.explanation && (
+                           <div className="mt-4 bg-slate-50 rounded-lg p-4">
+                             <p className="text-slate-600 text-sm">{q.explanation}</p>
+                           </div>
+                        )}
+
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return null;
+}
