@@ -1,380 +1,408 @@
-import React, { useState, useEffect } from 'react';
-import { Loader2, CheckCircle2, XCircle, Award, ArrowRight, RefreshCcw, BookOpen, AlertTriangle, Cloud, CloudOff } from 'lucide-react';
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NotebookLM 智慧測驗系統</title>
+    <!-- Tailwind CSS (樣式庫) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Noto Sans TC', sans-serif; }
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen text-slate-800">
 
-// --- 設定區域 ---
-const USE_MOCK_DATA = false; // 設為 false 代表要抓雲端資料
-// 你的 Google Apps Script URL
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwBS1cRZVuZZpbVpOfgs_Yg38liCu4u9Eyg58MTY0J0mRFqUklmmzwGkYALcEU2JTweKw/exec";
+    <!-- 主容器 -->
+    <div id="app" class="flex flex-col items-center justify-center min-h-screen p-4">
+        <!-- 內容會由 JavaScript 動態插入這裡 -->
+    </div>
 
-// 預設範例資料 (僅在 USE_MOCK_DATA = true 或讀取失敗時參考用)
-const MOCK_QUESTIONS = [
-  {
-    id: 1,
-    question: "範例題目：React 的 Hook 是什麼？",
-    options: ["useEffect", "useState", "useContext", "useReducer"],
-    correctAnswer: "useState",
-    explanation: "NotebookLM 解析：這是預設的範例資料，代表你尚未成功連線到 Google Sheet。"
-  }
-];
-
-export default function App() {
-  const [appState, setAppState] = useState('welcome'); // welcome, loading, quiz, result, submitting, error
-  const [userName, setUserName] = useState('');
-  const [questions, setQuestions] = useState([]);
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [userAnswers, setUserAnswers] = useState({}); 
-  const [score, setScore] = useState(0);
-  const [errorMsg, setErrorMsg] = useState(''); // 用來存儲錯誤訊息
-
-  // 洗牌演算法
-  const shuffleArray = (array) => {
-    const newArray = [...array];
-    for (let i = newArray.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
-    }
-    return newArray;
-  };
-
-  // 抓取題目 (包含詳細除錯邏輯)
-  const fetchQuestions = async () => {
-    // 檢查 URL
-    if (!USE_MOCK_DATA && GOOGLE_SCRIPT_URL.includes("YOUR_GOOGLE_APPS_SCRIPT")) {
-      setErrorMsg("尚未設定 Google Apps Script URL，請修改程式碼。");
-      setAppState('error');
-      return;
-    }
-
-    setAppState('loading');
-    setErrorMsg(''); // 清除舊錯誤
-
-    try {
-      let data = [];
-      
-      if (USE_MOCK_DATA) {
-        await new Promise(resolve => setTimeout(resolve, 800));
-        data = MOCK_QUESTIONS;
-      } else {
-        console.log("開始連線至:", GOOGLE_SCRIPT_URL);
-        const response = await fetch(GOOGLE_SCRIPT_URL);
+    <script>
+        // ==========================================
+        // 設定區域 (請修改這裡)
+        // ==========================================
         
-        // 嘗試讀取回應文字，因為如果是權限錯誤，Google 會回傳 HTML 而不是 JSON
-        const textResponse = await response.text();
-        
-        try {
-          data = JSON.parse(textResponse);
-        } catch (e) {
-          // JSON 解析失敗，通常是因為回傳了 HTML (權限錯誤頁面)
-          console.error("JSON Parse Error. Raw response:", textResponse);
-          if (textResponse.includes("Google Drive") || textResponse.includes("sign in")) {
-             throw new Error("權限錯誤：Google Script 未設定為「任何人」可存取，導致回傳了登入頁面。");
-          } else {
-             throw new Error(`資料格式錯誤 (非 JSON)。回應內容摘要: ${textResponse.substring(0, 100)}...`);
-          }
+        // 請填入您的 Google Apps Script 網頁應用程式網址
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbwBS1cRZVuZZpbVpOfgs_Yg38liCu4u9Eyg58MTY0J0mRFqUklmmzwGkYALcEU2JTweKw/exec";
+
+        // 如果想先測試畫面不想連 Google Sheet，把這個設為 true
+        const USE_MOCK_DATA = false;
+
+        // ==========================================
+        // 模擬資料 (Mock Data)
+        // ==========================================
+        const MOCK_DATA = [
+            {
+                id: 1,
+                question: "範例題目：這是一個 HTML 版本的測驗嗎？",
+                options: ["是的", "不是", "不確定", "可能是 React"],
+                correctAnswer: "是的",
+                explanation: "NotebookLM 解析：你現在看到的確實是純 HTML + JavaScript 的版本，沒有使用 React。"
+            },
+            {
+                id: 2,
+                question: "要如何抓取 Google Sheet 資料？",
+                options: ["用手抓", "使用 fetch API", "打電話給 Google", "使用心電感應"],
+                correctAnswer: "使用 fetch API",
+                explanation: "NotebookLM 解析：在前端網頁中，我們使用 JavaScript 的 fetch() 函式來向後端 Google Apps Script 發送請求。"
+            }
+        ];
+
+        // ==========================================
+        // 狀態管理 (State)
+        // ==========================================
+        let state = {
+            view: 'welcome', // welcome, loading, quiz, result, error
+            userName: '',
+            questions: [],
+            currentQuestionIndex: 0,
+            userAnswers: {}, // { questionId: 'Selected Option' }
+            score: 0,
+            errorMsg: ''
+        };
+
+        // ==========================================
+        // 核心邏輯 (Logic)
+        // ==========================================
+
+        // 洗牌演算法
+        function shuffleArray(array) {
+            let newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
         }
-      }
-      
-      if (!Array.isArray(data) || data.length === 0) {
-        throw new Error('讀取成功，但題庫是空的 (Empty Array)。請檢查 Google Sheet 是否有資料。');
-      }
 
-      setQuestions(shuffleArray(data));
-      setAppState('quiz');
-    } catch (error) {
-      console.error("Fetch Error:", error);
-      setErrorMsg(error.message || "未知錯誤");
-      setAppState('error');
-    }
-  };
+        // 開始按鈕點擊
+        function handleStart() {
+            const nameInput = document.getElementById('nameInput');
+            const name = nameInput.value.trim();
+            if (!name) {
+                alert('請輸入您的姓名');
+                return;
+            }
+            state.userName = name;
+            fetchQuestions();
+        }
 
-  const handleStart = () => {
-    if (!userName.trim()) {
-      alert("請輸入您的姓名"); // 這裡保留 alert 因為是簡單檢查
-      return;
-    }
-    fetchQuestions();
-  };
-
-  const handleAnswerSelect = (option) => {
-    setUserAnswers({
-      ...userAnswers,
-      [questions[currentQuestionIndex].id]: option
-    });
-  };
-
-  const handleNext = () => {
-    if (currentQuestionIndex < questions.length - 1) {
-      setCurrentQuestionIndex(currentQuestionIndex + 1);
-    } else {
-      calculateScore();
-    }
-  };
-
-  const calculateScore = async () => {
-    let currentScore = 0;
-    questions.forEach(q => {
-      if (userAnswers[q.id] === q.correctAnswer) {
-        currentScore += 1;
-      }
-    });
-    
-    const finalScore = Math.round((currentScore / questions.length) * 100);
-    setScore(finalScore);
-    setAppState('submitting');
-
-    if (!USE_MOCK_DATA) {
-      try {
-        await fetch(GOOGLE_SCRIPT_URL, {
-          method: 'POST',
-          body: JSON.stringify({ name: userName, score: finalScore }),
-          mode: 'no-cors', 
-          headers: { 'Content-Type': 'application/json' }
-        });
-      } catch (error) {
-        console.error("Submission error", error);
-      }
-    } else {
-      await new Promise(resolve => setTimeout(resolve, 800));
-    }
-    
-    setAppState('result');
-  };
-
-  const restartQuiz = () => {
-    setAppState('welcome');
-    setUserName('');
-    setUserAnswers({});
-    setCurrentQuestionIndex(0);
-    setScore(0);
-    setErrorMsg('');
-  };
-
-  // --- 畫面渲染 ---
-
-  // 0. 錯誤畫面 (新增)
-  if (appState === 'error') {
-    return (
-      <div className="min-h-screen bg-red-50 flex items-center justify-center p-4">
-        <div className="bg-white max-w-md w-full rounded-2xl shadow-xl p-8 border-l-4 border-red-500">
-          <div className="flex items-center gap-3 mb-4 text-red-600">
-            <AlertTriangle className="w-8 h-8" />
-            <h2 className="text-xl font-bold">連線發生錯誤</h2>
-          </div>
-          <div className="bg-red-50 p-4 rounded-lg text-sm text-red-800 font-mono mb-6 break-words">
-            {errorMsg}
-          </div>
-          <div className="text-slate-600 text-sm mb-6 space-y-2">
-            <p className="font-bold">請檢查以下幾點：</p>
-            <ul className="list-disc pl-5 space-y-1">
-              <li>Google Apps Script 是否已部署為「<strong>網頁應用程式</strong>」？</li>
-              <li>權限 (Who has access) 是否已設為「<strong>任何人 (Anyone)</strong>」？(這是最常見錯誤)</li>
-              <li>是否修改後忘記按「<strong>建立新版本</strong>」？</li>
-            </ul>
-          </div>
-          <button
-            onClick={restartQuiz}
-            className="w-full bg-slate-900 text-white font-bold py-3 rounded-lg hover:bg-slate-800 transition"
-          >
-            回首頁重試
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // 1. 歡迎畫面
-  if (appState === 'welcome') {
-    return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 font-sans">
-        <div className="bg-white max-w-md w-full rounded-2xl shadow-xl overflow-hidden">
-          <div className="bg-gradient-to-br from-blue-600 to-indigo-700 p-8 text-center">
-            <BookOpen className="w-16 h-16 text-white/90 mx-auto mb-4" />
-            <h1 className="text-3xl font-bold text-white mb-2 tracking-tight">線上測驗系統</h1>
-            <p className="text-blue-100 font-medium">NotebookLM 智慧出題</p>
-          </div>
-          <div className="p-8 space-y-6">
+        // 抓取題目
+        async function fetchQuestions() {
+            renderLoading();
             
-            {/* 狀態指示燈 */}
-            <div className={`flex items-center justify-center gap-2 text-xs font-bold py-1 px-3 rounded-full w-fit mx-auto ${USE_MOCK_DATA ? 'bg-orange-100 text-orange-700' : 'bg-green-100 text-green-700'}`}>
-              {USE_MOCK_DATA ? <CloudOff className="w-3 h-3"/> : <Cloud className="w-3 h-3"/>}
-              {USE_MOCK_DATA ? '模式：測試資料 (Mock)' : '模式：雲端 Google Sheet'}
-            </div>
+            // 檢查 URL 是否有設定
+            if (!USE_MOCK_DATA && (GAS_URL.includes("YOUR_GOOGLE") || GAS_URL === "")) {
+                state.errorMsg = "尚未設定 Google Apps Script URL！請打開 HTML 原始碼修改 GAS_URL 變數。";
+                renderError();
+                return;
+            }
 
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">
-                請輸入您的姓名
-              </label>
-              <input
-                type="text"
-                value={userName}
-                onChange={(e) => setUserName(e.target.value)}
-                className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition placeholder:text-slate-400"
-                placeholder="Ex: 王小明"
-              />
-            </div>
+            try {
+                let data = [];
+                if (USE_MOCK_DATA) {
+                    await new Promise(r => setTimeout(r, 800)); // 模擬延遲
+                    data = MOCK_DATA;
+                } else {
+                    const response = await fetch(GAS_URL);
+                    const text = await response.text();
+                    
+                    try {
+                        data = JSON.parse(text);
+                    } catch (e) {
+                        // 如果回傳的不是 JSON，通常是權限錯誤 (回傳了 Google 登入頁面的 HTML)
+                        console.error("解析失敗，原始回應:", text);
+                        if (text.includes("Google Drive") || text.includes("sign in")) {
+                            throw new Error("權限錯誤：請確認 Google Script 部署權限是否設為「任何人 (Anyone)」。");
+                        } else {
+                            throw new Error("資料格式錯誤，請檢查後端程式碼。");
+                        }
+                    }
+                }
 
-            <button
-              onClick={handleStart}
-              className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 px-6 rounded-lg transition duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform active:scale-95"
-            >
-              開始測驗 <ArrowRight className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+                if (!Array.isArray(data) || data.length === 0) {
+                    throw new Error("讀取成功，但沒有題目資料。請檢查 Google Sheet。");
+                }
 
-  // 2. 載入中
-  if (appState === 'loading' || appState === 'submitting') {
-    return (
-      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center">
-        <Loader2 className="w-12 h-12 text-blue-600 animate-spin mb-4" />
-        <p className="text-slate-600 font-medium animate-pulse">
-          {appState === 'loading' ? '正在從雲端載入試題...' : '正在紀錄成績...'}
-        </p>
-        {!USE_MOCK_DATA && appState === 'loading' && (
-           <p className="text-xs text-slate-400 mt-2">(如果是第一次連線，可能會稍慢)</p>
-        )}
-      </div>
-    );
-  }
+                state.questions = shuffleArray(data);
+                state.view = 'quiz';
+                renderQuiz();
 
-  // 3. 測驗畫面
-  if (appState === 'quiz') {
-    const currentQ = questions[currentQuestionIndex];
-    const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
-    const isAnswered = userAnswers[currentQ.id] !== undefined;
+            } catch (err) {
+                console.error(err);
+                state.errorMsg = err.message || "未知錯誤";
+                renderError();
+            }
+        }
 
-    return (
-      <div className="min-h-screen bg-slate-50 py-8 px-4 flex justify-center font-sans">
-        <div className="w-full max-w-2xl">
-          <div className="mb-6">
-            <div className="flex justify-between text-sm text-slate-500 mb-2 font-medium">
-              <span>Question {currentQuestionIndex + 1} <span className="text-slate-300">/</span> {questions.length}</span>
-              <span>{Math.round(progress)}%</span>
-            </div>
-            <div className="h-2.5 bg-slate-200 rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-blue-600 transition-all duration-500 ease-out rounded-full"
-                style={{ width: `${progress}%` }}
-              ></div>
-            </div>
-          </div>
+        // 選擇答案
+        function selectAnswer(option) {
+            const currentQ = state.questions[state.currentQuestionIndex];
+            state.userAnswers[currentQ.id] = option;
+            renderQuiz(); // 重新渲染以更新選取狀態
+        }
 
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8 mb-6">
-            <h2 className="text-xl md:text-2xl font-bold text-slate-800 mb-8 leading-relaxed">
-              {currentQ.question}
-            </h2>
+        // 下一題
+        function handleNext() {
+            if (state.currentQuestionIndex < state.questions.length - 1) {
+                state.currentQuestionIndex++;
+                renderQuiz();
+            } else {
+                calculateAndSubmit();
+            }
+        }
 
-            <div className="space-y-3">
-              {currentQ.options.map((option, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => handleAnswerSelect(option)}
-                  className={`w-full text-left p-4 rounded-xl border-2 transition-all duration-200 flex items-center group ${
-                    userAnswers[currentQ.id] === option
-                      ? 'border-blue-500 bg-blue-50 text-blue-800'
-                      : 'border-slate-100 hover:border-blue-200 hover:bg-slate-50 text-slate-600'
-                  }`}
-                >
-                  <span className={`flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold mr-3 transition-colors ${
-                    userAnswers[currentQ.id] === option
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-slate-100 text-slate-400 group-hover:bg-blue-100 group-hover:text-blue-600'
-                  }`}>
-                    {String.fromCharCode(65 + idx)}
-                  </span>
-                  <span className="font-medium text-lg">{option}</span>
-                </button>
-              ))}
-            </div>
-          </div>
+        // 計算分數並提交
+        async function calculateAndSubmit() {
+            let correctCount = 0;
+            state.questions.forEach(q => {
+                if (state.userAnswers[q.id] === q.correctAnswer) {
+                    correctCount++;
+                }
+            });
 
-          <div className="flex justify-end">
-            <button
-              onClick={handleNext}
-              disabled={!isAnswered}
-              className={`px-8 py-3 rounded-lg font-bold text-lg transition-all transform ${
-                isAnswered
-                  ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg hover:shadow-xl hover:-translate-y-0.5'
-                  : 'bg-slate-200 text-slate-400 cursor-not-allowed'
-              }`}
-            >
-              {currentQuestionIndex === questions.length - 1 ? '提交試卷' : '下一題'}
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+            state.score = Math.round((correctCount / state.questions.length) * 100);
+            state.view = 'submitting';
+            renderLoading('正在儲存成績...');
 
-  // 4. 結果畫面
-  if (appState === 'result') {
-    return (
-      <div className="min-h-screen bg-slate-50 py-8 px-4 flex justify-center font-sans">
-        <div className="w-full max-w-3xl">
-          <div className="bg-white rounded-2xl shadow-lg border border-slate-100 p-8 text-center mb-8 relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500"></div>
-            <div className="inline-flex items-center justify-center w-24 h-24 bg-yellow-50 rounded-full mb-4 ring-8 ring-yellow-50/50">
-              <Award className="w-12 h-12 text-yellow-500" />
-            </div>
-            <h2 className="text-3xl font-bold text-slate-800 mb-2">測驗完成！</h2>
-            <p className="text-slate-500 mb-6 font-medium text-lg">{userName} 的最終成績</p>
-            <div className="text-7xl font-black text-slate-800 mb-8 tracking-tighter">
-              {score}<span className="text-3xl text-slate-400 font-normal ml-1">/100</span>
-            </div>
-            <button
-              onClick={restartQuiz}
-              className="inline-flex items-center gap-2 text-slate-600 hover:text-blue-600 font-bold transition-colors py-2 px-4 rounded-lg hover:bg-slate-50"
-            >
-              <RefreshCcw className="w-5 h-5" /> 重新測驗
-            </button>
-          </div>
+            if (!USE_MOCK_DATA) {
+                try {
+                    // 使用 no-cors 模式發送 POST，雖然拿不到回應內容，但能確保發送成功且不被瀏覽器擋下
+                    await fetch(GAS_URL, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        headers: {
+                            'Content-Type': 'text/plain;charset=utf-8',
+                        },
+                        body: JSON.stringify({
+                            name: state.userName,
+                            score: state.score
+                        })
+                    });
+                } catch (e) {
+                    console.error("提交失敗", e);
+                    // 即使提交失敗也顯示結果，以免卡住
+                }
+            } else {
+                await new Promise(r => setTimeout(r, 1000));
+            }
 
-          <div className="space-y-6">
-            <div className="flex items-center gap-3 ml-1 mb-2">
-              <div className="w-1 h-6 bg-blue-600 rounded-full"></div>
-              <h3 className="text-xl font-bold text-slate-800">詳細解析與指導</h3>
-            </div>
-            
-            {questions.map((q, idx) => {
-              const userAnswer = userAnswers[q.id];
-              const isCorrect = userAnswer === q.correctAnswer;
+            state.view = 'result';
+            renderResult();
+        }
 
-              return (
-                <div key={q.id} className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden transition hover:shadow-md">
-                  <div className={`p-6 border-l-[6px] ${isCorrect ? 'border-green-500' : 'border-red-500'}`}>
-                    <div className="flex items-start gap-4">
-                      <div className="mt-1 shrink-0">
-                        {isCorrect ? (
-                          <CheckCircle2 className="w-7 h-7 text-green-500" />
-                        ) : (
-                          <XCircle className="w-7 h-7 text-red-500" />
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <span className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block">
-                          Question {idx + 1}
-                        </span>
-                        <h4 className="text-lg font-bold text-slate-800 mb-4 leading-snug">
-                          {q.question}
-                        </h4>
-                        
-                        <div className="flex flex-col sm:flex-row gap-3 text-sm mb-5 bg-slate-50 p-3 rounded-lg">
-                          <div className={`flex items-center gap-2 ${isCorrect ? 'text-green-700' : 'text-red-700'}`}>
-                            <span className="font-bold shrink-0">你的答案:</span> 
-                            <span className="font-mono">{userAnswer}</span>
-                          </div>
-                          {!isCorrect && (
-                            <div className="flex items-center gap-2 text-slate-700">
-                              <span className="font-bold shrink-0">正確答案:</span> 
-                              <span className="font-mono text-green-700">{q.correctAnswer}</span>
-                            </div>
-                          )}
+        function restart() {
+            state.userName = '';
+            state.currentQuestionIndex = 0;
+            state.userAnswers = {};
+            state.score = 0;
+            state.view = 'welcome';
+            renderWelcome();
+        }
+
+        // ==========================================
+        // 畫面渲染函式 (Render Views)
+        // ==========================================
+        const app = document.getElementById('app');
+
+        // 1. 歡迎畫面
+        function renderWelcome() {
+            app.innerHTML = `
+                <div class="bg-white max-w-md w-full rounded-2xl shadow-xl overflow-hidden fade-in">
+                    <div class="bg-gradient-to-br from-blue-600 to-indigo-700 p-8 text-center">
+                        <svg class="w-16 h-16 text-white/90 mx-auto mb-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                        <h1 class="text-3xl font-bold text-white mb-2 tracking-tight">線上測驗系統</h1>
+                        <p class="text-blue-100 font-medium">NotebookLM 智慧出題 (HTML版)</p>
+                    </div>
+                    <div class="p-8 space-y-6">
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">請輸入您的姓名</label>
+                            <input type="text" id="nameInput" class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition" placeholder="Ex: 王小明">
                         </div>
+                        <button onclick="handleStart()" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 px-6 rounded-lg transition duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform active:scale-95">
+                            開始測驗 
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
 
-                        {!isCorrect && q.explanation && (
-                          <div className="mt-2 bg-gradient-to-br from-amber-50 to-orange-50/50 rounded-xl p-5 border border-amber-100 shadow-sm">
-                            <h5 className="text-amber-700 font-bold text-sm mb-3 flex items-center gap-2 uppercase tracking-wide">
-                              <BookOpen className="w
+        // 2. 載入中畫面
+        function renderLoading(msg = '正在從雲端載入試題...') {
+            app.innerHTML = `
+                <div class="flex flex-col items-center justify-center fade-in">
+                    <svg class="w-12 h-12 text-blue-600 animate-spin mb-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+                    <p class="text-slate-600 font-medium animate-pulse">${msg}</p>
+                </div>
+            `;
+        }
+
+        // 3. 錯誤畫面
+        function renderError() {
+            app.innerHTML = `
+                <div class="bg-white max-w-md w-full rounded-2xl shadow-xl p-8 border-l-4 border-red-500 fade-in">
+                    <div class="flex items-center gap-3 mb-4 text-red-600">
+                        <svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+                        <h2 class="text-xl font-bold">發生錯誤</h2>
+                    </div>
+                    <div class="bg-red-50 p-4 rounded-lg text-sm text-red-800 font-mono mb-6 break-words">${state.errorMsg}</div>
+                    <button onclick="restart()" class="w-full bg-slate-900 text-white font-bold py-3 rounded-lg hover:bg-slate-800 transition">重新整理</button>
+                </div>
+            `;
+        }
+
+        // 4. 測驗畫面
+        function renderQuiz() {
+            const currentQ = state.questions[state.currentQuestionIndex];
+            const progress = Math.round(((state.currentQuestionIndex + 1) / state.questions.length) * 100);
+            const isAnswered = state.userAnswers[currentQ.id] !== undefined;
+
+            // 產生選項的 HTML
+            const optionsHtml = currentQ.options.map((option, idx) => {
+                const isSelected = state.userAnswers[currentQ.id] === option;
+                const letter = String.fromCharCode(65 + idx);
+                const borderClass = isSelected ? 'border-blue-500 bg-blue-50 text-blue-800' : 'border-slate-100 hover:border-blue-200 hover:bg-slate-50 text-slate-600';
+                const circleClass = isSelected ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-400 group-hover:bg-blue-100 group-hover:text-blue-600';
+
+                return `
+                    <button onclick="selectAnswer('${option}')" class="w-full text-left p-4 rounded-xl border-2 transition-all duration-200 flex items-center group ${borderClass} mb-3">
+                        <span class="flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold mr-3 transition-colors ${circleClass}">
+                            ${letter}
+                        </span>
+                        <span class="font-medium text-lg">${option}</span>
+                    </button>
+                `;
+            }).join('');
+
+            // 下一題按鈕樣式
+            const nextBtnClass = isAnswered 
+                ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg hover:shadow-xl hover:-translate-y-0.5' 
+                : 'bg-slate-200 text-slate-400 cursor-not-allowed';
+            const nextBtnText = state.currentQuestionIndex === state.questions.length - 1 ? '提交試卷' : '下一題';
+
+            app.innerHTML = `
+                <div class="w-full max-w-2xl fade-in">
+                    <!-- 進度條 -->
+                    <div class="mb-6">
+                        <div class="flex justify-between text-sm text-slate-500 mb-2 font-medium">
+                            <span>Question ${state.currentQuestionIndex + 1} <span class="text-slate-300">/</span> ${state.questions.length}</span>
+                            <span>${progress}%</span>
+                        </div>
+                        <div class="h-2.5 bg-slate-200 rounded-full overflow-hidden">
+                            <div class="h-full bg-blue-600 transition-all duration-500 ease-out rounded-full" style="width: ${progress}%"></div>
+                        </div>
+                    </div>
+
+                    <!-- 題目卡片 -->
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8 mb-6">
+                        <h2 class="text-xl md:text-2xl font-bold text-slate-800 mb-8 leading-relaxed">${currentQ.question}</h2>
+                        <div class="space-y-3">
+                            ${optionsHtml}
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end">
+                        <button id="nextBtn" onclick="handleNext()" ${!isAnswered ? 'disabled' : ''} class="px-8 py-3 rounded-lg font-bold text-lg transition-all transform ${nextBtnClass}">
+                            ${nextBtnText}
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 5. 結果畫面
+        function renderResult() {
+            // 產生詳解列表 HTML
+            const reviewHtml = state.questions.map((q, idx) => {
+                const userAnswer = state.userAnswers[q.id];
+                const isCorrect = userAnswer === q.correctAnswer;
+                const borderClass = isCorrect ? 'border-green-500' : 'border-red-500';
+                const icon = isCorrect 
+                    ? `<svg class="w-7 h-7 text-green-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>` 
+                    : `<svg class="w-7 h-7 text-red-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>`;
+
+                // 詳解區塊 (NotebookLM)
+                let explanationHtml = '';
+                if (!isCorrect && q.explanation) {
+                    explanationHtml = `
+                        <div class="mt-2 bg-gradient-to-br from-amber-50 to-orange-50/50 rounded-xl p-5 border border-amber-100 shadow-sm">
+                            <h5 class="text-amber-700 font-bold text-sm mb-3 flex items-center gap-2 uppercase tracking-wide">
+                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                                NotebookLM 智慧指導
+                            </h5>
+                            <p class="text-slate-700 text-sm leading-7 text-justify">${q.explanation}</p>
+                        </div>
+                    `;
+                } else if (isCorrect && q.explanation) {
+                     explanationHtml = `<div class="mt-2 text-slate-500 text-sm italic pl-1"><p>💡 ${q.explanation}</p></div>`;
+                }
+
+                // 正確答案顯示邏輯
+                const correctAnswerDisplay = !isCorrect 
+                    ? `<div class="flex items-center gap-2 text-slate-700"><span class="font-bold shrink-0">正確答案:</span><span class="font-mono text-green-700">${q.correctAnswer}</span></div>` 
+                    : '';
+
+                return `
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden transition hover:shadow-md mb-6">
+                        <div class="p-6 border-l-[6px] ${borderClass}">
+                            <div class="flex items-start gap-4">
+                                <div class="mt-1 shrink-0">${icon}</div>
+                                <div class="flex-1 min-w-0">
+                                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block">Question ${idx + 1}</span>
+                                    <h4 class="text-lg font-bold text-slate-800 mb-4 leading-snug">${q.question}</h4>
+                                    
+                                    <div class="flex flex-col sm:flex-row gap-3 text-sm mb-5 bg-slate-50 p-3 rounded-lg">
+                                        <div class="flex items-center gap-2 ${isCorrect ? 'text-green-700' : 'text-red-700'}">
+                                            <span class="font-bold shrink-0">你的答案:</span> 
+                                            <span class="font-mono">${userAnswer}</span>
+                                        </div>
+                                        ${correctAnswerDisplay}
+                                    </div>
+                                    ${explanationHtml}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            app.innerHTML = `
+                <div class="w-full max-w-3xl fade-in">
+                    <div class="bg-white rounded-2xl shadow-lg border border-slate-100 p-8 text-center mb-8 relative overflow-hidden">
+                        <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500"></div>
+                        <div class="inline-flex items-center justify-center w-24 h-24 bg-yellow-50 rounded-full mb-4 ring-8 ring-yellow-50/50">
+                            <svg class="w-12 h-12 text-yellow-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>
+                        </div>
+                        <h2 class="text-3xl font-bold text-slate-800 mb-2">測驗完成！</h2>
+                        <p class="text-slate-500 mb-6 font-medium text-lg">${state.userName} 的最終成績</p>
+                        <div class="text-7xl font-black text-slate-800 mb-8 tracking-tighter">
+                            ${state.score}<span class="text-3xl text-slate-400 font-normal ml-1">/100</span>
+                        </div>
+                        <button onclick="restart()" class="inline-flex items-center gap-2 text-slate-600 hover:text-blue-600 font-bold transition-colors py-2 px-4 rounded-lg hover:bg-slate-50">
+                            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg> 
+                            重新測驗
+                        </button>
+                    </div>
+
+                    <div class="space-y-6">
+                        <div class="flex items-center gap-3 ml-1 mb-2">
+                            <div class="w-1 h-6 bg-blue-600 rounded-full"></div>
+                            <h3 class="text-xl font-bold text-slate-800">詳細解析與指導</h3>
+                        </div>
+                        ${reviewHtml}
+                    </div>
+                </div>
+            `;
+        }
+
+        // 初始化
+        renderWelcome();
+
+    </script>
+</body>
+</html>
