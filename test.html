@@ -1,46 +1,32 @@
 import React, { useState, useEffect } from 'react';
-import { Loader2, CheckCircle2, XCircle, Award, ArrowRight, RefreshCcw, BookOpen, AlertTriangle } from 'lucide-react';
+import { Loader2, CheckCircle2, XCircle, Award, ArrowRight, RefreshCcw, BookOpen, AlertTriangle, Cloud, CloudOff } from 'lucide-react';
 
 // --- 設定區域 ---
-// 1. 部署時請確認此處為 false，才會抓取 Google Sheet 資料
-const USE_MOCK_DATA = false; 
-
-// 2. 請填入您部署好的 Google Apps Script 網頁應用程式網址 (Exec URL)
+const USE_MOCK_DATA = false; // 設為 false 代表要抓雲端資料
+// 你的 Google Apps Script URL
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwBS1cRZVuZZpbVpOfgs_Yg38liCu4u9Eyg58MTY0J0mRFqUklmmzwGkYALcEU2JTweKw/exec";
 
+// 預設範例資料 (僅在 USE_MOCK_DATA = true 或讀取失敗時參考用)
 const MOCK_QUESTIONS = [
   {
     id: 1,
-    question: "在 React 中，用於管理組件內部狀態的 Hook 是什麼？",
+    question: "範例題目：React 的 Hook 是什麼？",
     options: ["useEffect", "useState", "useContext", "useReducer"],
     correctAnswer: "useState",
-    explanation: "NotebookLM 解析：useState 是 React 中最基礎的 Hook，允許函數組件擁有自己的狀態。useEffect 則是用於處理副作用。"
-  },
-  {
-    id: 2,
-    question: "CSS 中，哪一個屬性可以改變元素的背景顏色？",
-    options: ["color", "background-color", "border-color", "fill"],
-    correctAnswer: "background-color",
-    explanation: "NotebookLM 解析：color 屬性通常用於改變文字顏色，而 background-color 才是專門用於設定元素背景色的屬性。"
-  },
-  {
-    id: 3,
-    question: "下列何者不是 JavaScript 的資料型別？",
-    options: ["String", "Boolean", "Float", "Undefined"],
-    correctAnswer: "Float",
-    explanation: "NotebookLM 解析：JavaScript 只有 Number 型別，不區分 Integer 或 Float。其他選項皆為 JS 的基本型別。"
+    explanation: "NotebookLM 解析：這是預設的範例資料，代表你尚未成功連線到 Google Sheet。"
   }
 ];
 
 export default function App() {
-  const [appState, setAppState] = useState('welcome'); // welcome, loading, quiz, result, submitting
+  const [appState, setAppState] = useState('welcome'); // welcome, loading, quiz, result, submitting, error
   const [userName, setUserName] = useState('');
   const [questions, setQuestions] = useState([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [userAnswers, setUserAnswers] = useState({}); // { questionId: selectedOption }
+  const [userAnswers, setUserAnswers] = useState({}); 
   const [score, setScore] = useState(0);
+  const [errorMsg, setErrorMsg] = useState(''); // 用來存儲錯誤訊息
 
-  // 洗牌演算法 (Fisher-Yates Shuffle)
+  // 洗牌演算法
   const shuffleArray = (array) => {
     const newArray = [...array];
     for (let i = newArray.length - 1; i > 0; i--) {
@@ -50,51 +36,65 @@ export default function App() {
     return newArray;
   };
 
-  // 抓取題目
+  // 抓取題目 (包含詳細除錯邏輯)
   const fetchQuestions = async () => {
-    // 防呆檢查：確認是否已設定 URL
+    // 檢查 URL
     if (!USE_MOCK_DATA && GOOGLE_SCRIPT_URL.includes("YOUR_GOOGLE_APPS_SCRIPT")) {
-      alert("尚未設定後端網址！\n請在程式碼中填入您的 Google Apps Script URL。");
+      setErrorMsg("尚未設定 Google Apps Script URL，請修改程式碼。");
+      setAppState('error');
       return;
     }
 
     setAppState('loading');
+    setErrorMsg(''); // 清除舊錯誤
+
     try {
       let data = [];
+      
       if (USE_MOCK_DATA) {
-        // 模擬延遲
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise(resolve => setTimeout(resolve, 800));
         data = MOCK_QUESTIONS;
       } else {
+        console.log("開始連線至:", GOOGLE_SCRIPT_URL);
         const response = await fetch(GOOGLE_SCRIPT_URL);
-        if (!response.ok) throw new Error('Network response was not ok');
-        data = await response.json();
+        
+        // 嘗試讀取回應文字，因為如果是權限錯誤，Google 會回傳 HTML 而不是 JSON
+        const textResponse = await response.text();
+        
+        try {
+          data = JSON.parse(textResponse);
+        } catch (e) {
+          // JSON 解析失敗，通常是因為回傳了 HTML (權限錯誤頁面)
+          console.error("JSON Parse Error. Raw response:", textResponse);
+          if (textResponse.includes("Google Drive") || textResponse.includes("sign in")) {
+             throw new Error("權限錯誤：Google Script 未設定為「任何人」可存取，導致回傳了登入頁面。");
+          } else {
+             throw new Error(`資料格式錯誤 (非 JSON)。回應內容摘要: ${textResponse.substring(0, 100)}...`);
+          }
+        }
       }
       
       if (!Array.isArray(data) || data.length === 0) {
-        throw new Error('No questions found');
+        throw new Error('讀取成功，但題庫是空的 (Empty Array)。請檢查 Google Sheet 是否有資料。');
       }
 
-      // 隨機排序題目
       setQuestions(shuffleArray(data));
       setAppState('quiz');
     } catch (error) {
-      console.error("Failed to fetch questions", error);
-      alert("讀取題目失敗，請確認網路連線或 Google Sheet 設定。\n(如果是跨域問題，請確認 Apps Script 已設為 '任何人' 可存取)");
-      setAppState('welcome');
+      console.error("Fetch Error:", error);
+      setErrorMsg(error.message || "未知錯誤");
+      setAppState('error');
     }
   };
 
-  // 處理開始測驗
   const handleStart = () => {
     if (!userName.trim()) {
-      alert("請輸入您的姓名");
+      alert("請輸入您的姓名"); // 這裡保留 alert 因為是簡單檢查
       return;
     }
     fetchQuestions();
   };
 
-  // 處理選擇答案
   const handleAnswerSelect = (option) => {
     setUserAnswers({
       ...userAnswers,
@@ -102,7 +102,6 @@ export default function App() {
     });
   };
 
-  // 下一題或結束
   const handleNext = () => {
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
@@ -111,7 +110,6 @@ export default function App() {
     }
   };
 
-  // 計算分數並提交
   const calculateScore = async () => {
     let currentScore = 0;
     questions.forEach(q => {
@@ -124,19 +122,16 @@ export default function App() {
     setScore(finalScore);
     setAppState('submitting');
 
-    // 提交成績回 Google Sheet
-    if (!USE_MOCK_DATA && !GOOGLE_SCRIPT_URL.includes("YOUR_GOOGLE_APPS_SCRIPT")) {
+    if (!USE_MOCK_DATA) {
       try {
         await fetch(GOOGLE_SCRIPT_URL, {
           method: 'POST',
           body: JSON.stringify({ name: userName, score: finalScore }),
-          // no-cors 模式對於 Google Apps Script 是必須的，但它不會回傳可讀的 response
           mode: 'no-cors', 
           headers: { 'Content-Type': 'application/json' }
         });
       } catch (error) {
         console.error("Submission error", error);
-        // 即使提交失敗，也讓使用者看成績，不阻擋流程
       }
     } else {
       await new Promise(resolve => setTimeout(resolve, 800));
@@ -151,9 +146,41 @@ export default function App() {
     setUserAnswers({});
     setCurrentQuestionIndex(0);
     setScore(0);
+    setErrorMsg('');
   };
 
-  // --- 畫面組件 ---
+  // --- 畫面渲染 ---
+
+  // 0. 錯誤畫面 (新增)
+  if (appState === 'error') {
+    return (
+      <div className="min-h-screen bg-red-50 flex items-center justify-center p-4">
+        <div className="bg-white max-w-md w-full rounded-2xl shadow-xl p-8 border-l-4 border-red-500">
+          <div className="flex items-center gap-3 mb-4 text-red-600">
+            <AlertTriangle className="w-8 h-8" />
+            <h2 className="text-xl font-bold">連線發生錯誤</h2>
+          </div>
+          <div className="bg-red-50 p-4 rounded-lg text-sm text-red-800 font-mono mb-6 break-words">
+            {errorMsg}
+          </div>
+          <div className="text-slate-600 text-sm mb-6 space-y-2">
+            <p className="font-bold">請檢查以下幾點：</p>
+            <ul className="list-disc pl-5 space-y-1">
+              <li>Google Apps Script 是否已部署為「<strong>網頁應用程式</strong>」？</li>
+              <li>權限 (Who has access) 是否已設為「<strong>任何人 (Anyone)</strong>」？(這是最常見錯誤)</li>
+              <li>是否修改後忘記按「<strong>建立新版本</strong>」？</li>
+            </ul>
+          </div>
+          <button
+            onClick={restartQuiz}
+            className="w-full bg-slate-900 text-white font-bold py-3 rounded-lg hover:bg-slate-800 transition"
+          >
+            回首頁重試
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   // 1. 歡迎畫面
   if (appState === 'welcome') {
@@ -163,9 +190,16 @@ export default function App() {
           <div className="bg-gradient-to-br from-blue-600 to-indigo-700 p-8 text-center">
             <BookOpen className="w-16 h-16 text-white/90 mx-auto mb-4" />
             <h1 className="text-3xl font-bold text-white mb-2 tracking-tight">線上測驗系統</h1>
-            <p className="text-blue-100 font-medium">挑戰自我，獲取 AI 智慧指導</p>
+            <p className="text-blue-100 font-medium">NotebookLM 智慧出題</p>
           </div>
           <div className="p-8 space-y-6">
+            
+            {/* 狀態指示燈 */}
+            <div className={`flex items-center justify-center gap-2 text-xs font-bold py-1 px-3 rounded-full w-fit mx-auto ${USE_MOCK_DATA ? 'bg-orange-100 text-orange-700' : 'bg-green-100 text-green-700'}`}>
+              {USE_MOCK_DATA ? <CloudOff className="w-3 h-3"/> : <Cloud className="w-3 h-3"/>}
+              {USE_MOCK_DATA ? '模式：測試資料 (Mock)' : '模式：雲端 Google Sheet'}
+            </div>
+
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2">
                 請輸入您的姓名
@@ -178,17 +212,6 @@ export default function App() {
                 placeholder="Ex: 王小明"
               />
             </div>
-            
-            {/* 提示使用者設定 URL 的區塊 (若 URL 未設定會顯示) */}
-            {!USE_MOCK_DATA && GOOGLE_SCRIPT_URL.includes("YOUR_GOOGLE_APPS_SCRIPT") && (
-              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex gap-3 text-sm text-amber-800">
-                <AlertTriangle className="w-5 h-5 shrink-0" />
-                <div>
-                  <span className="font-bold">尚未設定後端：</span>
-                  請在程式碼中填入 Google Apps Script URL 才能開始測驗。
-                </div>
-              </div>
-            )}
 
             <button
               onClick={handleStart}
@@ -210,6 +233,9 @@ export default function App() {
         <p className="text-slate-600 font-medium animate-pulse">
           {appState === 'loading' ? '正在從雲端載入試題...' : '正在紀錄成績...'}
         </p>
+        {!USE_MOCK_DATA && appState === 'loading' && (
+           <p className="text-xs text-slate-400 mt-2">(如果是第一次連線，可能會稍慢)</p>
+        )}
       </div>
     );
   }
@@ -223,7 +249,6 @@ export default function App() {
     return (
       <div className="min-h-screen bg-slate-50 py-8 px-4 flex justify-center font-sans">
         <div className="w-full max-w-2xl">
-          {/* 進度條 */}
           <div className="mb-6">
             <div className="flex justify-between text-sm text-slate-500 mb-2 font-medium">
               <span>Question {currentQuestionIndex + 1} <span className="text-slate-300">/</span> {questions.length}</span>
@@ -237,7 +262,6 @@ export default function App() {
             </div>
           </div>
 
-          {/* 題目卡片 */}
           <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8 mb-6">
             <h2 className="text-xl md:text-2xl font-bold text-slate-800 mb-8 leading-relaxed">
               {currentQ.question}
@@ -285,13 +309,11 @@ export default function App() {
     );
   }
 
-  // 4. 結果畫面 (重點：顯示 NotebookLM 的指導)
+  // 4. 結果畫面
   if (appState === 'result') {
     return (
       <div className="min-h-screen bg-slate-50 py-8 px-4 flex justify-center font-sans">
         <div className="w-full max-w-3xl">
-          
-          {/* 成績看板 */}
           <div className="bg-white rounded-2xl shadow-lg border border-slate-100 p-8 text-center mb-8 relative overflow-hidden">
             <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500"></div>
             <div className="inline-flex items-center justify-center w-24 h-24 bg-yellow-50 rounded-full mb-4 ring-8 ring-yellow-50/50">
@@ -310,7 +332,6 @@ export default function App() {
             </button>
           </div>
 
-          {/* 詳細解析區域 */}
           <div className="space-y-6">
             <div className="flex items-center gap-3 ml-1 mb-2">
               <div className="w-1 h-6 bg-blue-600 rounded-full"></div>
@@ -353,37 +374,7 @@ export default function App() {
                           )}
                         </div>
 
-                        {/* 這裡顯示 NotebookLM 的指導內容 */}
                         {!isCorrect && q.explanation && (
                           <div className="mt-2 bg-gradient-to-br from-amber-50 to-orange-50/50 rounded-xl p-5 border border-amber-100 shadow-sm">
                             <h5 className="text-amber-700 font-bold text-sm mb-3 flex items-center gap-2 uppercase tracking-wide">
-                              <BookOpen className="w-4 h-4" />
-                              NotebookLM 智慧指導
-                            </h5>
-                            <p className="text-slate-700 text-sm leading-7 text-justify">
-                              {q.explanation}
-                            </p>
-                          </div>
-                        )}
-                        
-                        {/* 即使答對也可以顯示解析 (可選) */}
-                        {isCorrect && q.explanation && (
-                           <div className="mt-2 text-slate-500 text-sm italic pl-1">
-                             <p>💡 {q.explanation}</p>
-                           </div>
-                        )}
-
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  return null;
-}
+                              <BookOpen className="w
