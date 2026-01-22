@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NotebookLM 智慧測驗系統</title>
-    <!-- Tailwind CSS (樣式庫) -->
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
@@ -16,60 +16,34 @@
 </head>
 <body class="bg-slate-50 min-h-screen text-slate-800">
 
-    <!-- 主容器 -->
-    <div id="app" class="flex flex-col items-center justify-center min-h-screen p-4">
-        <!-- 內容會由 JavaScript 動態插入這裡 -->
-    </div>
+    <div id="app" class="flex flex-col items-center justify-center min-h-screen p-4"></div>
 
     <script>
         // ==========================================
-        // 設定區域 (請修改這裡)
+        // 設定區域
         // ==========================================
-        
         // 請填入您的 Google Apps Script 網頁應用程式網址
         const GAS_URL = "https://script.google.com/macros/s/AKfycbwBS1cRZVuZZpbVpOfgs_Yg38liCu4u9Eyg58MTY0J0mRFqUklmmzwGkYALcEU2JTweKw/exec";
-
-        // 如果想先測試畫面不想連 Google Sheet，把這個設為 true
         const USE_MOCK_DATA = false;
 
-        // ==========================================
-        // 模擬資料 (Mock Data)
-        // ==========================================
         const MOCK_DATA = [
-            {
-                id: 1,
-                question: "範例題目：這是一個 HTML 版本的測驗嗎？",
-                options: ["是的", "不是", "不確定", "可能是 React"],
-                correctAnswer: "是的",
-                explanation: "NotebookLM 解析：你現在看到的確實是純 HTML + JavaScript 的版本，沒有使用 React。"
-            },
-            {
-                id: 2,
-                question: "要如何抓取 Google Sheet 資料？",
-                options: ["用手抓", "使用 fetch API", "打電話給 Google", "使用心電感應"],
-                correctAnswer: "使用 fetch API",
-                explanation: "NotebookLM 解析：在前端網頁中，我們使用 JavaScript 的 fetch() 函式來向後端 Google Apps Script 發送請求。"
-            }
+            { id: 1, question: "範例：React Hook?", options: ["useState", "class"], correctAnswer: "useState", explanation: "Mock data explanation." },
+            { id: 2, question: "範例：Fetch?", options: ["Yes", "No"], correctAnswer: "Yes", explanation: "Mock data explanation." }
         ];
 
-        // ==========================================
-        // 狀態管理 (State)
-        // ==========================================
         let state = {
-            view: 'welcome', // welcome, loading, quiz, result, error
+            view: 'welcome',
             userName: '',
             questions: [],
             currentQuestionIndex: 0,
-            userAnswers: {}, // { questionId: 'Selected Option' }
+            userAnswers: {},
             score: 0,
             errorMsg: ''
         };
 
         // ==========================================
-        // 核心邏輯 (Logic)
+        // 核心邏輯
         // ==========================================
-
-        // 洗牌演算法
         function shuffleArray(array) {
             let newArray = [...array];
             for (let i = newArray.length - 1; i > 0; i--) {
@@ -79,74 +53,43 @@
             return newArray;
         }
 
-        // 開始按鈕點擊
         function handleStart() {
             const nameInput = document.getElementById('nameInput');
             const name = nameInput.value.trim();
-            if (!name) {
-                alert('請輸入您的姓名');
-                return;
-            }
+            if (!name) { alert('請輸入您的姓名'); return; }
             state.userName = name;
             fetchQuestions();
         }
 
-        // 抓取題目
         async function fetchQuestions() {
             renderLoading();
-            
-            // 檢查 URL 是否有設定
             if (!USE_MOCK_DATA && (GAS_URL.includes("YOUR_GOOGLE") || GAS_URL === "")) {
-                state.errorMsg = "尚未設定 Google Apps Script URL！請打開 HTML 原始碼修改 GAS_URL 變數。";
-                renderError();
-                return;
+                state.errorMsg = "尚未設定 GAS_URL"; renderError(); return;
             }
-
             try {
                 let data = [];
                 if (USE_MOCK_DATA) {
-                    await new Promise(r => setTimeout(r, 800)); // 模擬延遲
-                    data = MOCK_DATA;
+                    await new Promise(r => setTimeout(r, 800)); data = MOCK_DATA;
                 } else {
                     const response = await fetch(GAS_URL);
                     const text = await response.text();
-                    
-                    try {
-                        data = JSON.parse(text);
-                    } catch (e) {
-                        // 如果回傳的不是 JSON，通常是權限錯誤 (回傳了 Google 登入頁面的 HTML)
-                        console.error("解析失敗，原始回應:", text);
-                        if (text.includes("Google Drive") || text.includes("sign in")) {
-                            throw new Error("權限錯誤：請確認 Google Script 部署權限是否設為「任何人 (Anyone)」。");
-                        } else {
-                            throw new Error("資料格式錯誤，請檢查後端程式碼。");
-                        }
-                    }
+                    try { data = JSON.parse(text); } catch (e) { throw new Error("資料格式錯誤或權限不足"); }
                 }
-
-                if (!Array.isArray(data) || data.length === 0) {
-                    throw new Error("讀取成功，但沒有題目資料。請檢查 Google Sheet。");
-                }
-
+                if (!Array.isArray(data) || data.length === 0) throw new Error("無題目資料");
                 state.questions = shuffleArray(data);
                 state.view = 'quiz';
                 renderQuiz();
-
             } catch (err) {
-                console.error(err);
-                state.errorMsg = err.message || "未知錯誤";
-                renderError();
+                state.errorMsg = err.message || "未知錯誤"; renderError();
             }
         }
 
-        // 選擇答案
         function selectAnswer(option) {
             const currentQ = state.questions[state.currentQuestionIndex];
             state.userAnswers[currentQ.id] = option;
-            renderQuiz(); // 重新渲染以更新選取狀態
+            renderQuiz();
         }
 
-        // 下一題
         function handleNext() {
             if (state.currentQuestionIndex < state.questions.length - 1) {
                 state.currentQuestionIndex++;
@@ -156,253 +99,124 @@
             }
         }
 
-        // 計算分數並提交
+        // 修改：計算分數並收集錯題
         async function calculateAndSubmit() {
             let correctCount = 0;
+            let wrongQuestionsLog = []; // 用來存錯題資訊
+
             state.questions.forEach(q => {
                 if (state.userAnswers[q.id] === q.correctAnswer) {
                     correctCount++;
+                } else {
+                    // 紀錄錯題：存入 ID 和 題目簡述 (取前10個字)
+                    // 這樣就算題目隨機排序，後端也能知道是哪一題
+                    let shortQ = q.question.substring(0, 10).replace(/,/g, "，"); // 避免逗號干擾
+                    wrongQuestionsLog.push(`[${q.id}]${shortQ}...`);
                 }
             });
 
             state.score = Math.round((correctCount / state.questions.length) * 100);
+            
+            // 將錯題陣列轉成字串，例如: "[1]React..., [3]CSS..."
+            let wrongListStr = wrongQuestionsLog.join(", ");
+
             state.view = 'submitting';
             renderLoading('正在儲存成績...');
 
             if (!USE_MOCK_DATA) {
                 try {
-                    // 使用 no-cors 模式發送 POST，雖然拿不到回應內容，但能確保發送成功且不被瀏覽器擋下
                     await fetch(GAS_URL, {
                         method: 'POST',
                         mode: 'no-cors',
-                        headers: {
-                            'Content-Type': 'text/plain;charset=utf-8',
-                        },
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                         body: JSON.stringify({
                             name: state.userName,
-                            score: state.score
+                            score: state.score,
+                            wrongList: wrongListStr // 新增這個欄位傳給後端
                         })
                     });
-                } catch (e) {
-                    console.error("提交失敗", e);
-                    // 即使提交失敗也顯示結果，以免卡住
-                }
-            } else {
-                await new Promise(r => setTimeout(r, 1000));
-            }
+                } catch (e) { console.error("提交失敗", e); }
+            } else { await new Promise(r => setTimeout(r, 1000)); }
 
             state.view = 'result';
             renderResult();
         }
 
         function restart() {
-            state.userName = '';
-            state.currentQuestionIndex = 0;
-            state.userAnswers = {};
-            state.score = 0;
-            state.view = 'welcome';
-            renderWelcome();
+            state.userName = ''; state.currentQuestionIndex = 0;
+            state.userAnswers = {}; state.score = 0;
+            state.view = 'welcome'; renderWelcome();
         }
 
         // ==========================================
-        // 畫面渲染函式 (Render Views)
+        // 畫面渲染
         // ==========================================
         const app = document.getElementById('app');
 
-        // 1. 歡迎畫面
         function renderWelcome() {
             app.innerHTML = `
                 <div class="bg-white max-w-md w-full rounded-2xl shadow-xl overflow-hidden fade-in">
-                    <div class="bg-gradient-to-br from-blue-600 to-indigo-700 p-8 text-center">
-                        <svg class="w-16 h-16 text-white/90 mx-auto mb-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
-                        <h1 class="text-3xl font-bold text-white mb-2 tracking-tight">線上測驗系統</h1>
-                        <p class="text-blue-100 font-medium">NotebookLM 智慧出題 (HTML版)</p>
+                    <div class="bg-blue-600 p-8 text-center text-white">
+                        <h1 class="text-3xl font-bold mb-2">線上測驗系統</h1>
+                        <p class="text-blue-100">NotebookLM 智慧出題</p>
                     </div>
                     <div class="p-8 space-y-6">
                         <div>
                             <label class="block text-sm font-semibold text-slate-700 mb-2">請輸入您的姓名</label>
-                            <input type="text" id="nameInput" class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition" placeholder="Ex: 王小明">
+                            <input type="text" id="nameInput" class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Ex: 王小明">
                         </div>
-                        <button onclick="handleStart()" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 px-6 rounded-lg transition duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform active:scale-95">
-                            開始測驗 
-                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-                        </button>
+                        <button onclick="handleStart()" class="w-full bg-slate-900 text-white font-bold py-3 rounded-lg hover:bg-slate-800 transition shadow-lg">開始測驗</button>
                     </div>
-                </div>
-            `;
+                </div>`;
         }
 
-        // 2. 載入中畫面
-        function renderLoading(msg = '正在從雲端載入試題...') {
-            app.innerHTML = `
-                <div class="flex flex-col items-center justify-center fade-in">
-                    <svg class="w-12 h-12 text-blue-600 animate-spin mb-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
-                    <p class="text-slate-600 font-medium animate-pulse">${msg}</p>
-                </div>
-            `;
+        function renderLoading(msg = '載入中...') {
+            app.innerHTML = `<div class="flex flex-col items-center fade-in"><div class="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4"></div><p class="text-slate-600">${msg}</p></div>`;
         }
 
-        // 3. 錯誤畫面
         function renderError() {
-            app.innerHTML = `
-                <div class="bg-white max-w-md w-full rounded-2xl shadow-xl p-8 border-l-4 border-red-500 fade-in">
-                    <div class="flex items-center gap-3 mb-4 text-red-600">
-                        <svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
-                        <h2 class="text-xl font-bold">發生錯誤</h2>
-                    </div>
-                    <div class="bg-red-50 p-4 rounded-lg text-sm text-red-800 font-mono mb-6 break-words">${state.errorMsg}</div>
-                    <button onclick="restart()" class="w-full bg-slate-900 text-white font-bold py-3 rounded-lg hover:bg-slate-800 transition">重新整理</button>
-                </div>
-            `;
+            app.innerHTML = `<div class="bg-white p-8 rounded-2xl shadow-xl border-l-4 border-red-500 fade-in"><h2 class="text-xl font-bold text-red-600 mb-4">發生錯誤</h2><p class="text-red-800 mb-6">${state.errorMsg}</p><button onclick="restart()" class="w-full bg-slate-900 text-white py-3 rounded-lg">重新整理</button></div>`;
         }
 
-        // 4. 測驗畫面
         function renderQuiz() {
             const currentQ = state.questions[state.currentQuestionIndex];
             const progress = Math.round(((state.currentQuestionIndex + 1) / state.questions.length) * 100);
             const isAnswered = state.userAnswers[currentQ.id] !== undefined;
 
-            // 產生選項的 HTML
             const optionsHtml = currentQ.options.map((option, idx) => {
                 const isSelected = state.userAnswers[currentQ.id] === option;
-                const letter = String.fromCharCode(65 + idx);
-                const borderClass = isSelected ? 'border-blue-500 bg-blue-50 text-blue-800' : 'border-slate-100 hover:border-blue-200 hover:bg-slate-50 text-slate-600';
-                const circleClass = isSelected ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-400 group-hover:bg-blue-100 group-hover:text-blue-600';
-
-                return `
-                    <button onclick="selectAnswer('${option}')" class="w-full text-left p-4 rounded-xl border-2 transition-all duration-200 flex items-center group ${borderClass} mb-3">
-                        <span class="flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold mr-3 transition-colors ${circleClass}">
-                            ${letter}
-                        </span>
-                        <span class="font-medium text-lg">${option}</span>
-                    </button>
-                `;
+                const baseClass = "w-full text-left p-4 rounded-xl border-2 transition flex items-center mb-3 ";
+                const colorClass = isSelected ? 'border-blue-500 bg-blue-50 text-blue-800' : 'border-slate-100 hover:border-blue-200 hover:bg-slate-50 text-slate-600';
+                return `<button onclick="selectAnswer('${option}')" class="${baseClass} ${colorClass}"><span class="w-8 h-8 flex items-center justify-center rounded-full text-sm font-bold mr-3 ${isSelected ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-400'}">${String.fromCharCode(65 + idx)}</span><span class="font-medium text-lg">${option}</span></button>`;
             }).join('');
-
-            // 下一題按鈕樣式
-            const nextBtnClass = isAnswered 
-                ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg hover:shadow-xl hover:-translate-y-0.5' 
-                : 'bg-slate-200 text-slate-400 cursor-not-allowed';
-            const nextBtnText = state.currentQuestionIndex === state.questions.length - 1 ? '提交試卷' : '下一題';
 
             app.innerHTML = `
                 <div class="w-full max-w-2xl fade-in">
-                    <!-- 進度條 -->
-                    <div class="mb-6">
-                        <div class="flex justify-between text-sm text-slate-500 mb-2 font-medium">
-                            <span>Question ${state.currentQuestionIndex + 1} <span class="text-slate-300">/</span> ${state.questions.length}</span>
-                            <span>${progress}%</span>
-                        </div>
-                        <div class="h-2.5 bg-slate-200 rounded-full overflow-hidden">
-                            <div class="h-full bg-blue-600 transition-all duration-500 ease-out rounded-full" style="width: ${progress}%"></div>
-                        </div>
-                    </div>
-
-                    <!-- 題目卡片 -->
-                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8 mb-6">
-                        <h2 class="text-xl md:text-2xl font-bold text-slate-800 mb-8 leading-relaxed">${currentQ.question}</h2>
-                        <div class="space-y-3">
-                            ${optionsHtml}
-                        </div>
-                    </div>
-
-                    <div class="flex justify-end">
-                        <button id="nextBtn" onclick="handleNext()" ${!isAnswered ? 'disabled' : ''} class="px-8 py-3 rounded-lg font-bold text-lg transition-all transform ${nextBtnClass}">
-                            ${nextBtnText}
-                        </button>
-                    </div>
-                </div>
-            `;
+                    <div class="mb-6 flex justify-between text-sm text-slate-500"><span>Question ${state.currentQuestionIndex + 1}/${state.questions.length}</span><span>${progress}%</span></div>
+                    <div class="h-2.5 bg-slate-200 rounded-full mb-6 overflow-hidden"><div class="h-full bg-blue-600 transition-all duration-500" style="width: ${progress}%"></div></div>
+                    <div class="bg-white rounded-2xl shadow-sm border p-6 mb-6"><h2 class="text-xl font-bold mb-8">${currentQ.question}</h2><div class="space-y-3">${optionsHtml}</div></div>
+                    <div class="flex justify-end"><button onclick="handleNext()" ${!isAnswered ? 'disabled' : ''} class="px-8 py-3 rounded-lg font-bold text-lg transition ${isAnswered ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg' : 'bg-slate-200 text-slate-400'}">${state.currentQuestionIndex === state.questions.length - 1 ? '提交試卷' : '下一題'}</button></div>
+                </div>`;
         }
 
-        // 5. 結果畫面
         function renderResult() {
-            // 產生詳解列表 HTML
             const reviewHtml = state.questions.map((q, idx) => {
-                const userAnswer = state.userAnswers[q.id];
-                const isCorrect = userAnswer === q.correctAnswer;
-                const borderClass = isCorrect ? 'border-green-500' : 'border-red-500';
-                const icon = isCorrect 
-                    ? `<svg class="w-7 h-7 text-green-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>` 
-                    : `<svg class="w-7 h-7 text-red-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>`;
-
-                // 詳解區塊 (NotebookLM)
+                const isCorrect = state.userAnswers[q.id] === q.correctAnswer;
                 let explanationHtml = '';
-                if (!isCorrect && q.explanation) {
-                    explanationHtml = `
-                        <div class="mt-2 bg-gradient-to-br from-amber-50 to-orange-50/50 rounded-xl p-5 border border-amber-100 shadow-sm">
-                            <h5 class="text-amber-700 font-bold text-sm mb-3 flex items-center gap-2 uppercase tracking-wide">
-                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
-                                NotebookLM 智慧指導
-                            </h5>
-                            <p class="text-slate-700 text-sm leading-7 text-justify">${q.explanation}</p>
-                        </div>
-                    `;
-                } else if (isCorrect && q.explanation) {
-                     explanationHtml = `<div class="mt-2 text-slate-500 text-sm italic pl-1"><p>💡 ${q.explanation}</p></div>`;
-                }
+                if (!isCorrect && q.explanation) explanationHtml = `<div class="mt-2 bg-amber-50 rounded-xl p-5 border border-amber-100"><h5 class="text-amber-800 font-bold text-sm mb-2">NotebookLM 指導</h5><p class="text-slate-700 text-sm">${q.explanation}</p></div>`;
+                else if (isCorrect && q.explanation) explanationHtml = `<div class="mt-2 text-slate-500 text-sm italic pl-1">💡 ${q.explanation}</div>`;
 
-                // 正確答案顯示邏輯
-                const correctAnswerDisplay = !isCorrect 
-                    ? `<div class="flex items-center gap-2 text-slate-700"><span class="font-bold shrink-0">正確答案:</span><span class="font-mono text-green-700">${q.correctAnswer}</span></div>` 
-                    : '';
-
-                return `
-                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden transition hover:shadow-md mb-6">
-                        <div class="p-6 border-l-[6px] ${borderClass}">
-                            <div class="flex items-start gap-4">
-                                <div class="mt-1 shrink-0">${icon}</div>
-                                <div class="flex-1 min-w-0">
-                                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block">Question ${idx + 1}</span>
-                                    <h4 class="text-lg font-bold text-slate-800 mb-4 leading-snug">${q.question}</h4>
-                                    
-                                    <div class="flex flex-col sm:flex-row gap-3 text-sm mb-5 bg-slate-50 p-3 rounded-lg">
-                                        <div class="flex items-center gap-2 ${isCorrect ? 'text-green-700' : 'text-red-700'}">
-                                            <span class="font-bold shrink-0">你的答案:</span> 
-                                            <span class="font-mono">${userAnswer}</span>
-                                        </div>
-                                        ${correctAnswerDisplay}
-                                    </div>
-                                    ${explanationHtml}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `;
+                return `<div class="bg-white rounded-xl shadow-sm border mb-6 overflow-hidden"><div class="p-6 border-l-[6px] ${isCorrect ? 'border-green-500' : 'border-red-500'}"><h4 class="text-lg font-bold mb-4">Q${idx + 1}. ${q.question}</h4><div class="flex gap-4 text-sm mb-4"><span class="${isCorrect ? 'text-green-700' : 'text-red-700'} font-bold">你的答案: ${state.userAnswers[q.id]}</span>${!isCorrect ? `<span class="text-slate-600">正確答案: ${q.correctAnswer}</span>` : ''}</div>${explanationHtml}</div></div>`;
             }).join('');
 
             app.innerHTML = `
                 <div class="w-full max-w-3xl fade-in">
-                    <div class="bg-white rounded-2xl shadow-lg border border-slate-100 p-8 text-center mb-8 relative overflow-hidden">
-                        <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500"></div>
-                        <div class="inline-flex items-center justify-center w-24 h-24 bg-yellow-50 rounded-full mb-4 ring-8 ring-yellow-50/50">
-                            <svg class="w-12 h-12 text-yellow-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>
-                        </div>
-                        <h2 class="text-3xl font-bold text-slate-800 mb-2">測驗完成！</h2>
-                        <p class="text-slate-500 mb-6 font-medium text-lg">${state.userName} 的最終成績</p>
-                        <div class="text-7xl font-black text-slate-800 mb-8 tracking-tighter">
-                            ${state.score}<span class="text-3xl text-slate-400 font-normal ml-1">/100</span>
-                        </div>
-                        <button onclick="restart()" class="inline-flex items-center gap-2 text-slate-600 hover:text-blue-600 font-bold transition-colors py-2 px-4 rounded-lg hover:bg-slate-50">
-                            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg> 
-                            重新測驗
-                        </button>
-                    </div>
-
-                    <div class="space-y-6">
-                        <div class="flex items-center gap-3 ml-1 mb-2">
-                            <div class="w-1 h-6 bg-blue-600 rounded-full"></div>
-                            <h3 class="text-xl font-bold text-slate-800">詳細解析與指導</h3>
-                        </div>
-                        ${reviewHtml}
-                    </div>
-                </div>
-            `;
+                    <div class="bg-white rounded-2xl shadow-lg border p-8 text-center mb-8"><h2 class="text-3xl font-bold mb-2">測驗完成</h2><p class="text-slate-500 mb-4">${state.userName} 的成績</p><div class="text-6xl font-black text-slate-800 mb-6">${state.score}</div><button onclick="restart()" class="text-blue-600 font-bold hover:underline">重新測驗</button></div>
+                    <div class="space-y-6">${reviewHtml}</div>
+                </div>`;
         }
 
-        // 初始化
         renderWelcome();
-
     </script>
 </body>
 </html>
