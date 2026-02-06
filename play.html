@@ -196,7 +196,7 @@
                     const apiKey = trainingData.apiKey || prompt("請輸入您的 Gemini API Key 以開始對話:");
                     if (!apiKey) throw new Error("Missing API Key");
 
-                    const genAI = new GoogleGenerativeAI(AIzaSyDnRNPAF1NYTsPhuK66m-u8VJvpp1-1SCc);
+                    const genAI = new GoogleGenerativeAI(apiKey);
                     
                     // 系統提示詞構建
                     const systemPrompt = `
@@ -579,4 +579,3 @@
     </script>
 </body>
 </html>
-
