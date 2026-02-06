@@ -1,491 +1,582 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { GoogleGenAI } from '@google/genai';
-import { 
-    Mic, Send, RotateCcw, User, Bot, GraduationCap, Stethoscope, 
-    AlertTriangle, ShieldCheck, ArrowLeft, Clock, Loader
-} from 'lucide-react';
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 智能對練場 (React 版)</title>
+    
+    <!-- 1. 核心樣式庫 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- 2. React 核心 -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    
+    <!-- 3. Babel (用於解析 JSX) -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-// 與 App.tsx 共用同樣的 GAS URL
-const GAS_URL = "https://script.google.com/macros/s/AKfycbyFryLNJ7oEQwOKQK2Jkpyva1ZajhTmAtlsUXW7E8BhSylvLqPheaAgYklu3CsgtCwJEg/exec";
-
-interface Scenario {
-    source_agent: string;
-    blocker: string;
-    context: string;
-    improvement_needed: string;
-}
-
-interface Message {
-    role: 'user' | 'ai';
-    text: string;
-    timestamp: number;
-}
-
-interface TrainingPackage {
-    apiKey: string;
-    rules: { systemInstruction: string };
-    scenarios: Scenario[];
-}
-
-export default function Simulator({ onBack }: { onBack: () => void }) {
-    const [isLoading, setIsLoading] = useState(true);
-    const [loadingStep, setLoadingStep] = useState("正在連線至雲端戰情室...");
-    const [trainingData, setTrainingData] = useState<TrainingPackage | null>(null);
-    const [currentScenario, setCurrentScenario] = useState<Scenario | null>(null);
-    const [messages, setMessages] = useState<Message[]>([]);
-    const [input, setInput] = useState('');
-    const [isListening, setIsListening] = useState(false);
-    const [patience, setPatience] = useState(100);
-    const [isThinking, setIsThinking] = useState(false);
-    const [sessionStatus, setSessionStatus] = useState<'active' | 'success' | 'fail' | 'idle'>('idle');
-    const [coachFeedback, setCoachFeedback] = useState<string | null>(null);
-    const [timer, setTimer] = useState(0);
-
-    const chatContainerRef = useRef<HTMLDivElement>(null);
-    const recognitionRef = useRef<any>(null);
-    const timerRef = useRef<any>(null);
-
-    // 1. 初始化：從雲端 (GAS) 抓取訓練包
-    useEffect(() => {
-        const fetchConfig = async () => {
-            try {
-                setLoadingStep("正在下載真實失敗案例庫...");
-                const response = await fetch(GAS_URL, {
-                    method: 'POST',
-                    body: JSON.stringify({ action: 'get_training_package' })
-                });
-                const data = await response.json();
-                
-                if (data.status === 'success') {
-                    setTrainingData(data);
-                    if (data.scenarios.length > 0) {
-                        loadScenario(data.scenarios[0]);
-                    }
-                } else {
-                    setLoadingStep("連線失敗：" + data.message);
-                }
-            } catch (e) {
-                setLoadingStep("無法連線至後端，請檢查網路。");
-            } finally {
-                setIsLoading(false);
-            }
-        };
-        fetchConfig();
-        
-        return () => stopTimer();
-    }, []);
-
-    // 2. 計時器邏輯
-    const startTimer = () => {
-        stopTimer();
-        setTimer(0);
-        timerRef.current = setInterval(() => {
-            setTimer(prev => prev + 1);
-        }, 1000);
-    };
-
-    const stopTimer = () => {
-        if (timerRef.current) clearInterval(timerRef.current);
-    };
-
-    const formatTime = (seconds: number) => {
-        const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
-        const secs = (seconds % 60).toString().padStart(2, '0');
-        return `${mins}:${secs}`;
-    };
-
-    // 3. 載入劇本
-    const loadScenario = (scenario: Scenario) => {
-        setCurrentScenario(scenario);
-        setMessages([]);
-        setPatience(100);
-        setSessionStatus('active');
-        setCoachFeedback(null);
-        startTimer();
-        
-        // AI 開場白
-        const opening = `(電話接通) 喂...請問是${scenario.source_agent}專員嗎？我之前有問過裝機，但我還在考慮...`;
-        addMessage('ai', opening);
-        speak(opening);
-    };
-
-    // 4. 發送訊息邏輯
-    const sendMessage = async () => {
-        if (!input.trim() || !trainingData || !currentScenario) return;
-        
-        const userText = input;
-        setInput('');
-        addMessage('user', userText);
-        
-        setIsThinking(true);
-
-        try {
-            const ai = new GoogleGenAI({ apiKey: trainingData.apiKey });
-            
-            const systemPrompt = `
-                ${trainingData.rules.systemInstruction}
-                
-                # 重要任務：角色扮演 (Role Play)
-                你現在不是稽核員，你是一位【真實客戶】。
-                請依據以下設定進行對話：
-                
-                ## 你的背景
-                - 核心阻礙 (為何不想買)：${currentScenario.blocker}
-                - 真實案例背景：${currentScenario.context}
-                - 你的性格：猶豫、多疑、對價格敏感。
-                
-                ## 遊戲規則 (Game Rules)
-                1. 初始耐心值：${patience} (每回合自然扣減 5 分)。
-                2. 專員若使用了【違禁詞】(如：不知道)，請大幅扣分並表現出生氣。
-                3. 專員若使用了正確的【反對話術】(參照 SOP)，請給予肯定並回復耐心。
-                4. 若耐心值歸零，請掛斷電話 (輸出 [HANGUP])。
-                5. 若專員成功解決你的核心阻礙 (${currentScenario.blocker})，請答應成交 (輸出 [DEAL])。
-                
-                ## 輸出格式 (JSON Only)
-                請僅輸出 JSON，不要 Markdown：
-                {
-                    "reply": "你的回應 (口語化)",
-                    "patience_change": -10,
-                    "internal_thought": "客戶內心獨白 (為何扣分/加分)",
-                    "status": "CONTINUE" | "HANGUP" | "DEAL"
-                }
-            `;
-
-            const history = messages.map(m => ({
-                role: m.role === 'user' ? 'user' : 'model',
-                parts: [{ text: m.text }]
-            }));
-
-            const result = await ai.models.generateContent({
-                model: 'gemini-3-flash-preview',
-                contents: [
-                    { role: 'user', parts: [{ text: systemPrompt }] }, 
-                    ...history,
-                    { role: 'user', parts: [{ text: userText }] }
-                ],
-                config: { responseMimeType: "application/json" }
-            });
-
-            const responseText = result.text || "{}";
-            const data = JSON.parse(responseText);
-
-            const newPatience = Math.max(0, Math.min(100, patience + data.patience_change));
-            setPatience(newPatience);
-            setCoachFeedback(data.internal_thought);
-
-            addMessage('ai', data.reply);
-            speak(data.reply);
-
-            if (data.status === 'HANGUP' || newPatience === 0) {
-                setSessionStatus('fail');
-                stopTimer();
-            } else if (data.status === 'DEAL') {
-                setSessionStatus('success');
-                stopTimer();
-            }
-
-        } catch (e) {
-            console.error(e);
-            addMessage('ai', "(通訊干擾) 喂？聽不清楚... (系統錯誤)");
-        } finally {
-            setIsThinking(false);
+    <!-- 4. Google Generative AI SDK (Web版) -->
+    <script type="importmap">
+      {
+        "imports": {
+          "@google/generative-ai": "https://esm.run/@google/generative-ai"
         }
-    };
+      }
+    </script>
 
-    const addMessage = (role: 'user' | 'ai', text: string) => {
-        setMessages(prev => [...prev, { role, text, timestamp: Date.now() }]);
-        setTimeout(() => {
-            if (chatContainerRef.current) {
-                chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
-            }
-        }, 100);
-    };
-
-    // 5. 語音合成 (TTS) 與 識別 (STT)
-    const speak = (text: string) => {
-        if ('speechSynthesis' in window) {
-            const u = new SpeechSynthesisUtterance(text);
-            u.lang = 'zh-TW';
-            u.rate = 1.1; 
-            window.speechSynthesis.speak(u);
-        }
-    };
-
-    const toggleMic = () => {
-        if (isListening) {
-            recognitionRef.current?.stop();
-            setIsListening(false);
-            return;
-        }
-
-        if (!('webkitSpeechRecognition' in window)) {
-            alert("請使用 Chrome 瀏覽器以支援語音輸入");
-            return;
-        }
-
-        const recognition = new (window as any).webkitSpeechRecognition();
-        recognition.lang = 'zh-TW';
-        recognition.continuous = false;
-        recognition.interimResults = false;
-
-        recognition.onstart = () => setIsListening(true);
-        recognition.onend = () => setIsListening(false);
-        recognition.onresult = (event: any) => {
-            const text = event.results[0][0].transcript;
-            setInput(text);
-        };
+    <style>
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #0f172a; color: #e2e8f0; }
         
-        recognitionRef.current = recognition;
-        recognition.start();
-    };
+        /* 自定義動畫 */
+        @keyframes slideUp { 
+            from { opacity: 0; transform: translateY(10px); } 
+            to { opacity: 1; transform: translateY(0); } 
+        }
+        .animate-in { animation: slideUp 0.3s ease-out forwards; }
+        
+        /* 滾動條樣式 */
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #334155; border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
 
-    // 載入畫面
-    if (isLoading) {
-        return (
-            <div className="flex flex-col items-center justify-center h-screen bg-slate-900 text-slate-200 gap-4 font-sans">
-                <Loader className="h-10 w-10 animate-spin text-sky-500" />
-                <p className="font-medium animate-pulse">{loadingStep}</p>
-                <button onClick={onBack} className="mt-8 text-sm text-slate-500 hover:text-white transition-colors">取消並返回</button>
-            </div>
+    <script type="text/babel" data-type="module">
+        import { GoogleGenerativeAI } from "@google/generative-ai";
+        
+        const { useState, useEffect, useRef } = React;
+
+        // --- 1. 圖標組件映射 (Mapping Lucide to FontAwesome) ---
+        // 為了保持您的原始代碼結構，我們創建了同名的圖標組件
+        const IconWrapper = ({ icon, className = "", spin = false }) => (
+            <i className={`${icon} ${className} ${spin ? 'fa-spin' : ''}`}></i>
         );
-    }
 
-    // 主畫面 (Dark Mode Architecture)
-    return (
-        <div className="flex flex-col md:flex-row h-screen bg-slate-900 text-slate-200 overflow-hidden font-sans">
-            
-            {/* 左側：教練儀表板 */}
-            <aside className="w-full md:w-96 bg-slate-950 border-r border-slate-800 flex flex-col z-20 shadow-xl">
-                <div className="p-5 border-b border-slate-800 bg-slate-950">
-                    <button onClick={onBack} className="mb-3 text-xs text-slate-400 hover:text-sky-400 flex items-center gap-1 transition-colors font-bold">
-                        <ArrowLeft className="h-3 w-3" /> 返回主選單
-                    </button>
-                    <h1 className="font-bold text-lg text-white flex items-center gap-2">
-                        <div className="w-8 h-8 bg-indigo-600 text-white rounded-lg flex items-center justify-center shadow-sm">
-                            <GraduationCap className="h-4 w-4" />
-                        </div>
-                        AI 智能教練系統
-                    </h1>
-                    <p className="text-[10px] text-slate-400 mt-1 uppercase tracking-wider font-bold flex items-center gap-1">
-                        <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                        Coach Persona Active
-                    </p>
-                </div>
+        const Mic = (props) => <IconWrapper icon="fa-solid fa-microphone" {...props} />;
+        const Send = (props) => <IconWrapper icon="fa-solid fa-paper-plane" {...props} />;
+        const RotateCcw = (props) => <IconWrapper icon="fa-solid fa-rotate-right" {...props} />;
+        const User = (props) => <IconWrapper icon="fa-solid fa-user" {...props} />;
+        const Bot = (props) => <IconWrapper icon="fa-solid fa-robot" {...props} />;
+        const GraduationCap = (props) => <IconWrapper icon="fa-solid fa-user-graduate" {...props} />;
+        const Stethoscope = (props) => <IconWrapper icon="fa-solid fa-stethoscope" {...props} />;
+        const AlertTriangle = (props) => <IconWrapper icon="fa-solid fa-triangle-exclamation" {...props} />;
+        const ShieldCheck = (props) => <IconWrapper icon="fa-solid fa-shield-halved" {...props} />;
+        const ArrowLeft = (props) => <IconWrapper icon="fa-solid fa-arrow-left" {...props} />;
+        const Clock = (props) => <IconWrapper icon="fa-regular fa-clock" {...props} />;
+        const Loader = (props) => <IconWrapper icon="fa-solid fa-spinner" spin={true} {...props} />;
 
-                <div className="p-5 flex-1 overflow-y-auto space-y-6 custom-scrollbar">
-                    {/* 1. 劇本資訊 */}
-                    <div>
-                        <label className="block text-xs font-bold text-slate-500 uppercase mb-2">今日演練劇本 (Scenario)</label>
-                        <div className="w-full bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-sm hover:border-sky-500/50 transition-colors">
-                            <div className="p-3 bg-slate-800/50 border-b border-slate-800">
-                                <div className="text-sm font-bold text-sky-400">{currentScenario?.blocker || "載入中"}</div>
-                            </div>
-                            <div className="p-3">
-                                <p className="text-xs text-slate-400 leading-relaxed">{currentScenario?.context}</p>
-                            </div>
-                        </div>
+        // --- 2. 常數定義 ---
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbyFryLNJ7oEQwOKQK2Jkpyva1ZajhTmAtlsUXW7E8BhSylvLqPheaAgYklu3CsgtCwJEg/exec";
+
+        // --- 3. 主組件 ---
+        function Simulator({ onBack }) {
+            // State Definitions
+            const [isLoading, setIsLoading] = useState(true);
+            const [loadingStep, setLoadingStep] = useState("正在連線至雲端戰情室...");
+            const [trainingData, setTrainingData] = useState(null);
+            const [currentScenario, setCurrentScenario] = useState(null);
+            const [messages, setMessages] = useState([]);
+            const [input, setInput] = useState('');
+            const [isListening, setIsListening] = useState(false);
+            const [patience, setPatience] = useState(100);
+            const [isThinking, setIsThinking] = useState(false);
+            const [sessionStatus, setSessionStatus] = useState('idle'); // 'active' | 'success' | 'fail' | 'idle'
+            const [coachFeedback, setCoachFeedback] = useState(null);
+            const [timer, setTimer] = useState(0);
+
+            const chatContainerRef = useRef(null);
+            const recognitionRef = useRef(null);
+            const timerRef = useRef(null);
+
+            // 1. 初始化：從雲端 (GAS) 抓取訓練包
+            useEffect(() => {
+                const fetchConfig = async () => {
+                    try {
+                        setLoadingStep("正在下載真實失敗案例庫...");
                         
-                        {/* 劇本切換按鈕 */}
-                        {trainingData?.scenarios && trainingData.scenarios.length > 1 && (
-                            <div className="mt-3 grid grid-cols-2 gap-2">
-                                {trainingData.scenarios.map((s, i) => (
-                                    <button 
-                                        key={i} 
-                                        onClick={() => loadScenario(s)}
-                                        className={`text-[10px] p-2 rounded border truncate text-left transition-all ${
-                                            currentScenario === s 
-                                                ? 'bg-sky-500/20 border-sky-500 text-sky-400 font-bold' 
-                                                : 'bg-slate-900 border-slate-800 text-slate-500 hover:bg-slate-800'
-                                        }`}
-                                    >
-                                        Case {i+1}: {s.blocker.substring(0, 8)}...
-                                    </button>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-
-                    {/* 2. 教練診斷 */}
-                    <div className="bg-slate-900 border border-slate-800 rounded-xl p-0 shadow-sm relative overflow-hidden">
-                        <div className="bg-slate-800/50 px-4 py-3 border-b border-slate-800 flex justify-between items-center">
-                            <h3 className="text-xs font-bold text-slate-400 uppercase flex items-center gap-1">
-                                <Stethoscope className="h-3 w-3 text-indigo-400" /> 對話診斷指標
-                            </h3>
-                            <span className="text-[10px] bg-indigo-500/20 text-indigo-400 px-2 py-0.5 rounded font-bold border border-indigo-500/30">LIVE</span>
-                        </div>
-                        <div className="p-4 min-h-[100px] flex items-center justify-center">
-                            {coachFeedback ? (
-                                <p className="text-sm text-slate-300 leading-relaxed animate-in fade-in duration-500">
-                                    <span className="font-bold text-indigo-400 block mb-1">教練 OS：</span>
-                                    {coachFeedback}
-                                </p>
-                            ) : (
-                                <p className="text-xs text-slate-600 italic text-center">
-                                    AI 教練正在監聽您的對話...
-                                </p>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* 3. 提示區 */}
-                    <div className="bg-amber-900/10 border border-amber-500/20 rounded-xl p-4">
-                        <h3 className="text-xs font-bold text-amber-500 uppercase mb-2 flex items-center gap-1">
-                            <AlertTriangle className="h-3 w-3" /> 基礎應對規範
-                        </h3>
-                        <ul className="text-xs text-amber-200/70 space-y-1.5 list-disc pl-4">
-                            <li>必須清晰報出「品牌」與「姓氏」。</li>
-                            <li>積極聆聽，適當附和客戶。</li>
-                            <li>嚴禁使用「不知道」、「沒辦法」。</li>
-                        </ul>
-                    </div>
-
-                    {/* 4. 耐心值 */}
-                    <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
-                        <div className="flex justify-between items-end mb-2">
-                            <h3 className="text-xs font-bold text-slate-500 uppercase">客戶耐心值 (Patience)</h3>
-                            <span className={`text-xs font-bold ${patience < 40 ? 'text-red-400' : 'text-green-400'}`}>{patience}%</span>
-                        </div>
-                        <div className="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
-                            <div 
-                                className={`h-full transition-all duration-500 ${patience < 40 ? 'bg-red-500' : patience < 70 ? 'bg-yellow-500' : 'bg-green-500'}`} 
-                                style={{ width: `${patience}%` }}
-                            ></div>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="p-4 border-t border-slate-800 bg-slate-950">
-                    <button 
-                        onClick={() => currentScenario && loadScenario(currentScenario)}
-                        className="w-full py-3 px-4 bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 rounded-xl text-sm font-bold transition flex items-center justify-center gap-2 shadow-sm group"
-                    >
-                        <RotateCcw className="h-4 w-4 group-hover:rotate-180 transition-transform duration-500" /> 
-                        重新開始
-                    </button>
-                </div>
-            </aside>
-
-            {/* 右側：主聊天視窗 */}
-            <main className="flex-1 flex flex-col bg-slate-900/50 relative">
+                        // 嘗試 Fetch
+                        const response = await fetch(GAS_URL, {
+                            method: 'POST',
+                            body: JSON.stringify({ action: 'get_training_package' })
+                        });
+                        const data = await response.json();
+                        
+                        if (data.status === 'success') {
+                            setTrainingData(data);
+                            if (data.scenarios && data.scenarios.length > 0) {
+                                loadScenario(data.scenarios[0]);
+                            }
+                        } else {
+                            throw new Error(data.message || "Unknown error");
+                        }
+                    } catch (e) {
+                        console.warn("GAS Fetch failed, using fallback data for demo.");
+                        // Fallback Data (以防 GAS 無法連線，讓 Demo 可展示)
+                        const fallbackData = {
+                            apiKey: "", // 注意：如果是 Demo，這裡需要使用者自行填入 Key 或是提示
+                            rules: { systemInstruction: "你是一位嚴格的客戶..." },
+                            scenarios: [
+                                {
+                                    source_agent: "全秀惠",
+                                    blocker: "價格太貴 (盤石200元)",
+                                    context: "客戶覺得370元太貴，競品只要200元。",
+                                    improvement_needed: "價值堆疊"
+                                },
+                                {
+                                    source_agent: "劉亭君",
+                                    blocker: "信任感不足",
+                                    context: "客戶怕工程師亂收費。",
+                                    improvement_needed: "風險逆轉"
+                                }
+                            ]
+                        };
+                        setTrainingData(fallbackData);
+                        loadScenario(fallbackData.scenarios[0]);
+                    } finally {
+                        setIsLoading(false);
+                    }
+                };
+                fetchConfig();
                 
-                {/* 頂部導航 */}
-                <header className="bg-slate-950/80 backdrop-blur-md border-b border-slate-800 h-16 flex items-center justify-between px-6 z-10 sticky top-0">
-                    <div className="flex items-center gap-3">
-                        <div className="relative">
-                            <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center overflow-hidden border-2 border-slate-700 shadow-sm">
-                                <User className="h-5 w-5 text-slate-400" />
-                            </div>
-                            <span className={`absolute bottom-0 right-0 w-3 h-3 border-2 border-slate-900 rounded-full ${sessionStatus === 'active' ? 'bg-green-500' : 'bg-slate-500'}`}></span>
-                        </div>
-                        <div>
-                            <div className="text-sm font-bold text-slate-200">模擬客戶 (Bot)</div>
-                            <div className="text-xs text-slate-500 flex items-center gap-1">
-                                {isThinking ? "對方正在輸入..." : sessionStatus === 'active' ? "通話連線中..." : "通話結束"}
-                            </div>
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-4">
-                        <div className="hidden md:flex items-center gap-2 text-xs text-slate-500">
-                            <ShieldCheck className="h-3 w-3" /> 稽核模式: <span className="font-bold text-indigo-400">開啟</span>
-                        </div>
-                        <div className="bg-slate-900 px-3 py-1 rounded-full border border-slate-800 font-mono text-xs text-slate-400 flex items-center gap-1">
-                            <Clock className="h-3 w-3" />
-                            {formatTime(timer)}
-                        </div>
-                    </div>
-                </header>
+                return () => stopTimer();
+            }, []);
 
-                {/* 聊天內容區 */}
-                <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-6 space-y-6 pb-32">
-                    {messages.map((msg, idx) => (
-                        <div key={idx} className={`flex gap-3 ${msg.role === 'ai' ? 'justify-start' : 'justify-end'} animate-in slide-in-from-bottom-2 duration-300`}>
-                            {msg.role === 'ai' && (
-                                <div className="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center flex-shrink-0 text-slate-400 font-bold text-xs shadow-sm">客</div>
+            // 2. 計時器邏輯
+            const startTimer = () => {
+                stopTimer();
+                setTimer(0);
+                timerRef.current = setInterval(() => {
+                    setTimer(prev => prev + 1);
+                }, 1000);
+            };
+
+            const stopTimer = () => {
+                if (timerRef.current) clearInterval(timerRef.current);
+            };
+
+            const formatTime = (seconds) => {
+                const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
+                const secs = (seconds % 60).toString().padStart(2, '0');
+                return `${mins}:${secs}`;
+            };
+
+            // 3. 載入劇本
+            const loadScenario = (scenario) => {
+                setCurrentScenario(scenario);
+                setMessages([]);
+                setPatience(100);
+                setSessionStatus('active');
+                setCoachFeedback(null);
+                startTimer();
+                
+                // AI 開場白
+                const opening = `(電話接通) 喂...請問是${scenario.source_agent}專員嗎？我之前有問過裝機，但我還在考慮...`;
+                addMessage('ai', opening);
+                speak(opening);
+            };
+
+            // 4. 發送訊息邏輯
+            const sendMessage = async () => {
+                if (!input.trim() || !trainingData || !currentScenario) return;
+                
+                const userText = input;
+                setInput('');
+                addMessage('user', userText);
+                
+                setIsThinking(true);
+
+                try {
+                    // 初始化 Google Generative AI (Web SDK)
+                    // 注意：如果 fallbackData 沒有 key，這裡會報錯。
+                    // 實際應用建議增加 API Key 輸入框
+                    const apiKey = trainingData.apiKey || prompt("請輸入您的 Gemini API Key 以開始對話:");
+                    if (!apiKey) throw new Error("Missing API Key");
+
+                    const genAI = new GoogleGenerativeAI(apiKey);
+                    
+                    // 系統提示詞構建
+                    const systemPrompt = `
+                        ${trainingData.rules.systemInstruction}
+                        
+                        # 重要任務：角色扮演 (Role Play)
+                        你現在不是稽核員，你是一位【真實客戶】。
+                        請依據以下設定進行對話：
+                        
+                        ## 你的背景
+                        - 核心阻礙 (為何不想買)：${currentScenario.blocker}
+                        - 真實案例背景：${currentScenario.context}
+                        - 你的性格：猶豫、多疑、對價格敏感。
+                        
+                        ## 遊戲規則 (Game Rules)
+                        1. 初始耐心值：${patience} (每回合自然扣減 5 分)。
+                        2. 專員若使用了【違禁詞】(如：不知道)，請大幅扣分並表現出生氣。
+                        3. 專員若使用了正確的【反對話術】(參照 SOP)，請給予肯定並回復耐心。
+                        4. 若耐心值歸零，請掛斷電話 (輸出 [HANGUP])。
+                        5. 若專員成功解決你的核心阻礙 (${currentScenario.blocker})，請答應成交 (輸出 [DEAL])。
+                        
+                        ## 輸出格式 (JSON Only)
+                        請僅輸出 JSON，不要 Markdown：
+                        {
+                            "reply": "你的回應 (口語化)",
+                            "patience_change": -10,
+                            "internal_thought": "客戶內心獨白 (為何扣分/加分)",
+                            "status": "CONTINUE" | "HANGUP" | "DEAL"
+                        }
+                    `;
+
+                    // 獲取模型
+                    const model = genAI.getGenerativeModel({ 
+                        model: "gemini-2.0-flash",
+                        systemInstruction: systemPrompt
+                    });
+
+                    // 構建歷史記錄
+                    const history = messages.map(m => ({
+                        role: m.role === 'user' ? 'user' : 'model',
+                        parts: [{ text: m.text }]
+                    }));
+
+                    // 生成內容
+                    const result = await model.generateContent({
+                        contents: [...history, { role: 'user', parts: [{ text: userText }] }],
+                        generationConfig: { responseMimeType: "application/json" }
+                    });
+
+                    const responseText = result.response.text() || "{}";
+                    const data = JSON.parse(responseText);
+
+                    const newPatience = Math.max(0, Math.min(100, patience + (data.patience_change || -5)));
+                    setPatience(newPatience);
+                    setCoachFeedback(data.internal_thought);
+
+                    addMessage('ai', data.reply);
+                    speak(data.reply);
+
+                    if (data.status === 'HANGUP' || newPatience === 0) {
+                        setSessionStatus('fail');
+                        stopTimer();
+                    } else if (data.status === 'DEAL') {
+                        setSessionStatus('success');
+                        stopTimer();
+                    }
+
+                } catch (e) {
+                    console.error(e);
+                    addMessage('ai', `(系統提示) 無法連接 AI: ${e.message}。請檢查 API Key 或網路。`);
+                } finally {
+                    setIsThinking(false);
+                }
+            };
+
+            const addMessage = (role, text) => {
+                setMessages(prev => [...prev, { role, text, timestamp: Date.now() }]);
+                setTimeout(() => {
+                    if (chatContainerRef.current) {
+                        chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+                    }
+                }, 100);
+            };
+
+            // 5. 語音合成 (TTS)
+            const speak = (text) => {
+                if ('speechSynthesis' in window) {
+                    // 為了避免瀏覽器阻擋自動播放，通常需要用戶先交互
+                    const u = new SpeechSynthesisUtterance(text);
+                    u.lang = 'zh-TW';
+                    u.rate = 1.1; 
+                    window.speechSynthesis.speak(u);
+                }
+            };
+
+            // 6. 語音識別 (STT)
+            const toggleMic = () => {
+                if (isListening) {
+                    if (recognitionRef.current) recognitionRef.current.stop();
+                    setIsListening(false);
+                    return;
+                }
+
+                if (!('webkitSpeechRecognition' in window)) {
+                    alert("請使用 Chrome 瀏覽器以支援語音輸入");
+                    return;
+                }
+
+                const recognition = new window.webkitSpeechRecognition();
+                recognition.lang = 'zh-TW';
+                recognition.continuous = false;
+                recognition.interimResults = false;
+
+                recognition.onstart = () => setIsListening(true);
+                recognition.onend = () => setIsListening(false);
+                recognition.onresult = (event) => {
+                    const text = event.results[0][0].transcript;
+                    setInput(text);
+                };
+                
+                recognitionRef.current = recognition;
+                recognition.start();
+            };
+
+            // --- 渲染部分 ---
+
+            if (isLoading) {
+                return (
+                    <div className="flex flex-col items-center justify-center h-screen bg-slate-900 text-slate-200 gap-4 font-sans">
+                        <Loader className="h-10 w-10 text-sky-500" />
+                        <p className="font-medium animate-pulse">{loadingStep}</p>
+                        {onBack && <button onClick={onBack} className="mt-8 text-sm text-slate-500 hover:text-white transition-colors">取消並返回</button>}
+                    </div>
+                );
+            }
+
+            return (
+                <div className="flex flex-col md:flex-row h-screen bg-slate-900 text-slate-200 overflow-hidden font-sans">
+                    
+                    {/* 左側：教練儀表板 */}
+                    <aside className="w-full md:w-96 bg-slate-950 border-r border-slate-800 flex flex-col z-20 shadow-xl">
+                        <div className="p-5 border-b border-slate-800 bg-slate-950">
+                            {onBack && (
+                                <button onClick={onBack} className="mb-3 text-xs text-slate-400 hover:text-sky-400 flex items-center gap-1 transition-colors font-bold">
+                                    <ArrowLeft className="h-3 w-3" /> 返回主選單
+                                </button>
                             )}
-                            <div className={`px-4 py-3 rounded-2xl text-sm leading-relaxed shadow-sm max-w-[85%] ${
-                                msg.role === 'ai' 
-                                    ? 'bg-slate-800 border border-slate-700 text-slate-200 rounded-tl-none' 
-                                    : 'bg-sky-600 text-white rounded-tr-none shadow-lg shadow-sky-900/20'
-                            }`}>
-                                {msg.text}
-                            </div>
-                        </div>
-                    ))}
-
-                    {/* 結束狀態顯示 */}
-                    {sessionStatus === 'fail' && (
-                        <div className="flex justify-center my-6">
-                            <div className="bg-slate-900 p-6 rounded-xl shadow-2xl border border-red-500/20 max-w-sm text-center relative overflow-hidden">
-                                <div className="absolute top-2 right-2 text-6xl text-red-500/5 font-black rotate-12 select-none">FAIL</div>
-                                <div className="w-12 h-12 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-3 text-red-500">
-                                    <AlertTriangle className="h-6 w-6" />
+                            <h1 className="font-bold text-lg text-white flex items-center gap-2">
+                                <div className="w-8 h-8 bg-indigo-600 text-white rounded-lg flex items-center justify-center shadow-sm">
+                                    <GraduationCap className="h-4 w-4" />
                                 </div>
-                                <h3 className="font-bold text-slate-200 text-lg mb-1">演練未通過</h3>
-                                <p className="text-sm text-slate-400 mb-4">客戶失去了耐心並掛斷了電話。</p>
-                                <button onClick={() => currentScenario && loadScenario(currentScenario)} className="text-sm text-sky-400 font-bold hover:underline">再試一次</button>
-                            </div>
+                                AI 智能教練系統
+                            </h1>
+                            <p className="text-[10px] text-slate-400 mt-1 uppercase tracking-wider font-bold flex items-center gap-1">
+                                <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                                Coach Persona Active
+                            </p>
                         </div>
-                    )}
-                    {sessionStatus === 'success' && (
-                        <div className="flex justify-center my-6">
-                            <div className="bg-slate-900 p-6 rounded-xl shadow-2xl border border-green-500/20 max-w-sm text-center relative overflow-hidden">
-                                <div className="absolute top-2 right-2 text-6xl text-green-500/5 font-black rotate-12 select-none">PASS</div>
-                                <div className="w-12 h-12 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-3 text-green-500">
-                                    <ShieldCheck className="h-6 w-6" />
+
+                        <div className="p-5 flex-1 overflow-y-auto space-y-6 custom-scrollbar">
+                            {/* 1. 劇本資訊 */}
+                            <div>
+                                <label className="block text-xs font-bold text-slate-500 uppercase mb-2">今日演練劇本 (Scenario)</label>
+                                <div className="w-full bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-sm hover:border-sky-500/50 transition-colors">
+                                    <div className="p-3 bg-slate-800/50 border-b border-slate-800">
+                                        <div className="text-sm font-bold text-sky-400">{currentScenario?.blocker || "載入中"}</div>
+                                    </div>
+                                    <div className="p-3">
+                                        <p className="text-xs text-slate-400 leading-relaxed">{currentScenario?.context}</p>
+                                    </div>
                                 </div>
-                                <h3 className="font-bold text-slate-200 text-lg mb-1">演練通過</h3>
-                                <p className="text-sm text-slate-400 mb-4">成功解決客戶疑慮並達成成交！</p>
-                                <button onClick={() => currentScenario && loadScenario(currentScenario)} className="text-sm text-sky-400 font-bold hover:underline">再試一次</button>
+                                
+                                {/* 劇本切換按鈕 */}
+                                {trainingData?.scenarios && trainingData.scenarios.length > 1 && (
+                                    <div className="mt-3 grid grid-cols-2 gap-2">
+                                        {trainingData.scenarios.map((s, i) => (
+                                            <button 
+                                                key={i} 
+                                                onClick={() => loadScenario(s)}
+                                                className={`text-[10px] p-2 rounded border truncate text-left transition-all ${
+                                                    currentScenario === s 
+                                                        ? 'bg-sky-500/20 border-sky-500 text-sky-400 font-bold' 
+                                                        : 'bg-slate-900 border-slate-800 text-slate-500 hover:bg-slate-800'
+                                                }`}
+                                            >
+                                                Case {i+1}: {s.blocker.substring(0, 8)}...
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* 2. 教練診斷 */}
+                            <div className="bg-slate-900 border border-slate-800 rounded-xl p-0 shadow-sm relative overflow-hidden">
+                                <div className="bg-slate-800/50 px-4 py-3 border-b border-slate-800 flex justify-between items-center">
+                                    <h3 className="text-xs font-bold text-slate-400 uppercase flex items-center gap-1">
+                                        <Stethoscope className="h-3 w-3 text-indigo-400" /> 對話診斷指標
+                                    </h3>
+                                    <span className="text-[10px] bg-indigo-500/20 text-indigo-400 px-2 py-0.5 rounded font-bold border border-indigo-500/30">LIVE</span>
+                                </div>
+                                <div className="p-4 min-h-[100px] flex items-center justify-center">
+                                    {coachFeedback ? (
+                                        <p className="text-sm text-slate-300 leading-relaxed animate-in">
+                                            <span className="font-bold text-indigo-400 block mb-1">教練 OS：</span>
+                                            {coachFeedback}
+                                        </p>
+                                    ) : (
+                                        <p className="text-xs text-slate-600 italic text-center">
+                                            AI 教練正在監聽您的對話...
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* 3. 提示區 */}
+                            <div className="bg-amber-900/10 border border-amber-500/20 rounded-xl p-4">
+                                <h3 className="text-xs font-bold text-amber-500 uppercase mb-2 flex items-center gap-1">
+                                    <AlertTriangle className="h-3 w-3" /> 基礎應對規範
+                                </h3>
+                                <ul className="text-xs text-amber-200/70 space-y-1.5 list-disc pl-4">
+                                    <li>必須清晰報出「品牌」與「姓氏」。</li>
+                                    <li>積極聆聽，適當附和客戶。</li>
+                                    <li>嚴禁使用「不知道」、「沒辦法」。</li>
+                                </ul>
+                            </div>
+
+                            {/* 4. 耐心值 */}
+                            <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
+                                <div className="flex justify-between items-end mb-2">
+                                    <h3 className="text-xs font-bold text-slate-500 uppercase">客戶耐心值 (Patience)</h3>
+                                    <span className={`text-xs font-bold ${patience < 40 ? 'text-red-400' : 'text-green-400'}`}>{patience}%</span>
+                                </div>
+                                <div className="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
+                                    <div 
+                                        className={`h-full transition-all duration-500 ${patience < 40 ? 'bg-red-500' : patience < 70 ? 'bg-yellow-500' : 'bg-green-500'}`} 
+                                        style={{ width: `${patience}%` }}
+                                    ></div>
+                                </div>
                             </div>
                         </div>
-                    )}
-                </div>
 
-                {/* 輸入區 */}
-                <div className="absolute bottom-0 left-0 right-0 bg-slate-950 border-t border-slate-800 p-4 shadow-2xl z-20">
-                    <div className="max-w-4xl mx-auto flex items-end gap-3">
-                        <button 
-                            onClick={toggleMic}
-                            className={`flex-shrink-0 w-12 h-12 rounded-full border flex items-center justify-center transition-all duration-300 ${
-                                isListening 
-                                    ? 'bg-red-500/20 text-red-500 animate-pulse border-red-500' 
-                                    : 'bg-slate-900 text-slate-400 hover:bg-slate-800 hover:text-white border-slate-800'
-                            }`}
-                            title="語音輸入"
-                        >
-                            <Mic className="h-5 w-5" />
-                        </button>
+                        <div className="p-4 border-t border-slate-800 bg-slate-950">
+                            <button 
+                                onClick={() => currentScenario && loadScenario(currentScenario)}
+                                className="w-full py-3 px-4 bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 rounded-xl text-sm font-bold transition flex items-center justify-center gap-2 shadow-sm group"
+                            >
+                                <RotateCcw className="h-4 w-4 group-hover:rotate-180 transition-transform duration-500" /> 
+                                重新開始
+                            </button>
+                        </div>
+                    </aside>
 
-                        <div className="flex-1 bg-slate-900 border border-slate-800 rounded-2xl px-4 py-3 focus-within:ring-2 focus-within:ring-sky-500 focus-within:border-sky-500 transition-all relative">
-                            <textarea 
-                                value={input}
-                                onChange={(e) => setInput(e.target.value)}
-                                onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), sendMessage())}
-                                placeholder={sessionStatus === 'active' ? "請輸入話術..." : "通話已結束"}
-                                rows={1}
-                                disabled={sessionStatus !== 'active'}
-                                className="w-full bg-transparent border-none outline-none text-slate-200 resize-none max-h-32 leading-relaxed placeholder:text-slate-600"
-                            />
-                            {isListening && <div className="absolute right-3 bottom-3 text-[10px] text-red-500 font-bold bg-slate-950 px-1.5 py-0.5 rounded border border-red-900/50">REC</div>}
+                    {/* 右側：主聊天視窗 */}
+                    <main className="flex-1 flex flex-col bg-slate-900/50 relative">
+                        
+                        {/* 頂部導航 */}
+                        <header className="bg-slate-950/80 backdrop-blur-md border-b border-slate-800 h-16 flex items-center justify-between px-6 z-10 sticky top-0">
+                            <div className="flex items-center gap-3">
+                                <div className="relative">
+                                    <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center overflow-hidden border-2 border-slate-700 shadow-sm">
+                                        <User className="h-5 w-5 text-slate-400" />
+                                    </div>
+                                    <span className={`absolute bottom-0 right-0 w-3 h-3 border-2 border-slate-900 rounded-full ${sessionStatus === 'active' ? 'bg-green-500' : 'bg-slate-500'}`}></span>
+                                </div>
+                                <div>
+                                    <div className="text-sm font-bold text-slate-200">模擬客戶 (Bot)</div>
+                                    <div className="text-xs text-slate-500 flex items-center gap-1">
+                                        {isThinking ? "對方正在輸入..." : sessionStatus === 'active' ? "通話連線中..." : "通話結束"}
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-4">
+                                <div className="hidden md:flex items-center gap-2 text-xs text-slate-500">
+                                    <ShieldCheck className="h-3 w-3" /> 稽核模式: <span className="font-bold text-indigo-400">開啟</span>
+                                </div>
+                                <div className="bg-slate-900 px-3 py-1 rounded-full border border-slate-800 font-mono text-xs text-slate-400 flex items-center gap-1">
+                                    <Clock className="h-3 w-3" />
+                                    {formatTime(timer)}
+                                </div>
+                            </div>
+                        </header>
+
+                        {/* 聊天內容區 */}
+                        <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-6 space-y-6 pb-32 custom-scrollbar">
+                            {messages.map((msg, idx) => (
+                                <div key={idx} className={`flex gap-3 ${msg.role === 'ai' ? 'justify-start' : 'justify-end'} animate-in`}>
+                                    {msg.role === 'ai' && (
+                                        <div className="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center flex-shrink-0 text-slate-400 font-bold text-xs shadow-sm">客</div>
+                                    )}
+                                    <div className={`px-4 py-3 rounded-2xl text-sm leading-relaxed shadow-sm max-w-[85%] ${
+                                        msg.role === 'ai' 
+                                            ? 'bg-slate-800 border border-slate-700 text-slate-200 rounded-tl-none' 
+                                            : 'bg-sky-600 text-white rounded-tr-none shadow-lg shadow-sky-900/20'
+                                    }`}>
+                                        {msg.text}
+                                    </div>
+                                </div>
+                            ))}
+
+                            {/* 結束狀態顯示 */}
+                            {sessionStatus === 'fail' && (
+                                <div className="flex justify-center my-6">
+                                    <div className="bg-slate-900 p-6 rounded-xl shadow-2xl border border-red-500/20 max-w-sm text-center relative overflow-hidden">
+                                        <div className="absolute top-2 right-2 text-6xl text-red-500/5 font-black rotate-12 select-none">FAIL</div>
+                                        <div className="w-12 h-12 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-3 text-red-500">
+                                            <AlertTriangle className="h-6 w-6" />
+                                        </div>
+                                        <h3 className="font-bold text-slate-200 text-lg mb-1">演練未通過</h3>
+                                        <p className="text-sm text-slate-400 mb-4">客戶失去了耐心並掛斷了電話。</p>
+                                        <button onClick={() => currentScenario && loadScenario(currentScenario)} className="text-sm text-sky-400 font-bold hover:underline">再試一次</button>
+                                    </div>
+                                </div>
+                            )}
+                            {sessionStatus === 'success' && (
+                                <div className="flex justify-center my-6">
+                                    <div className="bg-slate-900 p-6 rounded-xl shadow-2xl border border-green-500/20 max-w-sm text-center relative overflow-hidden">
+                                        <div className="absolute top-2 right-2 text-6xl text-green-500/5 font-black rotate-12 select-none">PASS</div>
+                                        <div className="w-12 h-12 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-3 text-green-500">
+                                            <ShieldCheck className="h-6 w-6" />
+                                        </div>
+                                        <h3 className="font-bold text-slate-200 text-lg mb-1">演練通過</h3>
+                                        <p className="text-sm text-slate-400 mb-4">成功解決客戶疑慮並達成成交！</p>
+                                        <button onClick={() => currentScenario && loadScenario(currentScenario)} className="text-sm text-sky-400 font-bold hover:underline">再試一次</button>
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
-                        <button 
-                            onClick={sendMessage}
-                            disabled={!input.trim() || sessionStatus !== 'active'}
-                            className="flex-shrink-0 w-12 h-12 rounded-full bg-sky-600 text-white hover:bg-sky-500 shadow-lg shadow-sky-900/20 flex items-center justify-center transition-transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            <Send className="h-5 w-5 ml-0.5" />
-                        </button>
-                    </div>
-                    <div className="text-center mt-2">
-                         <p className="text-[10px] text-slate-500 flex items-center justify-center gap-1">
-                            <Bot className="h-3 w-3" /> AI 教練正在依據「品質稽核標準」分析您的回應...
-                         </p>
-                    </div>
-                </div>
+                        {/* 輸入區 */}
+                        <div className="absolute bottom-0 left-0 right-0 bg-slate-950 border-t border-slate-800 p-4 shadow-2xl z-20">
+                            <div className="max-w-4xl mx-auto flex items-end gap-3">
+                                
+                                <button 
+                                    onClick={toggleMic}
+                                    className={`flex-shrink-0 w-12 h-12 rounded-full border flex items-center justify-center transition-all duration-300 ${
+                                        isListening 
+                                            ? 'bg-red-500/20 text-red-500 animate-pulse border-red-500' 
+                                            : 'bg-slate-900 text-slate-400 hover:bg-slate-800 hover:text-white border-slate-800'
+                                    }`}
+                                    title="語音輸入"
+                                >
+                                    <Mic className="h-5 w-5" />
+                                </button>
 
-            </main>
-        </div>
-    );
-}
+                                <div className="flex-1 bg-slate-900 border border-slate-800 rounded-2xl px-4 py-3 focus-within:ring-2 focus-within:ring-sky-500 focus-within:border-sky-500 transition-all relative">
+                                    <textarea 
+                                        value={input}
+                                        onChange={(e) => setInput(e.target.value)}
+                                        onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), sendMessage())}
+                                        placeholder={sessionStatus === 'active' ? "請輸入話術..." : "通話已結束"}
+                                        rows={1}
+                                        disabled={sessionStatus !== 'active'}
+                                        className="w-full bg-transparent border-none outline-none text-slate-200 resize-none max-h-32 leading-relaxed placeholder:text-slate-600"
+                                    />
+                                    {isListening && <div className="absolute right-3 bottom-3 text-[10px] text-red-500 font-bold bg-slate-950 px-1.5 py-0.5 rounded border border-red-900/50">REC</div>}
+                                </div>
+
+                                <button 
+                                    onClick={sendMessage}
+                                    disabled={!input.trim() || sessionStatus !== 'active'}
+                                    className="flex-shrink-0 w-12 h-12 rounded-full bg-sky-600 text-white hover:bg-sky-500 shadow-lg shadow-sky-900/20 flex items-center justify-center transition-transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    <Send className="h-5 w-5 ml-0.5" />
+                                </button>
+                            </div>
+                            <div className="text-center mt-2">
+                                 <p className="text-[10px] text-slate-500 flex items-center justify-center gap-1">
+                                    <Bot className="h-3 w-3" /> AI 教練正在依據「品質稽核標準」分析您的回應...
+                                 </p>
+                            </div>
+                        </div>
+
+                    </main>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<Simulator />);
+    </script>
+</body>
+</html>
 
