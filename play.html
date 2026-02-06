@@ -3,260 +3,430 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SOP 實戰演練場 | 真實案例版</title>
+    <title>SOP 戰情室：歷史修正計畫</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f0f2f5; }
-        .chat-scroll { scrollbar-width: thin; scrollbar-color: #cbd5e1 #f1f5f9; }
-        .fade-in { animation: fadeIn 0.5s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .mic-active { animation: pulse-red 1.5s infinite; }
-        @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 70% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #0f172a; color: #e2e8f0; }
+        .chat-scroll { scrollbar-width: thin; scrollbar-color: #475569 #1e293b; }
+        .message-anim { animation: slideIn 0.3s ease-out; }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
+        .sop-check { transition: all 0.3s ease; }
+        .sop-checked { background-color: #059669; border-color: #059669; color: white; }
+        .highlight-word { background-color: #f59e0b; color: #000; padding: 0 4px; border-radius: 2px; font-weight: bold; }
+        
+        /* 錄音波紋動畫 */
+        .mic-wave { display: flex; gap: 3px; align-items: center; height: 20px; }
+        .mic-wave span { width: 3px; background: #ef4444; animation: wave 1s infinite ease-in-out; border-radius: 2px; }
+        .mic-wave span:nth-child(1) { animation-delay: 0.1s; height: 10px; }
+        .mic-wave span:nth-child(2) { animation-delay: 0.2s; height: 15px; }
+        .mic-wave span:nth-child(3) { animation-delay: 0.3s; height: 20px; }
+        .mic-wave span:nth-child(4) { animation-delay: 0.2s; height: 15px; }
+        .mic-wave span:nth-child(5) { animation-delay: 0.1s; height: 10px; }
+        @keyframes wave { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(2); } }
     </style>
 </head>
-<body class="h-screen flex flex-col md:flex-row overflow-hidden">
+<body class="h-screen flex flex-col overflow-hidden">
 
-    <!-- LEFT PANEL: Dashboard -->
-    <aside class="w-full md:w-1/3 bg-slate-900 text-white flex flex-col border-r border-slate-700 z-20">
-        <div class="p-6 border-b border-slate-700 bg-slate-800">
-            <div class="flex items-center gap-3 mb-2">
-                <div class="bg-indigo-500 w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm">AI</div>
-                <h1 class="font-bold text-lg tracking-wide">SOP 實戰演練場</h1>
+    <!-- 頂部導航 -->
+    <header class="bg-slate-900 border-b border-slate-700 h-16 flex items-center justify-between px-6 shrink-0">
+        <div class="flex items-center gap-4">
+            <div class="w-10 h-10 bg-indigo-600 rounded-lg flex items-center justify-center shadow-lg shadow-indigo-500/30">
+                <i class="fa-solid fa-brain text-white text-xl"></i>
             </div>
-            <p class="text-xs text-slate-400">Loading Data: 2026/02/06 Transcripts</p>
-        </div>
-
-        <div class="p-6 border-b border-slate-700">
-            <label class="text-xs text-slate-400 font-bold uppercase tracking-wider mb-2 block">選擇受訓對象 (載入真實逐字稿)</label>
-            <select id="agent-select" onchange="loadMission()" class="w-full bg-slate-800 border border-slate-600 rounded-md p-2 text-sm text-white focus:ring-2 focus:ring-indigo-500 outline-none">
-                <option value="">-- 請選擇 --</option>
-                <option value="全秀惠_Price">全秀惠 - 案件 20260128 (價格異議)</option>
-                <option value="全秀惠_Mobile">全秀惠 - 案件 20260131 (攜碼疑慮)</option>
-                <option value="劉亭君_Trust">劉亭君 - 案件 20260204 (信任感)</option>
-            </select>
-        </div>
-
-        <div id="mission-panel" class="flex-1 p-6 overflow-y-auto hidden fade-in">
-            <div class="bg-indigo-900/50 border border-indigo-500/30 rounded-xl p-4 mb-6 relative">
-                <div class="absolute top-0 right-0 bg-indigo-500 text-xs px-2 py-1 rounded-bl-lg font-bold">歷史重演</div>
-                <h3 class="text-indigo-300 text-xs font-bold uppercase mb-1">核心阻礙 (Core Blocker)</h3>
-                <p id="mission-blocker" class="text-sm font-medium leading-relaxed mb-4 text-slate-200"></p>
-                
-                <h3 class="text-green-400 text-xs font-bold uppercase mb-1">通關關鍵字 (Winning Keywords)</h3>
-                <div class="bg-slate-800/80 rounded-lg p-3">
-                    <ul id="checklist" class="space-y-2 text-sm"></ul>
-                </div>
-            </div>
-
-            <!-- Hint Button (New Feature) -->
-            <div class="mt-4">
-                <button onclick="toggleHint()" class="text-xs text-slate-400 hover:text-white underline flex items-center gap-1">
-                    <i class="fa-solid fa-lightbulb text-yellow-500"></i> 查看金牌業務 (劉亭君-成交案) 怎麼說
-                </button>
-                <div id="hint-box" class="hidden mt-2 p-3 bg-slate-800 rounded border border-yellow-600/30 text-xs text-yellow-100 italic">
-                    <!-- Golden Sample Content -->
-                </div>
+            <div>
+                <h1 class="text-lg font-bold text-white tracking-wide">SOP 戰情室：歷史修正模式</h1>
+                <p class="text-xs text-slate-400">Loading Case: 全秀惠-未成交-20260128</p>
             </div>
         </div>
+        <div class="flex items-center gap-4">
+            <div class="bg-slate-800 px-4 py-2 rounded-full border border-slate-600 flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+                <span class="text-xs font-mono text-slate-300">REC: 00:00:00</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- 主畫面佈局 -->
+    <main class="flex-1 flex overflow-hidden">
         
-        <div id="start-panel" class="p-6 mt-auto hidden">
-            <button onclick="startSession()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg shadow-lg transition flex items-center justify-center gap-2">
-                <i class="fa-solid fa-phone"></i> 開始模擬通話
-            </button>
-        </div>
-    </aside>
+        <!-- 左側：SOP 監控儀表板 -->
+        <aside class="w-80 bg-slate-900 border-r border-slate-700 flex flex-col z-10">
+            <div class="p-4 bg-slate-800/50 border-b border-slate-700">
+                <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">案件摘要 (Case Profile)</h2>
+                <div class="space-y-3">
+                    <div class="bg-slate-800 p-3 rounded-lg border border-slate-700">
+                        <div class="text-xs text-slate-500 mb-1">客戶畫像 (Persona)</div>
+                        <div class="font-bold text-sm text-white">貪小便宜的舊客</div>
+                        <div class="text-xs text-indigo-400 mt-1">
+                            <i class="fa-solid fa-tag mr-1"></i>盤石200元競品 
+                            <i class="fa-solid fa-tag mr-1"></i>低用量
+                        </div>
+                    </div>
+                    <div class="bg-red-900/20 p-3 rounded-lg border border-red-900/50">
+                        <div class="text-xs text-red-400 mb-1">核心阻礙 (Blocker)</div>
+                        <div class="text-xs text-red-200 leading-relaxed">
+                            客戶深受舊業者「200元/月」影響，認為 370 元太貴，且自認需求極低 (只偶爾用)。
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-    <!-- RIGHT PANEL: Chat -->
-    <main class="flex-1 flex flex-col bg-slate-50 relative">
-        <div id="empty-state" class="absolute inset-0 flex items-center justify-center flex-col text-slate-400">
-            <i class="fa-solid fa-comments text-6xl mb-4 opacity-20"></i>
-            <p>請選擇真實案例以開始演練</p>
-        </div>
+            <div class="flex-1 overflow-y-auto p-4">
+                <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">SOP 即時檢核 (Live Check)</h2>
+                <div id="sop-list" class="space-y-2">
+                    <!-- SOP Items (Generated by JS) -->
+                </div>
+            </div>
+        </aside>
 
-        <div id="chat-area" class="flex-1 overflow-y-auto p-4 space-y-4 hidden chat-scroll pb-24"></div>
+        <!-- 中間：歷史對話重演 (Timeline) -->
+        <section class="flex-1 flex flex-col bg-slate-950 relative">
+            <!-- 播放進度條 -->
+            <div class="h-1 bg-slate-800 w-full">
+                <div id="progress-bar" class="h-full bg-indigo-500 w-0 transition-all duration-300"></div>
+            </div>
 
-        <div id="input-area" class="bg-white p-4 border-t border-slate-200 shadow-lg absolute bottom-0 w-full hidden z-10">
-            <div class="flex items-center gap-3 max-w-4xl mx-auto">
-                <button id="mic-btn" onclick="toggleMic()" class="w-12 h-12 rounded-full bg-slate-100 hover:bg-indigo-100 text-slate-600 transition flex items-center justify-center text-lg border border-slate-200">
-                    <i class="fa-solid fa-microphone"></i>
+            <!-- 對話區 -->
+            <div id="chat-container" class="flex-1 overflow-y-auto p-6 space-y-6 chat-scroll pb-32">
+                <!-- Messages Injected Here -->
+            </div>
+
+            <!-- 介入控制台 (Intervention Console) -->
+            <div id="control-panel" class="absolute bottom-0 left-0 right-0 bg-slate-900 border-t border-slate-700 p-6 shadow-2xl transform transition-transform duration-300 translate-y-0">
+                
+                <!-- 狀態 1: 自動播放中 -->
+                <div id="status-playing" class="flex justify-between items-center">
+                    <div class="flex items-center gap-3">
+                        <button onclick="togglePlay()" class="w-12 h-12 rounded-full bg-slate-700 hover:bg-slate-600 flex items-center justify-center text-white transition">
+                            <i id="play-icon" class="fa-solid fa-pause"></i>
+                        </button>
+                        <div>
+                            <div class="text-sm font-bold text-white">正在重演歷史錄音...</div>
+                            <div class="text-xs text-slate-400">AI 正在監測對話品質</div>
+                        </div>
+                    </div>
+                    <div class="flex gap-2">
+                        <span class="text-xs bg-slate-800 px-2 py-1 rounded text-slate-400">倍速: 1.0x</span>
+                    </div>
+                </div>
+
+                <!-- 狀態 2: 需要介入 (暫停時顯示) -->
+                <div id="status-intervention" class="hidden">
+                    <div class="flex items-start gap-4 mb-4">
+                        <div class="w-10 h-10 rounded-full bg-yellow-500/20 flex items-center justify-center flex-shrink-0">
+                            <i class="fa-solid fa-triangle-exclamation text-yellow-500"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-yellow-400 font-bold text-sm">偵測到關鍵缺失！(Critical Error)</h3>
+                            <p class="text-slate-300 text-sm mt-1">專員在此處未能有效處理「價格異議」。請參考右側金牌話術，按下麥克風進行修正。</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex gap-3">
+                        <input type="text" id="user-input" placeholder="請輸入正確的應對話術..." class="flex-1 bg-slate-800 border border-slate-600 rounded-lg px-4 text-white focus:border-indigo-500 focus:outline-none">
+                        <button onclick="toggleMic()" id="mic-btn" class="px-6 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-bold flex items-center gap-2 border border-slate-600">
+                            <i class="fa-solid fa-microphone"></i> 錄音
+                        </button>
+                        <button onclick="submitIntervention()" class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold shadow-lg shadow-indigo-500/20">
+                            確認修正
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 右側：教練視角與金牌樣本 -->
+        <aside class="w-96 bg-slate-900 border-l border-slate-700 flex flex-col">
+            <!-- 頁籤 -->
+            <div class="flex border-b border-slate-700">
+                <button class="flex-1 py-3 text-xs font-bold text-indigo-400 border-b-2 border-indigo-500 bg-slate-800/50">
+                    <i class="fa-solid fa-star mr-1"></i> 金牌樣本 (Success)
                 </button>
-                <input type="text" id="user-input" placeholder="請輸入話術..." class="flex-1 bg-slate-100 border-0 rounded-full px-5 py-3 focus:ring-2 focus:ring-indigo-500 outline-none" onkeypress="handleEnter(event)">
-                <button onclick="sendMessage()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-full font-bold shadow-md transition">
-                    發送
+                <button class="flex-1 py-3 text-xs font-bold text-slate-500 hover:text-slate-300">
+                    <i class="fa-solid fa-file-medical mr-1"></i> KB 診斷
                 </button>
             </div>
-        </div>
+
+            <!-- 內容區 -->
+            <div class="flex-1 overflow-y-auto p-5 space-y-6">
+                
+                <!-- 提示卡片 -->
+                <div class="bg-indigo-900/20 border border-indigo-500/30 rounded-xl p-4">
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="text-xs font-bold text-indigo-300 uppercase">參考：劉亭君 (成交案)</h3>
+                        <span class="bg-green-500/20 text-green-400 text-[10px] px-2 py-0.5 rounded">High Score</span>
+                    </div>
+                    <div class="text-sm text-slate-300 leading-relaxed italic">
+                        "大哥，其實您換算下來，370元一天只要 <span class="text-white font-bold underline decoration-yellow-500">12塊錢</span>，比買一瓶養樂多還便宜，而且我們是專線，尖峰時間不會塞車。"
+                    </div>
+                    <div class="mt-3 flex gap-2">
+                        <span class="text-[10px] bg-slate-800 px-2 py-1 rounded text-slate-400">#價值堆疊</span>
+                        <span class="text-[10px] bg-slate-800 px-2 py-1 rounded text-slate-400">#日單價拆解</span>
+                    </div>
+                </div>
+
+                <!-- 診斷分析 (來自您的 CSV/PDF) -->
+                <div>
+                    <h3 class="text-xs font-bold text-slate-400 uppercase mb-3">AI 診斷與分析</h3>
+                    <div class="space-y-3">
+                        <div class="flex gap-3">
+                            <div class="mt-1"><i class="fa-solid fa-xmark text-red-500"></i></div>
+                            <div>
+                                <div class="text-xs font-bold text-slate-200">未執行價值墊高</div>
+                                <div class="text-xs text-slate-500 mt-0.5">面對 200 元競品，僅回答「這是最優惠了」，未拆解日費用來降低客戶痛感。</div>
+                            </div>
+                        </div>
+                        <div class="flex gap-3">
+                            <div class="mt-1"><i class="fa-solid fa-xmark text-red-500"></i></div>
+                            <div>
+                                <div class="text-xs font-bold text-slate-200">SOP 違規</div>
+                                <div class="text-xs text-slate-500 mt-0.5">使用了負面詞彙「沒辦法」，應改為強調 300M 的「穩定性優勢」。</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </aside>
+
     </main>
 
+    <!-- JS Logic -->
     <script>
-        // --- 核心資料結構：基於您上傳的 TXT 檔案 ---
-        const scenarioDB = {
-            "全秀惠_Price": {
-                blocker: "客戶深受「盤石 200 元」低價吸引，覺得 370 元太貴，且用量低。",
-                keywords: ["平均", "一天", "穩定"], // 針對「未執行價值墊高」的修正
-                // 來自: 全秀惠裝機20260128-未成交.txt (00:06)
-                startLine: "我請問一下，你們網路只有那種 300M... 300M 的那個社區方案嗎？有沒有更低的啊？因為我不用用到那麼多，我只是偶爾用。",
-                // 來自: 劉亭君裝機20260204-成交.txt 的成功邏輯 (價值轉化)
-                goldenSample: "大哥，其實您換算下來，370元一天只要12塊錢，比買一瓶養樂多還便宜，而且我們是專線，尖峰時間不會塞車，這點跟200元那種共享頻寬差很多喔。",
-                maxTurns: 3
+        // --- 資料結構：整合您的 TXT 檔案 ---
+        
+        // 1. SOP 檢核表 (來自 PDF/CSV)
+        const sopItems = [
+            { id: 1, text: "開場：報姓氏與問候", status: "pending" },
+            { id: 2, text: "探詢：確認社區與需求", status: "pending" },
+            { id: 3, text: "報價：清楚說明費用結構", status: "pending" },
+            { id: 4, text: "異議處理：價值堆疊 (日單價)", status: "pending" }, // 關鍵缺失點
+            { id: 5, text: "締結：提及 10 天鑑賞期", status: "pending" }
+        ];
+
+        // 2. 劇本流程 (基於「全秀惠-未成交」與「劉亭君-成交」整合)
+        const scriptFlow = [
+            {
+                role: "agent", text: "謝謝您，您好，敝姓陳，很高興為您服務。",
+                audioTime: 3000, sopId: 1, status: "pass"
             },
-            "全秀惠_Mobile": {
-                blocker: "客戶使用台灣大哥大，擔心換網路要換門號，覺得麻煩。",
-                keywords: ["不用換", "折抵", "帳單"],
-                // 來自: 全秀惠裝機20260131-未成交.txt (02:12)
-                startLine: "我是台灣大哥大，那我不就還要再換門號？這樣很麻煩耶。",
-                goldenSample: "門號完全不用換喔！我們是直接幫您做帳單折抵，您的號碼、合約都不受影響，只是每個月網路費變便宜了。",
-                maxTurns: 3
+            {
+                role: "customer", text: "我請問一下，你們網路只有那種 300M... 300M 的那個社區方案嗎？有沒有更低的啊？因為我不用用到那麼多，我只是偶爾用。",
+                audioTime: 5000
             },
-            "劉亭君_Trust": {
-                blocker: "信任感不足，怕工程師來了不能裝還要收費 (過年期間)。",
-                keywords: ["不收費", "現場測", "鑑賞期"],
-                // 來自: 劉亭君裝機20260204-考慮.txt (00:20)
-                startLine: "那...那現在如果我申辦的話，會卡到過年誒。啊你們還是沒有休息嗎？如果我不喜歡的話，我可以終止？",
-                goldenSample: "您放心，我們有10天鑑賞期。工程師當天會帶機器去現場測，如果您不滿意或不能裝，我們一毛錢都不會收，直接把機器帶走。",
-                maxTurns: 4
+            {
+                role: "agent", text: "我目前的話都統一建設到上傳下載都是 300M 的頻寬喔。",
+                audioTime: 3000, sopId: 2, status: "warning", // 這裡只是回答規格，未探詢
+                coachNote: "僅回答規格，未探詢用途。"
+            },
+            {
+                role: "customer", text: "啊...那沒有再優惠的了喔？我在別家才 200 塊。",
+                audioTime: 4000
+            },
+            {
+                // 這就是關鍵失敗點，系統會在這裡暫停
+                role: "agent", text: "對，這是最優惠的...每個月平均大概是 428 元...真的沒有辦法再低了。",
+                audioTime: 4000, sopId: 4, status: "fail",
+                isBreakpoint: true, // 標記為介入點
+                coachNote: "未執行價值墊高，且使用了負面詞彙。"
             }
-        };
+        ];
 
-        let currentMission = null;
-        let matchedKeywords = new Set();
-        let isMicActive = false;
-        let recognition = null;
+        // --- 程式邏輯 ---
 
-        function loadMission() {
-            const key = document.getElementById('agent-select').value;
-            if (!key) return;
-            
-            currentMission = scenarioDB[key];
-            
-            // UI Updates
-            document.getElementById('empty-state').classList.add('hidden');
-            document.getElementById('mission-panel').classList.remove('hidden');
-            document.getElementById('start-panel').classList.remove('hidden');
-            document.getElementById('mission-blocker').innerText = currentMission.blocker;
-            document.getElementById('hint-box').innerText = currentMission.goldenSample;
-            document.getElementById('hint-box').classList.add('hidden'); // Reset hint
-            
-            // Generate Checklist
-            const list = document.getElementById('checklist');
-            list.innerHTML = '';
-            currentMission.keywords.forEach(kw => {
-                const li = document.createElement('li');
-                li.id = `kw-${kw}`;
-                li.className = "flex items-center gap-2 text-slate-300";
-                li.innerHTML = `<i class="fa-solid fa-circle-check text-slate-600"></i> 提及「${kw}」`;
-                list.appendChild(li);
-            });
-        }
+        let currentStep = 0;
+        let isPlaying = false;
+        let playInterval;
 
-        function startSession() {
-            document.getElementById('start-panel').classList.add('hidden');
-            document.getElementById('chat-area').classList.remove('hidden');
-            document.getElementById('input-area').classList.remove('hidden');
-            document.getElementById('chat-area').innerHTML = ''; // Clear chat
-            
-            matchedKeywords.clear();
-            
-            // AI Speaks the REAL start line from transcript
-            addMessage('ai', currentMission.startLine);
-            speak(currentMission.startLine);
-        }
-
-        function sendMessage() {
-            const input = document.getElementById('user-input');
-            const text = input.value.trim();
-            if (!text) return;
-
-            addMessage('user', text);
-            input.value = '';
-            
-            checkKeywords(text);
-            
+        function init() {
+            renderSOP();
+            // Start the simulation after a short delay
             setTimeout(() => {
-                // Mock Logic for Demo
-                const allMatched = currentMission.keywords.every(k => matchedKeywords.has(k));
-                if (allMatched) {
-                    const winMsg = "喔...這樣講我就懂了。既然不用換號碼/不用錢，那我就試試看好了。";
-                    addMessage('ai', winMsg);
-                    speak(winMsg);
-                } else {
-                    const failMsg = "可是我還是覺得很麻煩... (AI 仍在猶豫，請嘗試使用關鍵字)";
-                    addMessage('ai', failMsg);
-                    speak(failMsg);
-                }
-            }, 1500);
+                addSystemMessage("系統連線中... 載入案件：全秀惠-未成交 (2026/01/28)");
+                startPlayback();
+            }, 1000);
         }
 
-        function checkKeywords(text) {
-            currentMission.keywords.forEach(kw => {
-                if (text.includes(kw) && !matchedKeywords.has(kw)) {
-                    matchedKeywords.add(kw);
-                    const el = document.getElementById(`kw-${kw}`);
-                    el.innerHTML = `<i class="fa-solid fa-circle-check text-green-400"></i> <span class="text-green-400 font-bold">提及「${kw}」</span>`;
-                }
-            });
-        }
-
-        function addMessage(sender, text) {
-            const area = document.getElementById('chat-area');
-            const div = document.createElement('div');
-            div.className = `flex ${sender === 'user' ? 'justify-end' : 'justify-start'} fade-in`;
-            
-            const bubbleClass = sender === 'user' 
-                ? "bg-indigo-600 text-white rounded-2xl rounded-tr-none" 
-                : "bg-white text-slate-800 border border-slate-200 rounded-2xl rounded-tl-none";
-                
-            div.innerHTML = `
-                <div class="${bubbleClass} py-3 px-4 max-w-[85%] shadow-sm text-sm leading-relaxed">
-                    ${text}
+        function renderSOP() {
+            const container = document.getElementById('sop-list');
+            container.innerHTML = sopItems.map(item => `
+                <div id="sop-item-${item.id}" class="sop-check border border-slate-700 bg-slate-800/50 p-3 rounded flex items-center justify-between">
+                    <span class="text-xs text-slate-300">${item.text}</span>
+                    <i class="fa-regular fa-circle text-slate-600 text-xs icon"></i>
                 </div>
-            `;
-            area.appendChild(div);
-            area.scrollTop = area.scrollHeight;
+            `).join('');
         }
 
-        function toggleHint() {
-            const box = document.getElementById('hint-box');
-            box.classList.toggle('hidden');
+        function updateSOP(id, status) {
+            const el = document.getElementById(`sop-item-${id}`);
+            const icon = el.querySelector('.icon');
+            if (status === 'pass') {
+                el.className = "sop-check border border-green-600 bg-green-900/30 p-3 rounded flex items-center justify-between";
+                icon.className = "fa-solid fa-check text-green-400 text-xs icon";
+            } else if (status === 'fail') {
+                el.className = "sop-check border border-red-600 bg-red-900/30 p-3 rounded flex items-center justify-between";
+                icon.className = "fa-solid fa-xmark text-red-400 text-xs icon";
+            }
         }
 
-        function toggleMic() {
-            if (!('webkitSpeechRecognition' in window)) {
-                alert("請使用 Chrome 瀏覽器");
+        function startPlayback() {
+            isPlaying = true;
+            document.getElementById('play-icon').className = "fa-solid fa-pause";
+            
+            // 模擬逐句播放
+            playNextLine();
+        }
+
+        function togglePlay() {
+            if (isPlaying) {
+                isPlaying = false;
+                document.getElementById('play-icon').className = "fa-solid fa-play";
+                clearTimeout(playInterval);
+            } else {
+                startPlayback();
+            }
+        }
+
+        function playNextLine() {
+            if (currentStep >= scriptFlow.length || !isPlaying) return;
+
+            const line = scriptFlow[currentStep];
+            
+            // 1. 如果是介入點 (Breakpoint)，暫停並切換 UI
+            if (line.isBreakpoint) {
+                isPlaying = false;
+                showInterventionUI();
+                // 顯示原本失敗的對話，但標示為錯誤
+                addMessage(line.role, line.text, 'fail');
+                updateSOP(line.sopId, 'fail');
                 return;
             }
-            if (isMicActive) {
-                recognition.stop();
-            } else {
-                recognition = new webkitSpeechRecognition();
-                recognition.lang = 'zh-TW';
-                recognition.onstart = () => {
-                    isMicActive = true;
-                    document.getElementById('mic-btn').classList.add('mic-active', 'bg-red-500', 'text-white');
-                };
-                recognition.onend = () => {
-                    isMicActive = false;
-                    document.getElementById('mic-btn').classList.remove('mic-active', 'bg-red-500', 'text-white');
-                };
-                recognition.onresult = (e) => {
-                    document.getElementById('user-input').value = e.results[0][0].transcript;
-                    sendMessage();
-                };
-                recognition.start();
+
+            // 2. 顯示對話
+            addMessage(line.role, line.text, line.status || 'neutral');
+            
+            // 3. 更新 SOP 狀態
+            if (line.sopId) {
+                updateSOP(line.sopId, line.status);
             }
+
+            // 4. 排程下一句
+            currentStep++;
+            playInterval = setTimeout(playNextLine, line.audioTime);
+            updateProgressBar();
+        }
+
+        function addMessage(role, text, status) {
+            const container = document.getElementById('chat-container');
+            const div = document.createElement('div');
+            
+            // Styles based on role
+            let bubbleClass = "";
+            let alignClass = "";
+            let avatar = "";
+
+            if (role === 'system') {
+                div.className = "flex justify-center message-anim";
+                div.innerHTML = `<span class="text-xs bg-slate-800 text-slate-400 px-3 py-1 rounded-full border border-slate-700">${text}</span>`;
+                container.appendChild(div);
+                return;
+            }
+
+            if (role === 'customer') {
+                alignClass = "justify-start";
+                bubbleClass = "bg-slate-800 text-slate-200 border-slate-700";
+                avatar = `<div class="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-xs font-bold text-slate-400">客</div>`;
+            } else { // Agent
+                alignClass = "justify-end";
+                if (status === 'fail') {
+                    bubbleClass = "bg-red-900/40 text-red-100 border-red-800"; // 錯誤示範
+                } else if (status === 'fixed') {
+                    bubbleClass = "bg-green-600 text-white border-green-500"; // 修正後
+                } else {
+                    bubbleClass = "bg-indigo-600 text-white border-indigo-500";
+                }
+                avatar = `<div class="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-xs font-bold text-white">員</div>`;
+            }
+
+            div.className = `flex ${alignClass} gap-3 message-anim`;
+            
+            // Layout logic
+            const content = `
+                <div class="${bubbleClass} border px-4 py-3 rounded-2xl max-w-[80%] text-sm shadow-sm leading-relaxed relative group">
+                    ${text}
+                    ${status === 'fail' ? '<div class="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] px-2 py-0.5 rounded-full font-bold shadow-sm">失誤點</div>' : ''}
+                </div>
+            `;
+
+            div.innerHTML = role === 'customer' ? avatar + content : content + avatar;
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function addSystemMessage(text) {
+            addMessage('system', text);
+        }
+
+        function showInterventionUI() {
+            document.getElementById('status-playing').classList.add('hidden');
+            document.getElementById('status-intervention').classList.remove('hidden');
+            document.getElementById('control-panel').classList.add('border-red-500'); // Highlight border
+        }
+
+        function submitIntervention() {
+            const input = document.getElementById('user-input');
+            const text = input.value;
+            if (!text) return;
+
+            // 1. 隱藏介入 UI，恢復正常
+            document.getElementById('status-playing').classList.remove('hidden');
+            document.getElementById('status-intervention').classList.add('hidden');
+            document.getElementById('control-panel').classList.remove('border-red-500');
+
+            // 2. 顯示修正後的對話
+            addMessage('agent', text, 'fixed');
+            updateSOP(4, 'pass'); // 修正 SOP 狀態
+
+            // 3. AI 給予回饋 (模擬)
+            setTimeout(() => {
+                addSystemMessage("AI 判定：成功運用「日單價」概念，通過檢核！");
+                
+                // 4. 繼續播放「如果成功了會怎樣」的模擬後續
+                // 這裡使用劉亭君(成交案)的後續作為獎勵
+                setTimeout(() => {
+                    addMessage('customer', "喔...一天12塊喔？這樣聽起來好像比較划算。那你們有鑑賞期嗎？", 'neutral');
+                    currentStep++;
+                    isPlaying = true;
+                    // Resume playback logic if needed...
+                }, 1500);
+            }, 800);
         }
         
-        function speak(text) {
-            if ('speechSynthesis' in window) {
-                const u = new SpeechSynthesisUtterance(text);
-                u.lang = 'zh-TW'; u.rate = 1.1;
-                window.speechSynthesis.speak(u);
+        function updateProgressBar() {
+            const progress = (currentStep / scriptFlow.length) * 100;
+            document.getElementById('progress-bar').style.width = `${progress}%`;
+        }
+
+        // --- Mock Mic Logic ---
+        function toggleMic() {
+            const btn = document.getElementById('mic-btn');
+            if (btn.classList.contains('bg-red-600')) {
+                btn.classList.remove('bg-red-600', 'animate-pulse');
+                btn.classList.add('bg-slate-700');
+                btn.innerHTML = '<i class="fa-solid fa-microphone"></i> 錄音';
+                document.getElementById('user-input').value = "這370元換算下來一天只要12塊，比養樂多還便宜，而且保證不塞車。"; // Auto-fill mock text
+            } else {
+                btn.classList.add('bg-red-600', 'animate-pulse');
+                btn.classList.remove('bg-slate-700');
+                btn.innerHTML = '<div class="mic-wave"><span></span><span></span><span></span><span></span><span></span></div> 錄音中';
             }
         }
 
-        function handleEnter(e) { if(e.key === 'Enter') sendMessage(); }
+        // Init
+        window.onload = init;
+
     </script>
 </body>
 </html>
