@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI 智能對練場 (React 版)</title>
+    <title>AI 智能對練場 V3 (難度設定版)</title>
     
-    <!-- 1. 核心樣式庫 -->
+    <!-- 1. 樣式庫 (Tailwind + FontAwesome) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
@@ -14,10 +14,10 @@
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     
-    <!-- 3. Babel (用於解析 JSX) -->
+    <!-- 3. Babel (解析 JSX) -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-    <!-- 4. Google Generative AI SDK (Web版) -->
+    <!-- 4. Google Generative AI Web SDK -->
     <script type="importmap">
       {
         "imports": {
@@ -29,14 +29,14 @@
     <style>
         body { font-family: 'Noto Sans TC', sans-serif; background-color: #0f172a; color: #e2e8f0; }
         
-        /* 自定義動畫 */
+        /* 動畫效果 */
         @keyframes slideUp { 
             from { opacity: 0; transform: translateY(10px); } 
             to { opacity: 1; transform: translateY(0); } 
         }
         .animate-in { animation: slideUp 0.3s ease-out forwards; }
         
-        /* 滾動條樣式 */
+        /* 自定義滾動條 */
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #334155; border-radius: 3px; }
@@ -50,31 +50,34 @@
         
         const { useState, useEffect, useRef } = React;
 
-        // --- 1. 圖標組件映射 (Mapping Lucide to FontAwesome) ---
-        // 為了保持您的原始代碼結構，我們創建了同名的圖標組件
-        const IconWrapper = ({ icon, className = "", spin = false }) => (
-            <i className={`${icon} ${className} ${spin ? 'fa-spin' : ''}`}></i>
-        );
+        // --- 1. 圖標組件映射 (Lucide -> FontAwesome) ---
+        const Icon = ({ name, className = "", spin = false }) => {
+            const map = {
+                Mic: "fa-solid fa-microphone",
+                Send: "fa-solid fa-paper-plane",
+                RotateCcw: "fa-solid fa-rotate-right",
+                User: "fa-solid fa-user",
+                Bot: "fa-solid fa-robot",
+                GraduationCap: "fa-solid fa-user-graduate",
+                Stethoscope: "fa-solid fa-stethoscope",
+                AlertTriangle: "fa-solid fa-triangle-exclamation",
+                ShieldCheck: "fa-solid fa-shield-halved",
+                ArrowLeft: "fa-solid fa-arrow-left",
+                Clock: "fa-regular fa-clock",
+                Loader: "fa-solid fa-spinner",
+                Shuffle: "fa-solid fa-shuffle",
+                Settings2: "fa-solid fa-sliders",
+                Flame: "fa-solid fa-fire"
+            };
+            return <i className={`${map[name] || "fa-solid fa-circle"} ${className} ${spin ? 'fa-spin' : ''}`}></i>;
+        };
 
-        const Mic = (props) => <IconWrapper icon="fa-solid fa-microphone" {...props} />;
-        const Send = (props) => <IconWrapper icon="fa-solid fa-paper-plane" {...props} />;
-        const RotateCcw = (props) => <IconWrapper icon="fa-solid fa-rotate-right" {...props} />;
-        const User = (props) => <IconWrapper icon="fa-solid fa-user" {...props} />;
-        const Bot = (props) => <IconWrapper icon="fa-solid fa-robot" {...props} />;
-        const GraduationCap = (props) => <IconWrapper icon="fa-solid fa-user-graduate" {...props} />;
-        const Stethoscope = (props) => <IconWrapper icon="fa-solid fa-stethoscope" {...props} />;
-        const AlertTriangle = (props) => <IconWrapper icon="fa-solid fa-triangle-exclamation" {...props} />;
-        const ShieldCheck = (props) => <IconWrapper icon="fa-solid fa-shield-halved" {...props} />;
-        const ArrowLeft = (props) => <IconWrapper icon="fa-solid fa-arrow-left" {...props} />;
-        const Clock = (props) => <IconWrapper icon="fa-regular fa-clock" {...props} />;
-        const Loader = (props) => <IconWrapper icon="fa-solid fa-spinner" spin={true} {...props} />;
-
-        // --- 2. 常數定義 ---
+        // --- 2. 系統常數 ---
         const GAS_URL = "https://script.google.com/macros/s/AKfycbyFryLNJ7oEQwOKQK2Jkpyva1ZajhTmAtlsUXW7E8BhSylvLqPheaAgYklu3CsgtCwJEg/exec";
 
         // --- 3. 主組件 ---
         function Simulator({ onBack }) {
-            // State Definitions
+            // State
             const [isLoading, setIsLoading] = useState(true);
             const [loadingStep, setLoadingStep] = useState("正在連線至雲端戰情室...");
             const [trainingData, setTrainingData] = useState(null);
@@ -82,6 +85,9 @@
             const [messages, setMessages] = useState([]);
             const [input, setInput] = useState('');
             const [isListening, setIsListening] = useState(false);
+            
+            // Game State
+            const [difficulty, setDifficulty] = useState('medium'); // 'easy' | 'medium' | 'hard'
             const [patience, setPatience] = useState(100);
             const [isThinking, setIsThinking] = useState(false);
             const [sessionStatus, setSessionStatus] = useState('idle'); // 'active' | 'success' | 'fail' | 'idle'
@@ -92,13 +98,11 @@
             const recognitionRef = useRef(null);
             const timerRef = useRef(null);
 
-            // 1. 初始化：從雲端 (GAS) 抓取訓練包
+            // 1. 初始化
             useEffect(() => {
                 const fetchConfig = async () => {
                     try {
                         setLoadingStep("正在下載真實失敗案例庫...");
-                        
-                        // 嘗試 Fetch
                         const response = await fetch(GAS_URL, {
                             method: 'POST',
                             body: JSON.stringify({ action: 'get_training_package' })
@@ -108,34 +112,25 @@
                         if (data.status === 'success') {
                             setTrainingData(data);
                             if (data.scenarios && data.scenarios.length > 0) {
-                                loadScenario(data.scenarios[0]);
+                                // 延遲一下讓 User 看到載入成功，然後隨機載入
+                                setTimeout(() => loadRandomScenario(data.scenarios), 500);
                             }
                         } else {
-                            throw new Error(data.message || "Unknown error");
+                            throw new Error(data.message);
                         }
                     } catch (e) {
-                        console.warn("GAS Fetch failed, using fallback data for demo.");
-                        // Fallback Data (以防 GAS 無法連線，讓 Demo 可展示)
-                        const fallbackData = {
-                            apiKey: "AIzaSyDnRNPAF1NYTsPhuK66m-u8VJvpp1-1SCc", // 注意：如果是 Demo，這裡需要使用者自行填入 Key 或是提示
+                        console.error("GAS Connection Error:", e);
+                        // Fallback Data (若連線失敗，使用此預設資料演示 UI)
+                        const fallbackScenarios = [
+                            { source_agent: "全秀惠", blocker: "價格太貴 (盤石200元)", context: "客戶覺得370元太貴，競品只要200元。", improvement_needed: "價值堆疊" },
+                            { source_agent: "劉亭君", blocker: "信任感不足", context: "客戶怕工程師亂收費。", improvement_needed: "風險逆轉" }
+                        ];
+                        setTrainingData({ 
+                            apiKey: "", // 請在此填入您的 API Key 進行測試，或在 UI 彈窗輸入
                             rules: { systemInstruction: "你是一位嚴格的客戶..." },
-                            scenarios: [
-                                {
-                                    source_agent: "全秀惠",
-                                    blocker: "價格太貴 (盤石200元)",
-                                    context: "客戶覺得370元太貴，競品只要200元。",
-                                    improvement_needed: "價值堆疊"
-                                },
-                                {
-                                    source_agent: "劉亭君",
-                                    blocker: "信任感不足",
-                                    context: "客戶怕工程師亂收費。",
-                                    improvement_needed: "風險逆轉"
-                                }
-                            ]
-                        };
-                        setTrainingData(fallbackData);
-                        loadScenario(fallbackData.scenarios[0]);
+                            scenarios: fallbackScenarios
+                        });
+                        loadRandomScenario(fallbackScenarios);
                     } finally {
                         setIsLoading(false);
                     }
@@ -145,7 +140,7 @@
                 return () => stopTimer();
             }, []);
 
-            // 2. 計時器邏輯
+            // 2. 計時器
             const startTimer = () => {
                 stopTimer();
                 setTimer(0);
@@ -164,11 +159,15 @@
                 return `${mins}:${secs}`;
             };
 
-            // 3. 載入劇本
+            // 3. 載入特定劇本
             const loadScenario = (scenario) => {
                 setCurrentScenario(scenario);
                 setMessages([]);
-                setPatience(100);
+                
+                // 根據難度設定初始耐心值
+                const initialPatience = difficulty === 'hard' ? 80 : 100;
+                setPatience(initialPatience);
+                
                 setSessionStatus('active');
                 setCoachFeedback(null);
                 startTimer();
@@ -179,7 +178,15 @@
                 speak(opening);
             };
 
-            // 4. 發送訊息邏輯
+            // 4. 隨機載入劇本
+            const loadRandomScenario = (scenariosList) => {
+                const list = scenariosList || trainingData?.scenarios || [];
+                if (list.length === 0) return;
+                const randomIndex = Math.floor(Math.random() * list.length);
+                loadScenario(list[randomIndex]);
+            };
+
+            // 5. 發送訊息 (AI 核心邏輯)
             const sendMessage = async () => {
                 if (!input.trim() || !trainingData || !currentScenario) return;
                 
@@ -190,66 +197,108 @@
                 setIsThinking(true);
 
                 try {
-                    // 初始化 Google Generative AI (Web SDK)
-                    // 注意：如果 fallbackData 沒有 key，這裡會報錯。
-                    // 實際應用建議增加 API Key 輸入框
-                    const apiKey = trainingData.apiKey || prompt("AIzaSyDnRNPAF1NYTsPhuK66m-u8VJvpp1-1SCc:");
-                    if (!apiKey) throw new Error("Missing API Key");
+                    // API Key 處理 (優先使用 config 中的 key，否則提示用戶輸入)
+                    let apiKey = trainingData.apiKey;
+                    if (!apiKey) {
+                        apiKey = prompt("請輸入您的 Gemini API Key 以開始對話:");
+                        if (apiKey) {
+                            // 暫存 Key 以免每次都問 (實際專案應存於安全處)
+                            setTrainingData(prev => ({ ...prev, apiKey }));
+                        } else {
+                            throw new Error("Missing API Key");
+                        }
+                    }
 
                     const genAI = new GoogleGenerativeAI(apiKey);
                     
-                    // 系統提示詞構建
+                    // 根據難度設定 Prompt 參數
+                    let difficultyPrompt = "";
+                    let patienceDecay = 5; 
+                    
+                    switch(difficulty) {
+                        case 'easy':
+                            difficultyPrompt = `
+                            難度等級：【新手 (Easy)】
+                            你的性格：耳根子軟，容易被說服。
+                            規則：只要專員回答得有禮貌且邏輯尚可，你就容易接受。耐心值扣減極慢 (每回合 -2)。
+                            `;
+                            patienceDecay = 2;
+                            break;
+                        case 'hard':
+                            difficultyPrompt = `
+                            難度等級：【地獄奧客 (Hard)】
+                            你的性格：非常固執、多疑、對價格極度敏感，很難搞。
+                            規則：
+                            1. 你會雞蛋裡挑骨頭，對專員的每一句話都抱持懷疑。
+                            2. 除非專員完全解決你的痛點並且給出額外好處，否則絕不輕易答應。
+                            3. 耐心值扣減快 (每回合 -10)，若專員講錯話直接掛電話。
+                            `;
+                            patienceDecay = 10;
+                            break;
+                        default: // medium
+                            difficultyPrompt = `
+                            難度等級：【標準 (Medium)】
+                            你的性格：理性但謹慎，講道理。
+                            規則：需要合理的解釋與SOP流程正確才會被說服。耐心值扣減正常 (每回合 -5)。
+                            `;
+                            patienceDecay = 5;
+                            break;
+                    }
+
                     const systemPrompt = `
                         ${trainingData.rules.systemInstruction}
                         
                         # 重要任務：角色扮演 (Role Play)
                         你現在不是稽核員，你是一位【真實客戶】。
-                        請依據以下設定進行對話：
                         
-                        ## 你的背景
+                        ## 你的背景設定
                         - 核心阻礙 (為何不想買)：${currentScenario.blocker}
                         - 真實案例背景：${currentScenario.context}
-                        - 你的性格：猶豫、多疑、對價格敏感。
                         
-                        ## 遊戲規則 (Game Rules)
-                        1. 初始耐心值：${patience} (每回合自然扣減 5 分)。
-                        2. 專員若使用了【違禁詞】(如：不知道)，請大幅扣分並表現出生氣。
-                        3. 專員若使用了正確的【反對話術】(參照 SOP)，請給予肯定並回復耐心。
-                        4. 若耐心值歸零，請掛斷電話 (輸出 [HANGUP])。
-                        5. 若專員成功解決你的核心阻礙 (${currentScenario.blocker})，請答應成交 (輸出 [DEAL])。
+                        ## 難度設定 (重要)
+                        ${difficultyPrompt}
+                        
+                        ## 關鍵互動規則 (Game Logic)
+                        1. **禁止鬼打牆**：當專員解釋合理時，請接受該解釋並推進對話。
+                        2. **評分機制**：
+                           - 目前耐心值：${patience}
+                           - 專員回答正確：耐心值 +10~15。
+                           - 專員回答普通：耐心值 -${patienceDecay} (自然流失)。
+                           - 專員回答錯誤/違禁詞：耐心值 -20~30 (大幅扣分)。
+                        3. **成交/失敗判定**：
+                           - 成交 (DEAL)：核心阻礙被解決 且 專員邀請成交。
+                           - 失敗 (HANGUP)：耐心值歸零 或 專員嚴重冒犯。
                         
                         ## 輸出格式 (JSON Only)
                         請僅輸出 JSON，不要 Markdown：
                         {
-                            "reply": "你的回應 (口語化)",
-                            "patience_change": -10,
-                            "internal_thought": "客戶內心獨白 (為何扣分/加分)",
+                            "reply": "你的回應",
+                            "patience_change": 數字,
+                            "internal_thought": "內心獨白",
                             "status": "CONTINUE" | "HANGUP" | "DEAL"
                         }
                     `;
 
-                    // 獲取模型
+                    // 使用 Gemini 2.0 Flash (最新穩定模型)
                     const model = genAI.getGenerativeModel({ 
                         model: "gemini-2.0-flash",
                         systemInstruction: systemPrompt
                     });
 
-                    // 構建歷史記錄
                     const history = messages.map(m => ({
                         role: m.role === 'user' ? 'user' : 'model',
                         parts: [{ text: m.text }]
                     }));
 
-                    // 生成內容
                     const result = await model.generateContent({
                         contents: [...history, { role: 'user', parts: [{ text: userText }] }],
                         generationConfig: { responseMimeType: "application/json" }
                     });
 
-                    const responseText = result.response.text() || "{}";
+                    const responseText = result.response.text();
                     const data = JSON.parse(responseText);
 
-                    const newPatience = Math.max(0, Math.min(100, patience + (data.patience_change || -5)));
+                    const newPatience = Math.max(0, Math.min(100, patience + data.patience_change));
                     setPatience(newPatience);
                     setCoachFeedback(data.internal_thought);
 
@@ -266,7 +315,7 @@
 
                 } catch (e) {
                     console.error(e);
-                    addMessage('ai', `(系統提示) 無法連接 AI: ${e.message}。請檢查 API Key 或網路。`);
+                    addMessage('ai', `(系統錯誤) ${e.message || "無法連接 AI 服務"}`);
                 } finally {
                     setIsThinking(false);
                 }
@@ -281,10 +330,9 @@
                 }, 100);
             };
 
-            // 5. 語音合成 (TTS)
+            // 6. 語音合成 (TTS)
             const speak = (text) => {
                 if ('speechSynthesis' in window) {
-                    // 為了避免瀏覽器阻擋自動播放，通常需要用戶先交互
                     const u = new SpeechSynthesisUtterance(text);
                     u.lang = 'zh-TW';
                     u.rate = 1.1; 
@@ -292,10 +340,10 @@
                 }
             };
 
-            // 6. 語音識別 (STT)
+            // 7. 語音識別 (STT)
             const toggleMic = () => {
                 if (isListening) {
-                    if (recognitionRef.current) recognitionRef.current.stop();
+                    recognitionRef.current?.stop();
                     setIsListening(false);
                     return;
                 }
@@ -321,12 +369,12 @@
                 recognition.start();
             };
 
-            // --- 渲染部分 ---
+            // --- 渲染畫面 ---
 
             if (isLoading) {
                 return (
                     <div className="flex flex-col items-center justify-center h-screen bg-slate-900 text-slate-200 gap-4 font-sans">
-                        <Loader className="h-10 w-10 text-sky-500" />
+                        <Icon name="Loader" className="h-10 w-10 text-sky-500" spin={true} />
                         <p className="font-medium animate-pulse">{loadingStep}</p>
                         {onBack && <button onClick={onBack} className="mt-8 text-sm text-slate-500 hover:text-white transition-colors">取消並返回</button>}
                     </div>
@@ -341,86 +389,108 @@
                         <div className="p-5 border-b border-slate-800 bg-slate-950">
                             {onBack && (
                                 <button onClick={onBack} className="mb-3 text-xs text-slate-400 hover:text-sky-400 flex items-center gap-1 transition-colors font-bold">
-                                    <ArrowLeft className="h-3 w-3" /> 返回主選單
+                                    <Icon name="ArrowLeft" className="h-3 w-3" /> 返回主選單
                                 </button>
                             )}
                             <h1 className="font-bold text-lg text-white flex items-center gap-2">
                                 <div className="w-8 h-8 bg-indigo-600 text-white rounded-lg flex items-center justify-center shadow-sm">
-                                    <GraduationCap className="h-4 w-4" />
+                                    <Icon name="GraduationCap" className="h-4 w-4" />
                                 </div>
                                 AI 智能教練系統
                             </h1>
-                            <p className="text-[10px] text-slate-400 mt-1 uppercase tracking-wider font-bold flex items-center gap-1">
-                                <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                                Coach Persona Active
-                            </p>
+                            <div className="flex justify-between items-center mt-2">
+                                <p className="text-[10px] text-slate-400 uppercase tracking-wider font-bold flex items-center gap-1">
+                                    <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                                    Scenario Active
+                                </p>
+                            </div>
                         </div>
 
                         <div className="p-5 flex-1 overflow-y-auto space-y-6 custom-scrollbar">
-                            {/* 1. 劇本資訊 */}
+                            {/* 1. 難度設定與隨機抽題 */}
                             <div>
-                                <label className="block text-xs font-bold text-slate-500 uppercase mb-2">今日演練劇本 (Scenario)</label>
-                                <div className="w-full bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-sm hover:border-sky-500/50 transition-colors">
-                                    <div className="p-3 bg-slate-800/50 border-b border-slate-800">
-                                        <div className="text-sm font-bold text-sky-400">{currentScenario?.blocker || "載入中"}</div>
-                                    </div>
-                                    <div className="p-3">
-                                        <p className="text-xs text-slate-400 leading-relaxed">{currentScenario?.context}</p>
-                                    </div>
+                                <div className="flex items-center justify-between mb-2">
+                                     <label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-1">
+                                        <Icon name="Settings2" className="h-3 w-3" /> 演練設定
+                                     </label>
                                 </div>
                                 
-                                {/* 劇本切換按鈕 */}
-                                {trainingData?.scenarios && trainingData.scenarios.length > 1 && (
-                                    <div className="mt-3 grid grid-cols-2 gap-2">
-                                        {trainingData.scenarios.map((s, i) => (
-                                            <button 
-                                                key={i} 
-                                                onClick={() => loadScenario(s)}
-                                                className={`text-[10px] p-2 rounded border truncate text-left transition-all ${
-                                                    currentScenario === s 
-                                                        ? 'bg-sky-500/20 border-sky-500 text-sky-400 font-bold' 
-                                                        : 'bg-slate-900 border-slate-800 text-slate-500 hover:bg-slate-800'
-                                                }`}
-                                            >
-                                                Case {i+1}: {s.blocker.substring(0, 8)}...
-                                            </button>
-                                        ))}
+                                <div className="bg-slate-900 border border-slate-800 rounded-xl p-3 space-y-3">
+                                    {/* 難度選擇器 */}
+                                    <div className="grid grid-cols-3 gap-1 bg-slate-950 p-1 rounded-lg">
+                                        <button 
+                                            onClick={() => setDifficulty('easy')}
+                                            className={`text-xs py-1.5 rounded-md font-bold transition-all ${difficulty === 'easy' ? 'bg-green-500 text-white shadow' : 'text-slate-500 hover:text-slate-300'}`}
+                                        >
+                                            新手
+                                        </button>
+                                        <button 
+                                            onClick={() => setDifficulty('medium')}
+                                            className={`text-xs py-1.5 rounded-md font-bold transition-all ${difficulty === 'medium' ? 'bg-sky-500 text-white shadow' : 'text-slate-500 hover:text-slate-300'}`}
+                                        >
+                                            標準
+                                        </button>
+                                        <button 
+                                            onClick={() => setDifficulty('hard')}
+                                            className={`text-xs py-1.5 rounded-md font-bold transition-all flex items-center justify-center gap-1 ${difficulty === 'hard' ? 'bg-red-500 text-white shadow' : 'text-slate-500 hover:text-slate-300'}`}
+                                        >
+                                            <Icon name="Flame" className="h-3 w-3" /> 地獄
+                                        </button>
                                     </div>
-                                )}
+
+                                    {/* 隨機抽題按鈕 */}
+                                    <button 
+                                        onClick={() => loadRandomScenario()}
+                                        className="w-full py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-sky-400 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 group"
+                                    >
+                                        <Icon name="Shuffle" className="h-3 w-3 group-hover:rotate-180 transition-transform duration-500" /> 
+                                        隨機抽取下一題
+                                    </button>
+                                </div>
                             </div>
 
-                            {/* 2. 教練診斷 */}
+                            {/* 2. 劇本提示 (Blocker) */}
+                            <div>
+                                <label className="block text-xs font-bold text-slate-500 uppercase mb-2">當前關卡 (Scenario Info)</label>
+                                <div className="w-full bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-sm">
+                                    <div className="p-3 bg-slate-800/50 border-b border-slate-800">
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-[10px] bg-slate-700 text-slate-300 px-1.5 py-0.5 rounded">
+                                                {currentScenario?.source_agent || "未知"}專員的案例
+                                            </span>
+                                            <div className="text-sm font-bold text-sky-400 truncate">
+                                                {currentScenario?.blocker || "載入中"}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="p-3">
+                                        <p className="text-xs text-slate-400 leading-relaxed">
+                                            {currentScenario?.context}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* 3. 教練診斷 */}
                             <div className="bg-slate-900 border border-slate-800 rounded-xl p-0 shadow-sm relative overflow-hidden">
                                 <div className="bg-slate-800/50 px-4 py-3 border-b border-slate-800 flex justify-between items-center">
                                     <h3 className="text-xs font-bold text-slate-400 uppercase flex items-center gap-1">
-                                        <Stethoscope className="h-3 w-3 text-indigo-400" /> 對話診斷指標
+                                        <Icon name="Stethoscope" className="h-3 w-3 text-indigo-400" /> 對話診斷
                                     </h3>
-                                    <span className="text-[10px] bg-indigo-500/20 text-indigo-400 px-2 py-0.5 rounded font-bold border border-indigo-500/30">LIVE</span>
+                                    <span className="text-[10px] bg-indigo-500/20 text-indigo-400 px-2 py-0.5 rounded font-bold border border-indigo-500/30">AI COACH</span>
                                 </div>
-                                <div className="p-4 min-h-[100px] flex items-center justify-center">
+                                <div className="p-4 min-h-[80px] flex items-center justify-center">
                                     {coachFeedback ? (
-                                        <p className="text-sm text-slate-300 leading-relaxed animate-in">
-                                            <span className="font-bold text-indigo-400 block mb-1">教練 OS：</span>
+                                        <p className="text-sm text-slate-300 leading-relaxed animate-in fade-in duration-500">
+                                            <span className="font-bold text-indigo-400 block mb-1">OS：</span>
                                             {coachFeedback}
                                         </p>
                                     ) : (
                                         <p className="text-xs text-slate-600 italic text-center">
-                                            AI 教練正在監聽您的對話...
+                                            AI 教練正在監聽您的應對...
                                         </p>
                                     )}
                                 </div>
-                            </div>
-
-                            {/* 3. 提示區 */}
-                            <div className="bg-amber-900/10 border border-amber-500/20 rounded-xl p-4">
-                                <h3 className="text-xs font-bold text-amber-500 uppercase mb-2 flex items-center gap-1">
-                                    <AlertTriangle className="h-3 w-3" /> 基礎應對規範
-                                </h3>
-                                <ul className="text-xs text-amber-200/70 space-y-1.5 list-disc pl-4">
-                                    <li>必須清晰報出「品牌」與「姓氏」。</li>
-                                    <li>積極聆聽，適當附和客戶。</li>
-                                    <li>嚴禁使用「不知道」、「沒辦法」。</li>
-                                </ul>
                             </div>
 
                             {/* 4. 耐心值 */}
@@ -435,16 +505,21 @@
                                         style={{ width: `${patience}%` }}
                                     ></div>
                                 </div>
+                                {difficulty === 'hard' && (
+                                    <p className="text-[10px] text-red-400 mt-2 text-center font-bold">
+                                        ⚠️ 地獄模式：耐心值扣減速度 2倍
+                                    </p>
+                                )}
                             </div>
                         </div>
 
                         <div className="p-4 border-t border-slate-800 bg-slate-950">
-                            <button 
+                             <button 
                                 onClick={() => currentScenario && loadScenario(currentScenario)}
                                 className="w-full py-3 px-4 bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 rounded-xl text-sm font-bold transition flex items-center justify-center gap-2 shadow-sm group"
                             >
-                                <RotateCcw className="h-4 w-4 group-hover:rotate-180 transition-transform duration-500" /> 
-                                重新開始
+                                <Icon name="RotateCcw" className="h-4 w-4 group-hover:rotate-180 transition-transform duration-500" /> 
+                                重試本題
                             </button>
                         </div>
                     </aside>
@@ -457,7 +532,7 @@
                             <div className="flex items-center gap-3">
                                 <div className="relative">
                                     <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center overflow-hidden border-2 border-slate-700 shadow-sm">
-                                        <User className="h-5 w-5 text-slate-400" />
+                                        <Icon name="User" className="h-5 w-5 text-slate-400" />
                                     </div>
                                     <span className={`absolute bottom-0 right-0 w-3 h-3 border-2 border-slate-900 rounded-full ${sessionStatus === 'active' ? 'bg-green-500' : 'bg-slate-500'}`}></span>
                                 </div>
@@ -470,10 +545,10 @@
                             </div>
                             <div className="flex items-center gap-4">
                                 <div className="hidden md:flex items-center gap-2 text-xs text-slate-500">
-                                    <ShieldCheck className="h-3 w-3" /> 稽核模式: <span className="font-bold text-indigo-400">開啟</span>
+                                     難度: <span className={`font-bold uppercase ${difficulty === 'hard' ? 'text-red-500' : difficulty === 'easy' ? 'text-green-500' : 'text-sky-500'}`}>{difficulty}</span>
                                 </div>
                                 <div className="bg-slate-900 px-3 py-1 rounded-full border border-slate-800 font-mono text-xs text-slate-400 flex items-center gap-1">
-                                    <Clock className="h-3 w-3" />
+                                    <Icon name="Clock" className="h-3 w-3" />
                                     {formatTime(timer)}
                                 </div>
                             </div>
@@ -482,7 +557,7 @@
                         {/* 聊天內容區 */}
                         <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-6 space-y-6 pb-32 custom-scrollbar">
                             {messages.map((msg, idx) => (
-                                <div key={idx} className={`flex gap-3 ${msg.role === 'ai' ? 'justify-start' : 'justify-end'} animate-in`}>
+                                <div key={idx} className={`flex gap-3 ${msg.role === 'ai' ? 'justify-start' : 'justify-end'} animate-in slide-in-from-bottom-2 duration-300`}>
                                     {msg.role === 'ai' && (
                                         <div className="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center flex-shrink-0 text-slate-400 font-bold text-xs shadow-sm">客</div>
                                     )}
@@ -502,7 +577,7 @@
                                     <div className="bg-slate-900 p-6 rounded-xl shadow-2xl border border-red-500/20 max-w-sm text-center relative overflow-hidden">
                                         <div className="absolute top-2 right-2 text-6xl text-red-500/5 font-black rotate-12 select-none">FAIL</div>
                                         <div className="w-12 h-12 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-3 text-red-500">
-                                            <AlertTriangle className="h-6 w-6" />
+                                            <Icon name="AlertTriangle" className="h-6 w-6" />
                                         </div>
                                         <h3 className="font-bold text-slate-200 text-lg mb-1">演練未通過</h3>
                                         <p className="text-sm text-slate-400 mb-4">客戶失去了耐心並掛斷了電話。</p>
@@ -515,7 +590,7 @@
                                     <div className="bg-slate-900 p-6 rounded-xl shadow-2xl border border-green-500/20 max-w-sm text-center relative overflow-hidden">
                                         <div className="absolute top-2 right-2 text-6xl text-green-500/5 font-black rotate-12 select-none">PASS</div>
                                         <div className="w-12 h-12 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-3 text-green-500">
-                                            <ShieldCheck className="h-6 w-6" />
+                                            <Icon name="ShieldCheck" className="h-6 w-6" />
                                         </div>
                                         <h3 className="font-bold text-slate-200 text-lg mb-1">演練通過</h3>
                                         <p className="text-sm text-slate-400 mb-4">成功解決客戶疑慮並達成成交！</p>
@@ -538,7 +613,7 @@
                                     }`}
                                     title="語音輸入"
                                 >
-                                    <Mic className="h-5 w-5" />
+                                    <Icon name="Mic" className="h-5 w-5" />
                                 </button>
 
                                 <div className="flex-1 bg-slate-900 border border-slate-800 rounded-2xl px-4 py-3 focus-within:ring-2 focus-within:ring-sky-500 focus-within:border-sky-500 transition-all relative">
@@ -559,12 +634,12 @@
                                     disabled={!input.trim() || sessionStatus !== 'active'}
                                     className="flex-shrink-0 w-12 h-12 rounded-full bg-sky-600 text-white hover:bg-sky-500 shadow-lg shadow-sky-900/20 flex items-center justify-center transition-transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                    <Send className="h-5 w-5 ml-0.5" />
+                                    <Icon name="Send" className="h-5 w-5 ml-0.5" />
                                 </button>
                             </div>
                             <div className="text-center mt-2">
                                  <p className="text-[10px] text-slate-500 flex items-center justify-center gap-1">
-                                    <Bot className="h-3 w-3" /> AI 教練正在依據「品質稽核標準」分析您的回應...
+                                    <Icon name="Bot" className="h-3 w-3" /> AI 教練正在依據「品質稽核標準」分析您的回應...
                                  </p>
                             </div>
                         </div>
