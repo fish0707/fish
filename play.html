@@ -117,7 +117,7 @@
                         console.warn("GAS Fetch failed, using fallback data for demo.");
                         // Fallback Data (以防 GAS 無法連線，讓 Demo 可展示)
                         const fallbackData = {
-                            apiKey: "", // 注意：如果是 Demo，這裡需要使用者自行填入 Key 或是提示
+                            apiKey: "AIzaSyDnRNPAF1NYTsPhuK66m-u8VJvpp1-1SCc", // 注意：如果是 Demo，這裡需要使用者自行填入 Key 或是提示
                             rules: { systemInstruction: "你是一位嚴格的客戶..." },
                             scenarios: [
                                 {
@@ -193,7 +193,7 @@
                     // 初始化 Google Generative AI (Web SDK)
                     // 注意：如果 fallbackData 沒有 key，這裡會報錯。
                     // 實際應用建議增加 API Key 輸入框
-                    const apiKey = trainingData.apiKey || prompt("請輸入您的 Gemini API Key 以開始對話:");
+                    const apiKey = trainingData.apiKey || prompt("AIzaSyDnRNPAF1NYTsPhuK66m-u8VJvpp1-1SCc:");
                     if (!apiKey) throw new Error("Missing API Key");
 
                     const genAI = new GoogleGenerativeAI(apiKey);
