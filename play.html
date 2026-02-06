@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 智能語音陪練場 | 客服品質優化系統</title>
+    <!-- Tailwind CSS for modern styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f3f4f6; }
+        .mic-active { animation: pulse-red 1.5s infinite; }
+        @keyframes pulse-red {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+        .ai-speaking { animation: wave 1s infinite; }
+        @keyframes wave {
+            0%, 100% { transform: scaleY(1); }
+            50% { transform: scaleY(1.2); }
+        }
+        .message-bubble { max-width: 80%; border-radius: 1rem; padding: 0.75rem 1rem; position: relative; animation: popIn 0.3s ease-out; }
+        @keyframes popIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="h-screen flex flex-col overflow-hidden">
+
+    <!-- 1. Header -->
+    <header class="bg-slate-800 text-white p-4 shadow-md flex justify-between items-center z-10">
+        <div class="flex items-center gap-3">
+            <div class="bg-indigo-500 w-10 h-10 rounded-full flex items-center justify-center font-bold">AI</div>
+            <div>
+                <h1 class="text-lg font-bold tracking-wide">客服智能陪練場</h1>
+                <p class="text-xs text-slate-300">PDCA Cycle: Act Phase</p>
+            </div>
+        </div>
+        <div id="user-status" class="hidden md:flex items-center gap-2 text-sm bg-slate-700 px-3 py-1 rounded-full">
+            <i class="fa-solid fa-user-circle"></i>
+            <span id="current-user-name">未登入</span>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 relative overflow-hidden flex flex-col">
+        
+        <!-- VIEW 1: Login Screen -->
+        <div id="view-login" class="absolute inset-0 flex items-center justify-center bg-gray-50 z-20 transition-all duration-500">
+            <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md text-center border border-gray-100">
+                <div class="mb-6 inline-block p-4 bg-indigo-50 rounded-full text-indigo-600">
+                    <i class="fa-solid fa-headset text-4xl"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-gray-800 mb-2">開始您的每日演練</h2>
+                <p class="text-gray-500 mb-6 text-sm">系統將自動從 Google Sheet 讀取您的品質改善計畫</p>
+                
+                <div class="space-y-4 text-left">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">選擇專員身份 (模擬讀取 CSV)</label>
+                        <select id="agent-select" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition">
+                            <option value="全秀惠">全秀惠 (弱點：價格疑慮、長輩應對)</option>
+                            <option value="劉亭君">劉亭君 (弱點：硬體相容性、締結力)</option>
+                            <option value="陳志良">陳志良 (弱點：競品 280 元攻防)</option>
+                        </select>
+                    </div>
+                    <button onclick="login()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg shadow transition transform hover:scale-[1.02]">
+                        進入訓練 <i class="fa-solid fa-arrow-right ml-2"></i>
+                    </button>
+                </div>
+                
+                <div class="mt-6 pt-6 border-t border-gray-100 flex justify-between text-xs text-gray-400">
+                    <span><i class="fa-solid fa-database mr-1"></i> Data Sync: Active</span>
+                    <span><i class="fa-solid fa-robot mr-1"></i> Gemini 2.0 Flash</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW 2: Mission Briefing (The Prescription) -->
+        <div id="view-mission" class="hidden absolute inset-0 bg-gray-50 z-10 flex flex-col items-center justify-center p-4">
+            <div class="bg-white w-full max-w-2xl rounded-2xl shadow-lg overflow-hidden flex flex-col max-h-[90vh]">
+                <div class="bg-gradient-to-r from-indigo-600 to-purple-600 p-6 text-white">
+                    <h3 class="text-xl font-bold mb-1"><i class="fa-solid fa-clipboard-list mr-2"></i> 本日訓練處方籤</h3>
+                    <p class="text-indigo-100 text-sm">基於 2026/02/04 稽核缺失自動生成</p>
+                </div>
+                
+                <div class="p-6 overflow-y-auto">
+                    <div class="flex gap-4 mb-6">
+                        <div class="w-1/2 bg-red-50 p-4 rounded-xl border border-red-100">
+                            <h4 class="text-red-700 font-bold text-sm mb-2"><i class="fa-solid fa-virus mr-1"></i> 核心阻礙 (模擬客戶)</h4>
+                            <p id="mission-blocker" class="text-gray-700 text-sm leading-relaxed">
+                                <!-- Dynamic Content -->
+                            </p>
+                        </div>
+                        <div class="w-1/2 bg-green-50 p-4 rounded-xl border border-green-100">
+                            <h4 class="text-green-700 font-bold text-sm mb-2"><i class="fa-solid fa-syringe mr-1"></i> 通關條件 (SOP)</h4>
+                            <p id="mission-goal" class="text-gray-700 text-sm leading-relaxed">
+                                <!-- Dynamic Content -->
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="bg-gray-50 p-4 rounded-xl border border-gray-200 mb-6">
+                        <h4 class="text-gray-500 text-xs font-bold uppercase tracking-wider mb-2">AI 角色設定 (Persona)</h4>
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-gray-600">
+                                <i class="fa-solid fa-user-secret"></i>
+                            </div>
+                            <div>
+                                <p class="font-bold text-gray-800">難搞的林先生</p>
+                                <p class="text-xs text-gray-500">個性：急躁、價格敏感、喜歡拿別家來比較。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-4 border-t border-gray-100 bg-gray-50 text-center">
+                    <button onclick="startTraining()" class="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-full font-bold shadow-lg transition transform hover:scale-105">
+                        <i class="fa-solid fa-microphone-lines mr-2"></i> 開始對話演練
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW 3: Chat Interface (The Arena) -->
+        <div id="view-chat" class="hidden flex-1 flex flex-col bg-white">
+            <!-- Chat History -->
+            <div id="chat-container" class="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
+                <!-- System Message -->
+                <div class="flex justify-center">
+                    <span class="text-xs bg-gray-200 text-gray-500 px-3 py-1 rounded-full">
+                        通話已連線 - 錄音中 (ID: SIM-20260206-001)
+                    </span>
+                </div>
+                
+                <!-- Initial AI Message (Injected by JS) -->
+            </div>
+
+            <!-- Interaction Area -->
+            <div class="bg-white p-4 border-t border-gray-200 shadow-lg z-20">
+                <!-- Status Bar -->
+                <div class="flex justify-between items-center mb-4 px-2">
+                    <div id="status-text" class="text-sm font-medium text-gray-500 flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-gray-400"></span> 準備就緒
+                    </div>
+                    <div class="text-xs text-gray-400">Web Speech API Active</div>
+                </div>
+
+                <!-- Controls -->
+                <div class="flex items-center gap-4">
+                    <button id="mic-btn" onclick="toggleMic()" class="flex-shrink-0 w-14 h-14 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xl shadow-lg hover:bg-indigo-700 transition">
+                        <i class="fa-solid fa-microphone"></i>
+                    </button>
+                    
+                    <div class="flex-1 relative">
+                        <input type="text" id="text-input" placeholder="按麥克風說話，或在此輸入..." class="w-full bg-gray-100 border-0 rounded-full px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none text-gray-700" onkeypress="handleEnter(event)">
+                        <button onclick="sendMessage()" class="absolute right-2 top-1/2 transform -translate-y-1/2 text-indigo-600 hover:text-indigo-800 p-2">
+                            <i class="fa-solid fa-paper-plane"></i>
+                        </button>
+                    </div>
+
+                    <button onclick="endSession()" class="flex-shrink-0 px-4 py-2 border border-red-200 text-red-600 rounded-lg hover:bg-red-50 text-sm font-medium">
+                        結束通話
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW 4: Result Modal (The PDCA Feedback) -->
+        <div id="view-result" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-gray-900/50 backdrop-blur-sm">
+            <div class="bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden transform transition-all scale-100">
+                <div class="p-6 text-center">
+                    <div id="result-icon" class="w-20 h-20 bg-green-100 text-green-500 rounded-full flex items-center justify-center text-4xl mx-auto mb-4">
+                        <i class="fa-solid fa-check"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-gray-800 mb-1" id="result-title">演練通過！</h2>
+                    <p class="text-gray-500 text-sm mb-6">AI 稽核系統判定結果</p>
+
+                    <div class="text-left bg-gray-50 rounded-xl p-4 mb-6 border border-gray-200">
+                        <div class="mb-3">
+                            <span class="text-xs font-bold text-gray-400 uppercase">關鍵指標檢核</span>
+                            <ul class="mt-2 space-y-2 text-sm" id="checklist-container">
+                                <!-- Dynamic List -->
+                            </ul>
+                        </div>
+                        
+                        <div>
+                            <span class="text-xs font-bold text-gray-400 uppercase">AI 教練評語</span>
+                            <p id="ai-comment" class="mt-1 text-sm text-gray-700">
+                                這次表現不錯！有成功運用「寄放邏輯」消除客戶對費用的疑慮。語氣如果能再堅定一點會更好。
+                            </p>
+                        </div>
+                    </div>
+
+                    <button onclick="location.reload()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg shadow">
+                        回寫紀錄並開始下一場
+                    </button>
+                    <p class="mt-3 text-xs text-gray-400">此結果將自動同步至「人員輔導計畫表」</p>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // --- MOCK DATA (來自 CSV 的模擬資料) ---
+        // 在實際應用中，這裡會透過 google.script.run 從後端 Sheet 獲取
+        const employeeData = {
+            "全秀惠": {
+                name: "全秀惠",
+                blocker: "客戶深受舊業者「200元/月」且「買12送1」的影響，認為今網 370 元太貴且無贈品。",
+                goal: "必須主動拋出「10天鑑賞期」或「不綁約」武器，並用「平均日單價」法進行價值堆疊。",
+                persona_start: "小姐，我剛看到你們傳單，可是我在別家才兩百塊欸，你們怎麼貴這麼多？",
+                keywords: ["鑑賞期", "退費", "不綁約", "試用", "日單價", "幾塊錢"], // 用於模擬 AI 判斷
+                weakness_tags: ["價格疑慮", "競品比較"]
+            },
+            "劉亭君": {
+                name: "劉亭君",
+                blocker: "客戶不確定現有設備是否支援 300M，且對工程師的誠信有先入為主的質疑。",
+                goal: "未提及「10 天鑑賞期」作為誘因。必須強調工程師當天帶機器去測，不滿意不收錢。",
+                persona_start: "我不想裝啦，上次別家工程師來說不能裝還收我車馬費，你們是不是也一樣？",
+                keywords: ["鑑賞期", "不收費", "免費測試", "當場測試"],
+                weakness_tags: ["信任感", "硬體疑慮"]
+            },
+            "陳志良": {
+                name: "陳志良",
+                blocker: "客戶拿速達通/潔衣的 280 元方案進行強力挑戰。極度價格導向。",
+                goal: "運用 KB 中的「平均日單價」法（一天只要10幾元）來淡化月費衝擊感。",
+                persona_start: "我有問到一家叫潔衣的才 280，你們 370 太貴了啦，能不能算便宜一點？",
+                keywords: ["一天", "飲料", "日單價", "平均"],
+                weakness_tags: ["價格談判"]
+            }
+        };
+
+        // --- STATE MANAGEMENT ---
+        let currentUser = null;
+        let isListening = false;
+        let recognition;
+        let synth = window.speechSynthesis;
+        let dialogueCount = 0;
+        let score = 0;
+        
+        // --- INITIALIZATION ---
+        function login() {
+            const agentName = document.getElementById('agent-select').value;
+            currentUser = employeeData[agentName];
+            
+            // UI Update
+            document.getElementById('current-user-name').innerText = agentName;
+            document.getElementById('view-login').classList.add('hidden');
+            document.getElementById('view-mission').classList.remove('hidden');
+            
+            // Populate Mission Data
+            document.getElementById('mission-blocker').innerText = currentUser.blocker;
+            document.getElementById('mission-goal').innerText = currentUser.goal;
+        }
+
+        function startTraining() {
+            document.getElementById('view-mission').classList.add('hidden');
+            document.getElementById('view-chat').classList.remove('hidden');
+            
+            // Initialize Speech Recognition
+            initSpeech();
+            
+            // AI Speaks First (Delayed)
+            setTimeout(() => {
+                addMessage(currentUser.persona_start, 'ai');
+                speakText(currentUser.persona_start);
+            }, 1000);
+        }
+
+        // --- SPEECH RECOGNITION (STT) ---
+        function initSpeech() {
+            if ('webkitSpeechRecognition' in window) {
+                recognition = new webkitSpeechRecognition();
+                recognition.continuous = false;
+                recognition.lang = 'zh-TW';
+                recognition.interimResults = true;
+
+                recognition.onstart = () => {
+                    isListening = true;
+                    updateMicStatus('listening');
+                };
+
+                recognition.onend = () => {
+                    isListening = false;
+                    updateMicStatus('idle');
+                };
+
+                recognition.onresult = (event) => {
+                    const transcript = event.results[0][0].transcript;
+                    document.getElementById('text-input').value = transcript;
+                    if (event.results[0].isFinal) {
+                        sendMessage();
+                    }
+                };
+            } else {
+                alert("您的瀏覽器不支援語音辨識，請使用 Chrome。");
+            }
+        }
+
+        function toggleMic() {
+            if (isListening) {
+                recognition.stop();
+            } else {
+                recognition.start();
+            }
+        }
+
+        function updateMicStatus(status) {
+            const btn = document.getElementById('mic-btn');
+            const statusText = document.getElementById('status-text');
+            
+            if (status === 'listening') {
+                btn.classList.add('mic-active', 'bg-red-500');
+                btn.classList.remove('bg-indigo-600');
+                btn.innerHTML = '<i class="fa-solid fa-wave-square"></i>';
+                statusText.innerHTML = '<span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span> 聆聽中...';
+            } else if (status === 'processing') {
+                btn.classList.remove('mic-active', 'bg-red-500');
+                btn.classList.add('bg-gray-400');
+                statusText.innerHTML = '<span class="w-2 h-2 rounded-full bg-yellow-500"></span> AI 思考中...';
+            } else if (status === 'speaking') {
+                statusText.innerHTML = '<span class="w-2 h-2 rounded-full bg-green-500"></span> 客戶說話中...';
+            } else {
+                btn.classList.remove('mic-active', 'bg-red-500', 'bg-gray-400');
+                btn.classList.add('bg-indigo-600');
+                btn.innerHTML = '<i class="fa-solid fa-microphone"></i>';
+                statusText.innerHTML = '<span class="w-2 h-2 rounded-full bg-gray-400"></span> 準備就緒';
+            }
+        }
+
+        // --- CHAT LOGIC ---
+        function sendMessage() {
+            const input = document.getElementById('text-input');
+            const text = input.value.trim();
+            if (!text) return;
+
+            addMessage(text, 'user');
+            input.value = '';
+            dialogueCount++;
+
+            // Simulate AI Processing
+            updateMicStatus('processing');
+            setTimeout(() => {
+                const aiResponse = generateAIResponse(text);
+                addMessage(aiResponse, 'ai');
+                speakText(aiResponse);
+            }, 1500); // Fake latency
+        }
+
+        function addMessage(text, sender) {
+            const container = document.getElementById('chat-container');
+            const div = document.createElement('div');
+            
+            if (sender === 'user') {
+                div.className = 'flex justify-end';
+                div.innerHTML = `
+                    <div class="message-bubble bg-indigo-600 text-white rounded-br-none">
+                        <p class="text-sm">${text}</p>
+                    </div>
+                `;
+            } else {
+                div.className = 'flex justify-start';
+                div.innerHTML = `
+                    <div class="flex gap-2 max-w-[85%]">
+                        <div class="w-8 h-8 rounded-full bg-gray-300 flex-shrink-0 flex items-center justify-center text-xs font-bold text-gray-600">客</div>
+                        <div class="message-bubble bg-white border border-gray-200 text-gray-800 rounded-bl-none shadow-sm">
+                            <p class="text-sm">${text}</p>
+                        </div>
+                    </div>
+                `;
+            }
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // --- SIMULATED AI BRAIN (MOCK GEMINI) ---
+        // 這是模擬後端 AI 根據 Prompt 生成回應
+        function generateAIResponse(userText) {
+            // Check for winning keywords
+            const hasKeyword = currentUser.keywords.some(k => userText.includes(k));
+            
+            if (hasKeyword) {
+                score += 30; // 簡單加分邏輯
+                if (score >= 60) {
+                    setTimeout(showSuccessResult, 3000); // End game if convinced
+                    return "喔...如果是這樣的話，好像比較有保障。那你說的那個鑑賞期確定是可以全額退的嗎？";
+                }
+                return "嗯...聽起來是有道理，但我還是覺得每個月繳錢很麻煩。";
+            }
+            
+            // Defensive AI responses based on Blocker
+            const responses = [
+                "可是隔壁才 200 塊，你們真的很貴欸。",
+                "我要再跟家人討論一下，先不要好了。",
+                "你們都要綁約綁很久，我不喜歡被綁住。",
+                "那如果不喜歡，你們會不會收我違約金？"
+            ];
+            return responses[Math.floor(Math.random() * responses.length)];
+        }
+
+        // --- TEXT TO SPEECH (TTS) ---
+        function speakText(text) {
+            updateMicStatus('speaking');
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'zh-TW';
+            utterance.rate = 1.1; // 稍微快一點，模擬不耐煩
+            utterance.onend = () => {
+                updateMicStatus('idle');
+            };
+            synth.speak(utterance);
+        }
+
+        function handleEnter(e) {
+            if (e.key === 'Enter') sendMessage();
+        }
+
+        function endSession() {
+            if (score > 30) showSuccessResult();
+            else alert("演練失敗：客戶不滿意直接掛電話了。請再嘗試一次，記得使用SOP技巧。");
+        }
+
+        // --- RESULT & FEEDBACK ---
+        function showSuccessResult() {
+            document.getElementById('view-result').classList.remove('hidden');
+            
+            const list = document.getElementById('checklist-container');
+            list.innerHTML = '';
+            
+            // Generate checklist based on Goal
+            const goalItems = currentUser.keywords.slice(0, 3); // Take top 3 keywords
+            goalItems.forEach(k => {
+                const li = document.createElement('li');
+                li.className = "flex items-center text-gray-700";
+                li.innerHTML = `<i class="fa-solid fa-check-circle text-green-500 mr-2"></i> 提及「${k}」`;
+                list.appendChild(li);
+            });
+            
+            // Mock Feedback
+            const comments = [
+                "語氣平穩，成功化解價格疑慮。",
+                "有確實執行 SOP 中的鑑賞期告知。",
+                "建議在開頭時可以更有自信一點。"
+            ];
+            document.getElementById('ai-comment').innerText = comments[Math.floor(Math.random() * comments.length)];
+        }
+
+    </script>
+</body>
+</html>
