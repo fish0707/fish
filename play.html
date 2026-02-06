@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI 智能對練場 (結局判定版)</title>
+    <title>AI 智能對練場 (教練診斷版)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
@@ -30,36 +30,57 @@
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 3px; }
+
+        /* 教練提示卡動畫 */
+        .coach-card { border-left: 4px solid #6366f1; background: #eef2ff; transition: all 0.3s ease; }
+        .coach-card:hover { background: #e0e7ff; transform: translateX(2px); }
     </style>
 </head>
 <body class="h-screen flex flex-col md:flex-row overflow-hidden">
 
-    <!-- 左側：劇本設定 -->
-    <aside class="w-full md:w-80 bg-white border-r border-slate-200 flex flex-col z-20 shadow-xl">
+    <!-- 左側：劇本設定與教練視角 -->
+    <aside class="w-full md:w-96 bg-white border-r border-slate-200 flex flex-col z-20 shadow-xl">
         <div class="p-5 border-b border-slate-100 bg-slate-50">
             <h1 class="font-bold text-lg text-slate-800 flex items-center gap-2">
-                <div class="w-8 h-8 bg-indigo-600 text-white rounded-lg flex items-center justify-center"><i class="fa-solid fa-headset"></i></div>
-                AI 智能對練場
+                <div class="w-8 h-8 bg-indigo-600 text-white rounded-lg flex items-center justify-center"><i class="fa-solid fa-user-graduate"></i></div>
+                AI 智能教練系統
             </h1>
-            <p class="text-[10px] text-slate-400 mt-1 uppercase tracking-wider font-bold">V2.0 Outcome Engine</p>
+            <p class="text-[10px] text-slate-400 mt-1 uppercase tracking-wider font-bold flex items-center gap-1">
+                <span class="w-2 h-2 rounded-full bg-green-500"></span>
+                Coach Persona Active
+            </p>
         </div>
 
-        <div class="p-5 flex-1 overflow-y-auto">
-            <div class="mb-6">
-                <label class="block text-xs font-bold text-slate-500 uppercase mb-2">今日考題 (Scenario)</label>
-                <select id="scenario-select" onchange="loadScenario()" class="w-full p-3 bg-white border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none shadow-sm transition">
+        <div class="p-5 flex-1 overflow-y-auto space-y-6">
+            
+            <!-- 1. 劇本選擇 -->
+            <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase mb-2">今日演練劇本 (Scenario)</label>
+                <select id="scenario-select" onchange="loadScenario()" class="w-full p-3 bg-white border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none shadow-sm transition hover:border-indigo-400">
                     <option value="price_war">劇本 A：價格戰 (盤石 200元)</option>
                     <option value="trust_issue">劇本 B：信任感 (怕被騙)</option>
                     <option value="mobile_port">劇本 C：攜碼疑慮 (台哥大)</option>
                 </select>
             </div>
 
-            <!-- 任務目標 -->
-            <div id="mission-card" class="bg-white border border-slate-200 rounded-xl p-4 mb-4 shadow-sm relative overflow-hidden">
-                <div class="absolute top-0 right-0 bg-indigo-100 text-indigo-600 text-[10px] px-2 py-1 rounded-bl-lg font-bold">Win Condition</div>
-                <h3 class="text-xs font-bold text-slate-800 uppercase mb-3">SOP 通關條件</h3>
-                <ul id="checklist" class="space-y-2">
-                    <!-- Dynamic Checklist -->
+            <!-- 2. 教練診斷區 (取代原本單純的 Checklist) -->
+            <div id="mission-card" class="bg-white border border-slate-200 rounded-xl p-0 shadow-sm relative overflow-hidden">
+                <div class="bg-slate-50 px-4 py-3 border-b border-slate-100 flex justify-between items-center">
+                    <h3 class="text-xs font-bold text-slate-700 uppercase"><i class="fa-solid fa-stethoscope mr-1 text-indigo-500"></i> 對話診斷指標</h3>
+                    <span class="text-[10px] bg-indigo-100 text-indigo-600 px-2 py-0.5 rounded font-bold">LIVE</span>
+                </div>
+                <ul id="checklist" class="p-4 space-y-3">
+                    <!-- Dynamic Diagnostic Items -->
+                </ul>
+            </div>
+
+            <!-- 3. 教練原則提示 -->
+            <div class="bg-orange-50 border border-orange-100 rounded-xl p-4">
+                <h3 class="text-xs font-bold text-orange-700 uppercase mb-2"><i class="fa-solid fa-circle-exclamation mr-1"></i> 基礎應對規範 (Manners)</h3>
+                <ul class="text-xs text-orange-800 space-y-1.5 list-disc pl-4 opacity-80">
+                    <li>必須清晰報出「品牌」與「姓氏」。</li>
+                    <li>積極聆聽，適當附和客戶。</li>
+                    <li>嚴禁使用「不知道」、「沒辦法」。</li>
                 </ul>
             </div>
 
@@ -72,13 +93,12 @@
                 <div class="w-full bg-slate-200 rounded-full h-2">
                     <div id="patience-bar" class="bg-green-500 h-2 rounded-full transition-all duration-500" style="width: 100%"></div>
                 </div>
-                <p class="text-[10px] text-slate-400 mt-2">提示：若耐心歸零，客戶將會掛斷電話。</p>
             </div>
         </div>
 
         <div class="p-4 border-t border-slate-100 bg-slate-50">
-            <button onclick="restartSession()" class="w-full py-3 px-4 bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 rounded-xl text-sm font-bold transition flex items-center justify-center gap-2 shadow-sm">
-                <i class="fa-solid fa-rotate-right"></i> 重新開始
+            <button onclick="restartSession()" class="w-full py-3 px-4 bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 rounded-xl text-sm font-bold transition flex items-center justify-center gap-2 shadow-sm group">
+                <i class="fa-solid fa-rotate-right group-hover:rotate-180 transition-transform duration-500"></i> 重新開始
             </button>
         </div>
     </aside>
@@ -90,7 +110,7 @@
         <header class="bg-white/80 backdrop-blur-md border-b border-slate-200 h-16 flex items-center justify-between px-6 z-10 sticky top-0">
             <div class="flex items-center gap-3">
                 <div class="relative">
-                    <div class="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center overflow-hidden">
+                    <div class="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center overflow-hidden border-2 border-white shadow-sm">
                         <i class="fa-solid fa-user text-slate-400 text-lg"></i>
                     </div>
                     <span id="ai-status-dot" class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></span>
@@ -100,8 +120,13 @@
                     <div id="ai-status-text" class="text-xs text-slate-500">通話連線中...</div>
                 </div>
             </div>
-            <div class="bg-slate-100 px-3 py-1 rounded-full border border-slate-200">
-                <span class="text-xs font-mono text-slate-500" id="timer">00:00</span>
+            <div class="flex items-center gap-4">
+                <div class="hidden md:flex items-center gap-2 text-xs text-slate-400">
+                    <i class="fa-solid fa-shield-halved"></i> 稽核模式: <span class="font-bold text-indigo-500">開啟</span>
+                </div>
+                <div class="bg-slate-100 px-3 py-1 rounded-full border border-slate-200 font-mono text-xs text-slate-500" id="timer">
+                    00:00
+                </div>
             </div>
         </header>
 
@@ -111,45 +136,60 @@
         </div>
 
         <!-- 底部輸入區 -->
-        <div id="input-area" class="absolute bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-4 shadow-lg transition-transform duration-300">
+        <div id="input-area" class="absolute bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-4 shadow-lg transition-transform duration-300 z-20">
             <div class="max-w-4xl mx-auto flex items-end gap-3">
                 
-                <button id="mic-btn" onclick="toggleMic()" class="flex-shrink-0 w-12 h-12 rounded-full bg-slate-100 text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 border border-slate-200 flex items-center justify-center transition-all duration-300">
+                <button id="mic-btn" onclick="toggleMic()" class="flex-shrink-0 w-12 h-12 rounded-full bg-slate-100 text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 border border-slate-200 flex items-center justify-center transition-all duration-300" title="語音輸入">
                     <i class="fa-solid fa-microphone text-lg"></i>
                 </button>
 
-                <div class="flex-1 bg-slate-50 border border-slate-300 rounded-2xl px-4 py-3 focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-indigo-500 transition-all">
-                    <textarea id="user-input" rows="1" placeholder="請輸入話術..." class="w-full bg-transparent border-none outline-none text-slate-700 resize-none max-h-32" oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'" onkeydown="handleEnter(event)"></textarea>
+                <div class="flex-1 bg-slate-50 border border-slate-300 rounded-2xl px-4 py-3 focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-indigo-500 transition-all relative">
+                    <textarea id="user-input" rows="1" placeholder="請輸入話術..." class="w-full bg-transparent border-none outline-none text-slate-700 resize-none max-h-32 leading-relaxed" oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'" onkeydown="handleEnter(event)"></textarea>
+                    <div class="absolute right-3 bottom-3 text-[10px] text-slate-400 font-bold bg-slate-200 px-1.5 py-0.5 rounded">REC</div>
                 </div>
 
-                <button onclick="sendMessage()" class="flex-shrink-0 w-12 h-12 rounded-full bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg shadow-indigo-500/30 flex items-center justify-center transition-transform hover:scale-105">
+                <button onclick="sendMessage()" class="flex-shrink-0 w-12 h-12 rounded-full bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg shadow-indigo-500/30 flex items-center justify-center transition-transform hover:scale-105" title="發送">
                     <i class="fa-solid fa-paper-plane"></i>
                 </button>
+            </div>
+            <div class="text-center mt-2">
+                 <p class="text-[10px] text-slate-400"><i class="fa-solid fa-robot mr-1"></i> AI 教練正在依據「品質稽核標準」分析您的回應...</p>
             </div>
         </div>
 
         <!-- 結算彈窗 (End Screen Overlay) -->
-        <div id="end-screen" class="hidden absolute inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center">
-            <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-sm w-full text-center relative overflow-hidden transform transition-all scale-100">
+        <div id="end-screen" class="hidden absolute inset-0 z-50 bg-slate-900/60 backdrop-blur-md flex items-center justify-center transition-opacity duration-300">
+            <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full text-center relative overflow-hidden transform transition-all scale-100 border border-slate-200">
                 
                 <!-- 結果印章 -->
-                <div id="result-stamp" class="absolute top-4 right-4 text-6xl font-black opacity-0 stamp-anim border-4 rounded px-2"></div>
+                <div id="result-stamp" class="absolute top-6 right-6 text-6xl font-black opacity-0 stamp-anim border-4 rounded px-2 rotate-[-15deg]"></div>
                 
-                <div id="result-icon-container" class="mb-4">
+                <div id="result-icon-container" class="mb-6 mt-2">
                     <!-- Icon injected by JS -->
                 </div>
                 
                 <h2 id="result-title" class="text-2xl font-bold text-slate-800 mb-2"></h2>
-                <p id="result-reason" class="text-sm text-slate-500 mb-6 px-4"></p>
+                <p id="result-reason" class="text-sm text-slate-500 mb-6 px-4 leading-relaxed"></p>
 
-                <div class="bg-slate-50 rounded-xl p-4 text-left text-xs mb-6 border border-slate-100">
-                    <div class="font-bold text-slate-400 uppercase mb-2">AI 教練建議</div>
-                    <p id="result-feedback" class="text-slate-600 leading-relaxed"></p>
+                <div class="bg-indigo-50 rounded-xl p-5 text-left text-sm mb-6 border border-indigo-100 relative">
+                    <div class="absolute -top-3 left-4 bg-indigo-600 text-white text-[10px] px-2 py-0.5 rounded shadow-sm">
+                        <i class="fa-solid fa-user-graduate mr-1"></i>教練診斷報告
+                    </div>
+                    <p id="result-feedback" class="text-slate-700 leading-relaxed pt-2"></p>
                 </div>
 
-                <button onclick="restartSession()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl shadow-lg transition">
-                    <i class="fa-solid fa-arrow-rotate-right mr-2"></i> 再試一次
+                <button onclick="restartSession()" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3.5 rounded-xl shadow-lg transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-arrow-rotate-right"></i> 再次挑戰
                 </button>
+            </div>
+        </div>
+        
+        <!-- 即時回饋 Toast (模擬教練插話) -->
+        <div id="coach-toast" class="fixed top-24 right-5 bg-white border-l-4 border-yellow-500 shadow-xl rounded-lg p-4 max-w-xs transform translate-x-full transition-transform duration-500 z-50 flex items-start gap-3">
+            <div class="text-yellow-500 mt-1"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <div>
+                <h4 class="text-xs font-bold text-slate-800 uppercase mb-1">教練提醒</h4>
+                <p id="coach-message" class="text-xs text-slate-600 leading-relaxed"></p>
             </div>
         </div>
 
@@ -157,68 +197,128 @@
 
     <script>
         // ==========================================
-        // 1. 劇本資料庫 (含結局設定)
+        // 1. AI 教練核心設定 (System Prompts)
+        // 這些變數將來會作為 LLM 的 System Context
+        // ==========================================
+        
+        const COACH_IDENTITY = `
+# 角色設定 (Identity)
+你是一位資深的「客服銷售教練」與「品質稽核專家」，專精於電信寬頻領域。
+你的評分哲學是 **「先診斷，再開藥」** (Diagnosis before Prescription)。
+
+## 你的稽核重點
+1. **挖掘需求**：你不只看專員有沒有回答問題，更要看專員有沒有**主動探詢**客戶背後的真正考量。
+2. **聽出弦外之音**：當客戶說「太貴」或「綁約太久」時，專員是直接丟出降價方案(猜測)，還是有先詢問原因(診斷)？
+3. **對話控制權**：觀察專員是否能透過提問，將主導權抓回自己手上，而非被客戶牽著走。
+`;
+
+        const AGENT_MANNERS = `
+# 基礎禮貌與應對規範
+1. **開場要求**：必須清晰報出「品牌名稱」與「專員姓氏」。
+2. **積極聆聽**：在客戶陳述問題時，是否有適當的附和。
+3. **禮貌結尾**：通話結束前，必須確認客戶是否還有其他問題。
+4. **違禁詞庫**：
+   - 嚴禁使用：「不知道」、「沒辦法」、「你自己去查」、「這不歸我管」。
+`;
+
+        // ==========================================
+        // 2. 劇本資料庫 (Playbook Database)
+        // 結構更新：增加 "Intent" (意圖) 欄位，允許彈性回答
         // ==========================================
         const scenarios = {
             "price_war": {
                 name: "價格戰 (盤石 200元)",
                 persona: {
                     name: "林先生",
-                    desc: "貪小便宜，覺得你們太貴。",
+                    desc: "住在中泰匯社區，深受 200 元低價吸引，認為自己用量少不需要 300M。",
                     opening: "喂，請問一下，你們網路只有那種 300M 的嗎？有沒有更低的啊？因為我不用用到那麼多，我只是偶爾用。"
                 },
                 config: {
-                    max_turns: 5, // 最多講 5 回合，不然就掛電話
-                    patience_decay: 15, // 每回合扣 15 耐心
-                    keywords_positive: ["一天", "平均", "穩定", "專線", "12塊"],
-                    keywords_negative: ["沒辦法", "最優惠了", "不行"],
-                    checkpoints: [
-                        { id: "c1", text: "價值堆疊 (日單價)", met: false },
-                        { id: "c2", text: "強調 300M 穩定性", met: false }
+                    max_turns: 5, 
+                    patience_decay: 15,
+                    // 關鍵字組：包含 "core" (核心概念) 與 "alternatives" (替代說法)
+                    // 這模擬了 LLM 的語意理解能力
+                    intents: [
+                        { 
+                            id: "value_stacking", 
+                            name: "價值堆疊 (日單價)", 
+                            desc: "拆解費用為日均價，降低痛感",
+                            keywords: ["一天", "平均", "穩定", "專線", "12塊", "飲料"],
+                            met: false
+                        },
+                        { 
+                            id: "stability_defense", 
+                            name: "品質防禦 (穩定性)", 
+                            desc: "強調專線不塞車的價值",
+                            keywords: ["穩定", "塞車", "共享", "專線", "比較快"],
+                            met: false
+                        }
                     ],
-                    // 結局台詞
-                    ending_success: "喔...一天12塊喔？這樣聽起來好像比較划算。好啦，那我試試看好了。",
-                    ending_fail_patience: "唉，你講半天還是沒解決我的問題，我還是選隔壁那家好了，拜拜。",
-                    ending_fail_negative: "你這種態度我不想辦了，沒辦法就算了。"
+                    forbidden_words: ["沒辦法", "最優惠了", "不行", "不知道"],
+                    ending_success: "喔...聽你這樣算一天12塊好像還可以接受。好啦，既然品質比較好，那我就試試看。",
+                    ending_fail_patience: "唉，你一直講那些規格我聽不懂啦，反正隔壁比較便宜，我要掛了。",
+                    ending_fail_negative: "你這種說法讓我覺得很不舒服，沒辦法就算了。"
                 }
             },
             "trust_issue": {
                 name: "信任感 (怕被騙)",
                 persona: {
                     name: "鄭先生",
-                    desc: "多疑，怕工程師亂收費。",
+                    desc: "之前被別家騙過車馬費，擔心過年期間裝機有問題找不到人。",
                     opening: "那...如果我申辦的話，會卡到過年誒。啊如果工程師來了測了不能用，你們會不會收我錢？"
                 },
                 config: {
                     max_turns: 4,
                     patience_decay: 20,
-                    keywords_positive: ["鑑賞期", "不收費", "現場測", "退費"],
-                    keywords_negative: ["應該", "可能", "看情況"],
-                    checkpoints: [
-                        { id: "c1", text: "提及 10 天鑑賞期", met: false },
-                        { id: "c2", text: "保證不滿意不收費", met: false }
+                    intents: [
+                        { 
+                            id: "risk_reversal", 
+                            name: "風險逆轉 (鑑賞期)", 
+                            desc: "提及10天鑑賞期或無條件退費",
+                            keywords: ["鑑賞期", "不收費", "退費", "不滿意", "試用"],
+                            met: false
+                        },
+                        { 
+                            id: "process_clarity", 
+                            name: "流程透明化 (現場測)", 
+                            desc: "說明工程師現場測試流程",
+                            keywords: ["現場測", "帶機器", "當場", "測試"],
+                            met: false
+                        }
                     ],
+                    forbidden_words: ["應該", "可能", "看情況", "不歸我管"],
                     ending_success: "喔！有鑑賞期還不收費喔？這麼有自信。好，那你幫我安排時間。",
-                    ending_fail_patience: "我還是覺得很不保險，算了，我再考慮看看。",
-                    ending_fail_negative: "聽起來就很不確定啊，我不敢讓你們來裝。"
+                    ending_fail_patience: "講半天還是沒重點，我不敢讓你們來裝，再見。",
+                    ending_fail_negative: "聽起來就很不確定啊，我覺得你們想騙錢。"
                 }
             },
             "mobile_port": {
                 name: "攜碼疑慮 (台哥大)",
                 persona: {
                     name: "陳小姐",
-                    desc: "怕麻煩，不想換門號。",
+                    desc: "使用台灣大哥大多年，誤以為辦網路要換掉手機門號。",
                     opening: "我是台灣大哥大，那辦你們網路，我不就還要再換門號？這樣很麻煩耶，我有綁約。"
                 },
                 config: {
                     max_turns: 4,
                     patience_decay: 20,
-                    keywords_positive: ["不用換", "折抵", "帳單", "折扣"],
-                    keywords_negative: ["要換", "解約", "違約金"],
-                    checkpoints: [
-                        { id: "c1", text: "明確告知不用換號", met: false },
-                        { id: "c2", text: "說明帳單折抵機制", met: false }
+                    intents: [
+                        { 
+                            id: "no_porting", 
+                            name: "破除迷思 (不用換號)", 
+                            desc: "明確告知手機與寬頻獨立",
+                            keywords: ["不用換", "沒關係", "獨立", "分開"],
+                            met: false
+                        },
+                        { 
+                            id: "billing_offset", 
+                            name: "利益引導 (帳單折抵)", 
+                            desc: "說明折抵優惠",
+                            keywords: ["折抵", "帳單", "折扣", "補貼"],
+                            met: false
+                        }
                     ],
+                    forbidden_words: ["要換", "解約", "違約金", "麻煩"],
                     ending_success: "真的不用換號碼喔？還可以折抵帳單？那這樣很方便耶，我要辦。",
                     ending_fail_patience: "太複雜了啦，我懶得弄這些，先不要好了。",
                     ending_fail_negative: "還要解約喔？那太麻煩了，我不要。"
@@ -227,7 +327,7 @@
         };
 
         // ==========================================
-        // 2. 狀態管理
+        // 3. 狀態管理
         // ==========================================
         let currentScenario = null;
         let turnCount = 0;
@@ -254,16 +354,22 @@
             // UI 重置
             document.getElementById('persona-name').innerText = currentScenario.persona.name;
             document.getElementById('end-screen').classList.add('hidden');
-            document.getElementById('input-area').classList.remove('translate-y-full'); // Show input
+            document.getElementById('input-area').classList.remove('translate-y-full'); 
             updatePatienceUI();
             
             const list = document.getElementById('checklist');
             list.innerHTML = '';
-            currentScenario.config.checkpoints.forEach(cp => {
+            currentScenario.config.intents.forEach(intent => {
                 const li = document.createElement('li');
-                li.id = `cp-${cp.id}`;
-                li.className = "flex items-center gap-3 text-sm text-slate-400 transition-all duration-300";
-                li.innerHTML = `<i class="fa-regular fa-circle text-slate-300"></i> ${cp.text}`;
+                li.id = `intent-${intent.id}`;
+                li.className = "coach-card rounded-lg p-3 text-sm text-slate-600 transition-all duration-300";
+                li.innerHTML = `
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="font-bold text-slate-700">${intent.name}</span>
+                        <i class="fa-regular fa-circle text-slate-300 status-icon"></i>
+                    </div>
+                    <div class="text-xs text-slate-400">${intent.desc}</div>
+                `;
                 list.appendChild(li);
             });
 
@@ -292,92 +398,102 @@
         }
 
         // ==========================================
-        // 3. API 模擬層 (含結局判定邏輯)
+        // 4. API 模擬層 (核心邏輯升級)
+        // 這裡模擬了後端 LLM 接收到 System Prompt 後的行為
         // ==========================================
         async function callAI_API(userText) {
             setAIStatus('thinking');
             isThinking = true;
 
-            // 模擬網路延遲
+            // 模擬 API 處理延遲
             await new Promise(r => setTimeout(r, 1200));
 
             const config = currentScenario.config;
             let aiReply = "";
-            let callResult = null; // 'success' | 'fail' | null
+            let callResult = null; 
 
-            // 1. 關鍵字分析
-            const hitPositive = config.keywords_positive.filter(k => userText.includes(k));
-            const hitNegative = config.keywords_negative.filter(k => userText.includes(k));
+            // --- A. 教練診斷 (Diagnosis) ---
+            // 檢查是否包含 "違禁詞" (基於 AGENT_MANNERS)
+            const hitForbidden = config.forbidden_words.filter(k => userText.includes(k));
+            
+            // 檢查是否達成 "意圖" (Intent Matching)
+            // 這裡模擬 LLM 的語意理解：只要關鍵字命中，就視為該意圖達成
+            let newlyMetIntent = null;
+            config.intents.forEach(intent => {
+                const hit = intent.keywords.some(k => userText.includes(k));
+                if (hit && !intent.met) {
+                    intent.met = true;
+                    newlyMetIntent = intent;
+                    updateChecklistUI(intent.id);
+                    // 達成目標回補耐心
+                    patience = Math.min(100, patience + 15);
+                }
+            });
 
-            // 2. 更新 Checkpoints (模擬)
-            if (hitPositive.length > 0) {
-                config.checkpoints.forEach(cp => {
-                    if (!cp.met && Math.random() > 0.1) { // 90% 機率判定通過
-                        cp.met = true;
-                        updateChecklistUI(cp.id);
-                    }
-                });
-                patience = Math.min(100, patience + 10); // 加回耐心
-            }
-
-            // 3. 扣除耐心 (每回合固定扣 + 踩雷扣更多)
+            // --- B. 教練開藥 (Prescription / Response) ---
+            
+            // 1. 扣除基礎耐心
             turnCount++;
             let decay = config.patience_decay;
-            if (hitNegative.length > 0) decay += 30; // 踩雷大扣分
+            
+            // 2. 判斷是否踩雷 (嚴重扣分)
+            if (hitForbidden.length > 0) {
+                decay += 30;
+                showCoachToast(`檢測到負面用語：「${hitForbidden.join("、")}」。請改用更積極的說法，例如「我幫您爭取看看」。`);
+            }
+
             patience = Math.max(0, patience - decay);
             updatePatienceUI();
 
-            // 4. === 結局判定核心 (Outcome Engine) ===
-            const allMet = config.checkpoints.every(cp => cp.met);
+            // 3. 結局判定
+            const allMet = config.intents.every(i => i.met);
             
-            if (hitNegative.length > 0 && patience < 30) {
-                // 情境 A: 說錯話且耐心低 -> 憤怒掛斷
+            if (hitForbidden.length > 0 && patience < 30) {
                 callResult = 'fail_negative';
                 aiReply = config.ending_fail_negative;
             } else if (patience === 0 || turnCount >= config.max_turns) {
-                // 情境 B: 拖太久/沒重點 -> 失去耐心掛斷
                 callResult = 'fail_patience';
                 aiReply = config.ending_fail_patience;
             } else if (allMet) {
-                // 情境 C: 所有條件達成 -> 成交
                 callResult = 'success';
                 aiReply = config.ending_success;
             } else {
-                // 情境 D: 繼續對話
-                const fillers = [
-                    "可是我覺得還是有點貴耶...",
-                    "那如果不喜歡真的可以退嗎？",
-                    "我再考慮一下啦，這有點麻煩。"
-                ];
-                aiReply = fillers[Math.floor(Math.random() * fillers.length)];
+                // 中間對話生成 (模擬)
+                if (newlyMetIntent) {
+                    aiReply = "喔...這點聽起來是還不錯啦。那還有呢？"; // 肯定用戶的進展
+                } else {
+                    const fillers = [
+                        "可是我覺得還是有點貴耶...",
+                        "你們這方案聽起來沒有比較優惠啊。",
+                        "我再考慮一下啦，這有點麻煩。"
+                    ];
+                    aiReply = fillers[Math.floor(Math.random() * fillers.length)];
+                }
             }
 
-            // 5. 輸出回應
+            // --- C. 輸出 ---
             addMessage('ai', aiReply);
             speak(aiReply);
             setAIStatus('online');
             isThinking = false;
 
-            // 6. 如果有結果，觸發結算
             if (callResult) {
                 endSession(callResult);
             }
         }
 
         // ==========================================
-        // 4. 結算處理
+        // 5. 結算與回饋 (Feedback System)
         // ==========================================
         function endSession(resultType) {
             isCallActive = false;
             stopTimer();
             setAIStatus('offline');
-            
-            // 隱藏輸入框
             document.getElementById('input-area').classList.add('translate-y-full');
 
             setTimeout(() => {
                 showEndScreen(resultType);
-            }, 2000); // 讓使用者看完最後一句話再跳視窗
+            }, 1500);
         }
 
         function showEndScreen(type) {
@@ -391,30 +507,39 @@
             screen.classList.remove('hidden');
 
             if (type === 'success') {
-                stamp.innerText = "DEAL";
-                stamp.className = "absolute top-4 right-4 text-6xl font-black text-green-500/20 border-4 border-green-500/20 rounded px-2 stamp-anim";
-                icon.innerHTML = '<div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto text-green-600 text-4xl"><i class="fa-solid fa-handshake"></i></div>';
-                title.innerText = "恭喜成交！";
-                reason.innerText = "成功消除客戶疑慮，達成所有 SOP 指標。";
-                feedback.innerText = "太棒了！您精準使用了「價值堆疊」與「風險逆轉」技巧。客戶對於價格的抗性已被轉化為對品質的期待。";
+                stamp.innerText = "PASS";
+                stamp.className = "absolute top-6 right-6 text-6xl font-black text-green-500/20 border-4 border-green-500/20 rounded px-2 stamp-anim rotate-[-15deg]";
+                icon.innerHTML = '<div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto text-green-600 text-4xl shadow-md"><i class="fa-solid fa-handshake"></i></div>';
+                title.innerText = "演練通過";
+                reason.innerText = "成功引導客戶需求，達成溝通目標。";
+                feedback.innerHTML = `
+                    <span class="font-bold text-indigo-600 block mb-1">診斷結果：優秀</span>
+                    您在對話中展現了良好的「控制權」，沒有被客戶的價格異議牽著走。特別是在運用<b>${currentScenario.config.intents[0].name}</b>的技巧上非常到位，成功將對話焦點從價格轉移到價值。
+                `;
             } else {
                 stamp.innerText = "FAIL";
-                stamp.className = "absolute top-4 right-4 text-6xl font-black text-red-500/20 border-4 border-red-500/20 rounded px-2 stamp-anim";
-                icon.innerHTML = '<div class="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto text-red-600 text-4xl"><i class="fa-solid fa-phone-slash"></i></div>';
-                title.innerText = "通話失敗";
+                stamp.className = "absolute top-6 right-6 text-6xl font-black text-red-500/20 border-4 border-red-500/20 rounded px-2 stamp-anim rotate-[-15deg]";
+                icon.innerHTML = '<div class="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto text-red-600 text-4xl shadow-md"><i class="fa-solid fa-file-circle-xmark"></i></div>';
+                title.innerText = "演練未通過";
                 
                 if (type === 'fail_patience') {
-                    reason.innerText = "失敗原因：客戶失去耐心 (拖延太久/未講重點)";
-                    feedback.innerText = "注意：您花太多時間在解釋規格，卻沒有正面回應客戶最在意的「價格」問題。請嘗試在第 2 回合就直接使用「日單價」切入。";
+                    reason.innerText = "失敗主因：對話失焦 / 缺乏引導";
+                    feedback.innerHTML = `
+                        <span class="font-bold text-red-600 block mb-1">診斷結果：被動</span>
+                        教練觀察到您花太多時間在回應客戶的表層問題，而沒有<b>主動探詢</b>背後的原因。建議下次在第二回合就直接切入「${currentScenario.config.intents[0].name}」，奪回對話主導權。
+                    `;
                 } else {
-                    reason.innerText = "失敗原因：觸發負面情緒 (使用禁用語)";
-                    feedback.innerText = "警告：請避免使用「沒辦法」、「不行」等否定詞。這會讓客戶覺得沒有談判空間而直接放棄。";
+                    reason.innerText = "失敗主因：觸發防衛機制 (使用負面語彙)";
+                    feedback.innerHTML = `
+                        <span class="font-bold text-red-600 block mb-1">診斷結果：用詞不當</span>
+                        您使用了類似「沒辦法」的封閉式回答，這違反了基礎應對規範。記住，教練強調的是<b>「先同理，再引導」</b>。下次試試說：「雖然費率是固定的，但我可以幫您爭取...」。
+                    `;
                 }
             }
         }
 
         // ==========================================
-        // 5. UI Helper
+        // 6. UI Helper & Tools
         // ==========================================
         function addMessage(role, text) {
             const container = document.getElementById('chat-container');
@@ -423,7 +548,7 @@
             if (role === 'ai') {
                 div.className = "flex gap-3 message-enter justify-start";
                 div.innerHTML = `
-                    <div class="w-8 h-8 rounded-full bg-indigo-100 border border-indigo-200 flex items-center justify-center flex-shrink-0 text-indigo-600 font-bold text-xs">客</div>
+                    <div class="w-8 h-8 rounded-full bg-slate-200 border border-slate-300 flex items-center justify-center flex-shrink-0 text-slate-500 font-bold text-xs shadow-sm">客</div>
                     <div class="bg-white border border-slate-200 text-slate-700 px-4 py-3 rounded-2xl rounded-tl-none shadow-sm text-sm leading-relaxed max-w-[85%]">
                         ${text}
                     </div>
@@ -441,10 +566,11 @@
         }
 
         function updateChecklistUI(id) {
-            const el = document.getElementById(`cp-${id}`);
-            if (el) {
-                el.className = "flex items-center gap-3 text-sm text-slate-800 font-bold transition-all duration-500";
-                el.innerHTML = `<i class="fa-solid fa-circle-check text-green-500"></i> ${el.innerText}`;
+            const li = document.getElementById(`intent-${id}`);
+            if (li) {
+                li.className = "coach-card rounded-lg p-3 text-sm transition-all duration-300 bg-green-50 border-l-4 border-green-500 shadow-sm transform translate-x-1";
+                const icon = li.querySelector('.status-icon');
+                icon.className = "fa-solid fa-circle-check text-green-500 text-lg";
             }
         }
 
@@ -455,13 +581,22 @@
             text.innerText = `${patience}%`;
             
             if (patience < 30) {
-                bar.className = "bg-red-500 h-2 rounded-full transition-all duration-500";
+                bar.className = "bg-red-500 h-2 rounded-full transition-all duration-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]";
                 text.className = "text-xs font-bold text-red-600 animate-pulse";
             } else if (patience < 60) {
                 bar.className = "bg-yellow-500 h-2 rounded-full transition-all duration-500";
             } else {
                 bar.className = "bg-green-500 h-2 rounded-full transition-all duration-500";
             }
+        }
+
+        function showCoachToast(msg) {
+            const toast = document.getElementById('coach-toast');
+            document.getElementById('coach-message').innerText = msg;
+            toast.classList.remove('translate-x-full');
+            setTimeout(() => {
+                toast.classList.add('translate-x-full');
+            }, 5000);
         }
 
         function setAIStatus(status) {
@@ -505,7 +640,6 @@
             }
         }
 
-        // --- TTS & STT ---
         function speak(text) {
             if ('speechSynthesis' in window) {
                 const u = new SpeechSynthesisUtterance(text);
