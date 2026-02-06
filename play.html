@@ -169,20 +169,41 @@
 
                 <!-- 診斷分析 (來自您的 CSV/PDF) -->
                 <div>
-                    <h3 class="text-xs font-bold text-slate-400 uppercase mb-3">AI 診斷與分析</h3>
-                    <div class="space-y-3">
-                        <div class="flex gap-3">
-                            <div class="mt-1"><i class="fa-solid fa-xmark text-red-500"></i></div>
-                            <div>
-                                <div class="text-xs font-bold text-slate-200">未執行價值墊高</div>
-                                <div class="text-xs text-slate-500 mt-0.5">面對 200 元競品，僅回答「這是最優惠了」，未拆解日費用來降低客戶痛感。</div>
+                    <h3 class="text-xs font-bold text-slate-400 uppercase mb-3">關鍵失敗原因 (Root Cause)</h3>
+                    <div class="space-y-4">
+                        <div class="bg-slate-800/50 p-3 rounded-lg border border-red-900/30">
+                            <div class="flex gap-2 items-start">
+                                <i class="fa-solid fa-anchor text-red-500 mt-1"></i>
+                                <div>
+                                    <div class="text-xs font-bold text-slate-200">價格錨定錯誤 (Anchoring)</div>
+                                    <div class="text-xs text-slate-400 mt-1 leading-relaxed">
+                                        客戶提出 $200 元競品時，專員被價格帶走，僅回應「這是最優惠」，未重新設定價格錨點（如：一天 12 元）。
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <div class="flex gap-3">
-                            <div class="mt-1"><i class="fa-solid fa-xmark text-red-500"></i></div>
-                            <div>
-                                <div class="text-xs font-bold text-slate-200">SOP 違規</div>
-                                <div class="text-xs text-slate-500 mt-0.5">使用了負面詞彙「沒辦法」，應改為強調 300M 的「穩定性優勢」。</div>
+
+                        <div class="bg-slate-800/50 p-3 rounded-lg border border-red-900/30">
+                            <div class="flex gap-2 items-start">
+                                <i class="fa-solid fa-ban text-red-500 mt-1"></i>
+                                <div>
+                                    <div class="text-xs font-bold text-slate-200">使用了「對話句點」</div>
+                                    <div class="text-xs text-slate-400 mt-1 leading-relaxed">
+                                        回應「<span class="text-red-300">真的沒有辦法再低了</span>」等於主動關上談判大門。應改用「雖然費率固定，但我能幫您爭取...」來延續話題。
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                         <div class="bg-slate-800/50 p-3 rounded-lg border border-red-900/30">
+                            <div class="flex gap-2 items-start">
+                                <i class="fa-solid fa-shield-halved text-red-500 mt-1"></i>
+                                <div>
+                                    <div class="text-xs font-bold text-slate-200">缺乏風險逆轉 (Risk Reversal)</div>
+                                    <div class="text-xs text-slate-400 mt-1 leading-relaxed">
+                                        面對客戶猶豫（用量少/怕貴），未祭出<span class="text-indigo-300">「10天鑑賞期」</span>這項最強武器來降低客戶心理門檻。
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
